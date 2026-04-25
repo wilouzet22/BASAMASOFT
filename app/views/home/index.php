@@ -1,90 +1,73 @@
 <?php require APPROOT . '/views/inc/header.php'; ?>
 <?php require APPROOT . '/views/inc/navbar.php'; ?>
 
-<!-- Hero Slider -->
-<div class="relative pt-16 h-[600px] overflow-hidden group">
-    <!-- Slides -->
-    <div class="slider-container relative h-full w-full">
-        <!-- Slide 1 -->
-        <div class="slide absolute inset-0 transition-opacity duration-1000 opacity-100">
-            <img src="<?php echo URLROOT; ?>/assets/img/montaña.png" alt="Bienvenida" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                <div class="text-center text-white px-4">
-                    <h1 class="text-5xl font-bold mb-4">Bienvenidos a EduSaft</h1>
-                    <p class="text-xl">Conectando familia y escuela para un mejor futuro.</p>
-                </div>
+<div class="graph-paper-bg min-h-screen pt-16">
+    <!-- Hero Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col md:flex-row items-center gap-12">
+        <div class="flex-1 text-center md:text-left">
+            <h1 class="text-headline-xl text-primary font-headline-xl mb-6 tracking-tight">Bienvenidos a EduSaft</h1>
+            <p class="text-body-lg text-on-surface-variant mb-8 max-w-2xl">
+                Conectando familia y escuela para un mejor futuro. Participa activamente en el proceso educativo de tus hijos a través de nuestra plataforma interactiva.
+            </p>
+            <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                <a href="<?php echo URLROOT; ?>/auth/login" class="bg-primary text-on-primary px-8 py-3 rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-opacity">
+                    Comenzar Ahora
+                </a>
+                <a href="<?php echo URLROOT; ?>/home/terminos" class="border-2 border-primary text-primary px-8 py-3 rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors">
+                    Ver Términos
+                </a>
             </div>
         </div>
-        <!-- Slide 2 -->
-        <div class="slide absolute inset-0 transition-opacity duration-1000 opacity-0 bg-blue-600">
-            <div class="absolute inset-0 flex items-center justify-center">
-                <div class="text-center text-white px-4">
-                    <h1 class="text-5xl font-bold mb-4">Acompañamiento Familiar</h1>
-                    <p class="text-xl">Participa activamente en el proceso educativo de tus hijos.</p>
-                </div>
-            </div>
-        </div>
-        <!-- Slide 3 -->
-        <div class="slide absolute inset-0 transition-opacity duration-1000 opacity-0 bg-green-600">
-            <div class="absolute inset-0 flex items-center justify-center">
-                <div class="text-center text-white px-4">
-                    <h1 class="text-5xl font-bold mb-4">Gamificación Educativa</h1>
-                    <p class="text-xl">Aprende y avanza en el camino del conocimiento.</p>
-                </div>
-            </div>
+        <div class="flex-1 relative">
+            <div class="bg-surface-container-highest rounded-full w-64 h-64 md:w-96 md:h-96 absolute -top-12 -left-12 opacity-50 blur-3xl"></div>
+            <img src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="EduSaft Logo" class="relative z-10 w-full max-w-md mx-auto drop-shadow-2xl animate-pulse">
         </div>
     </div>
-    
-    <!-- Controls -->
-    <button id="prev-slide" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/30 hover:bg-white/50 p-2 rounded-full text-white transition">
-        <span class="material-symbols-outlined">chevron_left</span>
-    </button>
-    <button id="next-slide" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/30 hover:bg-white/50 p-2 rounded-full text-white transition">
-        <span class="material-symbols-outlined">chevron_right</span>
-    </button>
-</div>
 
-<!-- Content Sections -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-gray-900">Nuestras Secciones</h2>
-        <p class="mt-4 text-lg text-gray-500">Explora las herramientas que EduSaft tiene para ti.</p>
-    </div>
+    <!-- Content Sections -->
+    <div class="bg-white/80 backdrop-blur-sm py-20 border-t border-outline-variant">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-headline-lg text-on-surface font-headline-lg mb-4">Nuestras Secciones</h2>
+                <p class="text-body-md text-on-surface-variant">Explora las herramientas que EduSaft tiene para ti.</p>
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Card Carrera -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div class="h-48 bg-blue-100 flex items-center justify-center">
-                <span class="material-symbols-outlined text-6xl text-blue-500">flag</span>
-            </div>
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Carrera</h3>
-                <p class="text-gray-600 mb-4">Sigue el progreso de tu familia a través de un camino interactivo. ¡Asiste a eventos y desbloquea logros!</p>
-                <a href="#" class="text-blue-600 font-semibold hover:text-blue-800">Ver más &rarr;</a>
-            </div>
-        </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card Carrera -->
+                <div class="bg-surface border border-outline-variant rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="w-16 h-16 bg-primary-fixed rounded-xl flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-primary text-3xl">flag</span>
+                    </div>
+                    <h3 class="text-headline-md text-on-surface font-headline-md mb-2">Carrera</h3>
+                    <p class="text-body-md text-on-surface-variant mb-6">Sigue el progreso de tu familia a través de un camino interactivo. ¡Asiste a eventos y desbloquea logros!</p>
+                    <a href="#" class="text-primary font-semibold hover:underline flex items-center gap-2">
+                        Ver más <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
 
-        <!-- Card Contenidos -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div class="h-48 bg-green-100 flex items-center justify-center">
-                <span class="material-symbols-outlined text-6xl text-green-500">library_books</span>
-            </div>
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Contenidos</h3>
-                <p class="text-gray-600 mb-4">Accede a recursos educativos, videos y guías para apoyar el aprendizaje desde casa.</p>
-                <a href="#" class="text-green-600 font-semibold hover:text-green-800">Explorar &rarr;</a>
-            </div>
-        </div>
+                <!-- Card Contenidos -->
+                <div class="bg-surface border border-outline-variant rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="w-16 h-16 bg-tertiary-fixed rounded-xl flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-tertiary text-3xl">library_books</span>
+                    </div>
+                    <h3 class="text-headline-md text-on-surface font-headline-md mb-2">Contenidos</h3>
+                    <p class="text-body-md text-on-surface-variant mb-6">Accede a recursos educativos, videos y guías para apoyar el aprendizaje desde casa.</p>
+                    <a href="#" class="text-tertiary font-semibold hover:underline flex items-center gap-2">
+                        Explorar <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
 
-        <!-- Card Eventos -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div class="h-48 bg-purple-100 flex items-center justify-center">
-                <span class="material-symbols-outlined text-6xl text-purple-500">event</span>
-            </div>
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Eventos</h3>
-                <p class="text-gray-600 mb-4">Mantente al día con las reuniones, talleres y actividades escolares programadas.</p>
-                <a href="#" class="text-purple-600 font-semibold hover:text-purple-800">Ver calendario &rarr;</a>
+                <!-- Card Eventos -->
+                <div class="bg-surface border border-outline-variant rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="w-16 h-16 bg-secondary-fixed rounded-xl flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-secondary text-3xl">event</span>
+                    </div>
+                    <h3 class="text-headline-md text-on-surface font-headline-md mb-2">Eventos</h3>
+                    <p class="text-body-md text-on-surface-variant mb-6">Mantente al día con las reuniones, talleres y actividades escolares programadas.</p>
+                    <a href="#" class="text-secondary font-semibold hover:underline flex items-center gap-2">
+                        Ver calendario <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

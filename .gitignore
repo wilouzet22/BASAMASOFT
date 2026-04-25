@@ -1,0 +1,12 @@
+# Composer
+vendor/
+
+# Database
+*.sql
+
+# Temp
+.temp/
+.vscode/
+
+# Project specific
+nuevas interfaces/

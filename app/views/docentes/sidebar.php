@@ -1,35 +1,36 @@
-    <aside class="w-64 bg-white shadow-md hidden lg:block flex flex-col">
-        <div class="p-6 border-b">
-            <a href="../index.php" class="flex items-center text-gray-500 hover:text-blue-600 mb-4 transition-colors">
-                <span class="material-symbols-outlined mr-2">arrow_back</span>
-                <span class="text-sm font-medium">Volver al Inicio</span>
-            </a>
-            <h1 class="text-2xl font-bold text-blue-600">Docentes</h1>
-        </div>
-        <nav class="mt-6">
-            <a href="dashboard.php" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <span class="material-symbols-outlined mr-3">dashboard</span>
-                Dashboard
-            </a>
-            <a href="actividades.php" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <span class="material-symbols-outlined mr-3">assignment</span>
-                Actividades
-            </a>
-            <a href="asistencia.php" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <span class="material-symbols-outlined mr-3">qr_code_scanner</span>
-                Asistencia
-            </a>
-             <a href="reportes.php" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <span class="material-symbols-outlined mr-3">bar_chart</span>
-                Reportes
-            </a>
-            <a href="notificaciones.php" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <span class="material-symbols-outlined mr-3">notifications</span>
-                Notificaciones
-            </a>
-            <a href="configuracion.php" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <span class="material-symbols-outlined mr-3">settings</span>
-                Configuración
-            </a>
-        </nav>
-    </aside>
+<nav class="hidden md:flex flex-col fixed left-0 top-0 h-full py-4 docked w-64 border-r border-outline-variant bg-white z-40">
+    <div class="px-6 pb-6">
+        <h1 class="text-primary font-headline-md text-headline-md">Edusaft Portal</h1>
+        <p class="text-on-surface-variant font-body-md text-body-md">Gestión Docente</p>
+    </div>
+    
+    <div class="flex-grow flex flex-col gap-1">
+        <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/docentes/dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            Panel Principal
+        </a>
+        <a class="bg-primary-container text-on-primary-container font-semibold rounded-lg mx-2 px-4 py-3 flex items-center gap-3" href="<?php echo URLROOT; ?>/docentes/actividades">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
+            Actividades
+        </a>
+        <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/docentes/asistencia">
+            <span class="material-symbols-outlined">event_available</span>
+            Asistencia
+        </a>
+        <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="#">
+            <span class="material-symbols-outlined">group</span>
+            Estudiantes
+        </a>
+    </div>
+
+    <div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">
+        <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/docentes/configuracion">
+            <span class="material-symbols-outlined">settings</span>
+            Configuración
+        </a>
+        <a class="text-error px-4 py-3 mx-2 hover:bg-error-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/auth/logout">
+            <span class="material-symbols-outlined">logout</span>
+            Cerrar Sesión
+        </a>
+    </div>
+</nav>

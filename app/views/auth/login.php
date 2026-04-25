@@ -1,76 +1,114 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Login Educativo - <?php echo SITENAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      body {
-        font-family: "Poppins", sans-serif;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 flex items-center justify-center min-h-screen">
-    <div class="relative w-full max-w-4xl mx-auto">
-      <!-- SVG Decorations -->
-      <div class="absolute -left-32 -top-20">
-        <svg fill="none" height="400" viewBox="0 0 250 400" width="250" xmlns="http://www.w3.org/2000/svg">
-          <path d="M-10.5 400C-10.5 289.873 78.6273 200.5 188.754 200.5C298.88 200.5 388 111.373 388 0.5" stroke="#22c55e" stroke-opacity="0.3" stroke-width="3"></path>
-        </svg>
-      </div>
-      <div class="absolute -right-32 -bottom-20">
-        <svg fill="none" height="400" viewBox="0 0 250 400" width="250" xmlns="http://www.w3.org/2000/svg">
-          <path d="M260.5 0C260.5 110.127 171.373 199.5 61.2465 199.5C-48.8804 199.5 -138 288.627 -138 399.5" stroke="#3b82f6" stroke-opacity="0.3" stroke-width="3"></path>
-        </svg>
-      </div>
-
-      <div class="relative bg-white p-12 rounded-2xl shadow-lg z-10 w-full max-w-md mx-auto">
-        <div class="text-center mb-8">
-          <h1 class="text-4xl font-bold text-gray-800">¡Hola Familia!</h1>
-        </div>
-        <div class="flex justify-center mb-6">
-          <div class="bg-blue-100 p-4 rounded-full">
-            <div class="rounded-full overflow-hidden w-40 h-40 flex items-center justify-center">
-              <img src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="Logo" class="w-full h-full object-cover rounded-full" />
-            </div>
-          </div>
-        </div>
-        <p class="text-center text-gray-500 mb-6">IE Barrio Santa Margarita</p>
-        
-        <form action="<?php echo URLROOT; ?>/auth/login" method="post">
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-medium mb-2" for="username">Usuario</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">person</span>
-              <input class="w-full pl-10 pr-4 py-2 border <?php echo (!empty($data['username_err'])) ? 'border-red-500' : 'border-gray-300'; ?> rounded-lg focus:ring-blue-500 focus:border-blue-500" id="username" name="username" placeholder="Ingrese su usuario" type="text" value="<?php echo $data['username']; ?>" />
-              <span class="text-red-500 text-xs"><?php echo $data['username_err']; ?></span>
-            </div>
-          </div>
-          <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-medium mb-2" for="password">Contraseña</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
-              <input class="w-full pl-10 pr-4 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> rounded-lg focus:ring-blue-500 focus:border-blue-500" id="password" name="password" placeholder="Ingrese su contraseña" type="password" />
-              <span class="text-red-500 text-xs"><?php echo $data['password_err']; ?></span>
-            </div>
-          </div>
-          <div class="mb-4">
-            <p class="text-sm">Lee nuestros <a href="<?php echo URLROOT; ?>/terminos" class="text-blue-500 hover:underline">términos y condiciones</a></p>
-          </div>
-          <button class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-200" type="submit">
-            Iniciar Sesión
-          </button>
-        </form>
-      </div>
+<?php require APPROOT . '/views/inc/header.php'; ?>
+<body class="bg-background text-on-background min-h-screen flex flex-col items-center justify-center p-md graph-paper-bg">
+<!-- Top Branding Section -->
+<header class="flex flex-col md:flex-row items-center gap-md mb-lg max-w-4xl w-full">
+    <div class="flex-shrink-0">
+        <img class="w-40 h-40 rounded-full border-2 border-outline-variant shadow-sm bg-surface object-cover" src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="Logo">
     </div>
-  </body>
+    <div class="flex flex-col items-center md:items-start text-center md:text-left">
+        <h2 class="font-headline-md text-headline-md text-on-surface-variant max-w-md">
+            INSTITUCION EDUCATIVA BARRIO SANTA MARGARITA
+        </h2>
+        <h1 class="font-headline-xl text-headline-xl text-primary mt-sm tracking-tight">
+            Edusaft
+        </h1>
+    </div>
+</header>
+
+<!-- Main Content Area: Split Cards -->
+<main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-md items-start">
+    <!-- Login Form Card -->
+    <div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+        <div class="mb-md">
+            <h3 class="font-headline-md text-headline-md text-primary">INICIAR SESIÓN</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-xs">Acceda a su cuenta institucional</p>
+        </div>
+        <form action="<?php echo URLROOT; ?>/auth/login" method="post" class="space-y-sm">
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-md text-label-md text-on-surface">Usuario</label>
+                <div class="relative">
+                    <input name="username" class="w-full border <?php echo (!empty($data['username_err'])) ? 'border-error' : 'border-outline-variant'; ?> rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ingrese su usuario" type="text" value="<?php echo $data['username']; ?>"/>
+                    <span class="text-error text-xs"><?php echo $data['username_err']; ?></span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-md text-label-md text-on-surface">Contraseña</label>
+                <div class="relative">
+                    <input name="password" class="w-full border <?php echo (!empty($data['password_err'])) ? 'border-error' : 'border-outline-variant'; ?> rounded-lg pl-3 pr-10 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="••••••••" type="password"/>
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary" type="button">
+                        <span class="material-symbols-outlined text-lg">visibility</span>
+                    </button>
+                    <span class="text-error text-xs"><?php echo $data['password_err']; ?></span>
+                </div>
+            </div>
+            <div class="pt-sm">
+                <button class="w-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md py-3 rounded-lg transition-colors shadow-sm" type="submit">
+                    Enviar
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <p class="text-sm">Lee nuestros <a href="<?php echo URLROOT; ?>/home/terminos" class="text-primary hover:underline">términos y condiciones</a></p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Registration Form Card -->
+    <div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+        <div class="mb-md flex items-center justify-between">
+            <div>
+                <h3 class="font-headline-md text-headline-md text-primary">REGÍSTRESE</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-xs">Cree una nueva cuenta</p>
+            </div>
+            <span class="material-symbols-outlined text-primary text-3xl opacity-20" style="font-variation-settings: 'FILL' 1;">person_add</span>
+        </div>
+        <form action="<?php echo URLROOT; ?>/auth/register" method="post" class="space-y-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
+                <div class="flex flex-col gap-xs">
+                    <label class="font-label-md text-label-md text-on-surface">Rol</label>
+                    <select name="role" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
+                        <option value="">Seleccione rol</option>
+                        <option value="student">Estudiante</option>
+                        <option value="parent">Acudiente</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-xs">
+                    <label class="font-label-md text-label-md text-on-surface">Sede</label>
+                    <select name="sede" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
+                        <option value="">Principal</option>
+                        <option value="anexo1">Anexo Norte</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-md text-label-md text-on-surface">Nombre Completo</label>
+                <input name="name" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej. Juan Andrés Pérez" type="text"/>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
+                <div class="flex flex-col gap-xs">
+                    <label class="font-label-md text-label-md text-on-surface">Familia</label>
+                    <input name="family" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej. Familia Pérez" type="text"/>
+                </div>
+                <div class="flex flex-col gap-xs">
+                    <label class="font-label-md text-label-md text-on-surface">Grupo</label>
+                    <input name="group" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej. 10-A" type="text"/>
+                </div>
+            </div>
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-md text-label-md text-on-surface">Contraseña</label>
+                <div class="relative">
+                    <input name="password" class="w-full border border-outline-variant rounded-lg pl-3 pr-10 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Cree una contraseña segura" type="password"/>
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary" type="button">
+                        <span class="material-symbols-outlined text-lg">visibility</span>
+                    </button>
+                </div>
+            </div>
+            <div class="pt-sm">
+                <button class="w-full border-2 border-primary text-primary hover:bg-surface-container font-label-md text-label-md py-3 rounded-lg transition-colors bg-transparent" type="submit">
+                    Registrarse
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
 </html>
