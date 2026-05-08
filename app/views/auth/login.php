@@ -16,99 +16,92 @@
 </header>
 
 <!-- Main Content Area: Split Cards -->
-<main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-md items-start">
+<main class="w-full max-w-lg mx-auto">
     <!-- Login Form Card -->
-    <div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-        <div class="mb-md">
-            <h3 class="font-headline-md text-headline-md text-primary">INICIAR SESIÓN</h3>
-            <p class="font-body-md text-body-md text-on-surface-variant mt-xs">Acceda a su cuenta institucional</p>
+    <div class="bg-surface border border-outline-variant rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm bg-white/90">
+        <div class="mb-8 text-center">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">login</span>
+            </div>
+            <h3 class="font-headline-md text-headline-md text-primary tracking-tight">INICIAR SESIÓN</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-2">Bienvenido de nuevo a su comunidad educativa</p>
         </div>
-        <form action="<?php echo URLROOT; ?>/auth/login" method="post" class="space-y-sm">
-            <div class="flex flex-col gap-xs">
-                <label class="font-label-md text-label-md text-on-surface">Usuario</label>
-                <div class="relative">
-                    <input name="username" class="w-full border <?php echo (!empty($data['username_err'])) ? 'border-error' : 'border-outline-variant'; ?> rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ingrese su usuario" type="text" value="<?php echo $data['username']; ?>"/>
-                    <span class="text-error text-xs"><?php echo $data['username_err']; ?></span>
+        
+        <form action="<?php echo URLROOT; ?>/auth/login" method="post" class="space-y-6">
+            <div class="flex flex-col gap-2">
+                <label class="font-label-md text-label-md text-on-surface ml-1">Usuario</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+                    <input name="username" 
+                           class="w-full border <?php echo (!empty($data['username_err'])) ? 'border-error' : 'border-outline-variant'; ?> rounded-xl pl-11 pr-4 py-3 bg-surface/50 text-on-surface font-body-md text-body-md focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all" 
+                           placeholder="Ingrese su usuario" 
+                           type="text" 
+                           value="<?php echo $data['username']; ?>"/>
+                    <?php if(!empty($data['username_err'])): ?>
+                        <span class="text-error text-xs mt-1 ml-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">error</span>
+                            <?php echo $data['username_err']; ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
-            <div class="flex flex-col gap-xs">
-                <label class="font-label-md text-label-md text-on-surface">Contraseña</label>
-                <div class="relative">
-                    <input name="password" class="w-full border <?php echo (!empty($data['password_err'])) ? 'border-error' : 'border-outline-variant'; ?> rounded-lg pl-3 pr-10 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="••••••••" type="password"/>
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary" type="button">
-                        <span class="material-symbols-outlined text-lg">visibility</span>
-                    </button>
-                    <span class="text-error text-xs"><?php echo $data['password_err']; ?></span>
-                </div>
-            </div>
-            <div class="pt-sm">
-                <button class="w-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md py-3 rounded-lg transition-colors shadow-sm" type="submit">
-                    Enviar
-                </button>
-            </div>
-            <div class="mt-4 text-center">
-                <p class="text-sm">Lee nuestros <a href="<?php echo URLROOT; ?>/home/terminos" class="text-primary hover:underline">términos y condiciones</a></p>
-            </div>
-        </form>
-    </div>
 
-    <!-- Registration Form Card -->
-    <div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-        <div class="mb-md flex items-center justify-between">
-            <div>
-                <h3 class="font-headline-md text-headline-md text-primary">REGÍSTRESE</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-xs">Cree una nueva cuenta</p>
-            </div>
-            <span class="material-symbols-outlined text-primary text-3xl opacity-20" style="font-variation-settings: 'FILL' 1;">person_add</span>
-        </div>
-        <form action="<?php echo URLROOT; ?>/auth/register" method="post" class="space-y-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                <div class="flex flex-col gap-xs">
-                    <label class="font-label-md text-label-md text-on-surface">Rol</label>
-                    <select name="role" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
-                        <option value="">Seleccione rol</option>
-                        <option value="student">Estudiante</option>
-                        <option value="parent">Acudiente</option>
-                    </select>
-                </div>
-                <div class="flex flex-col gap-xs">
-                    <label class="font-label-md text-label-md text-on-surface">Sede</label>
-                    <select name="sede" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
-                        <option value="">Principal</option>
-                        <option value="anexo1">Anexo Norte</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex flex-col gap-xs">
-                <label class="font-label-md text-label-md text-on-surface">Nombre Completo</label>
-                <input name="name" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej. Juan Andrés Pérez" type="text"/>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                <div class="flex flex-col gap-xs">
-                    <label class="font-label-md text-label-md text-on-surface">Familia</label>
-                    <input name="family" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej. Familia Pérez" type="text"/>
-                </div>
-                <div class="flex flex-col gap-xs">
-                    <label class="font-label-md text-label-md text-on-surface">Grupo</label>
-                    <input name="group" class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej. 10-A" type="text"/>
-                </div>
-            </div>
-            <div class="flex flex-col gap-xs">
-                <label class="font-label-md text-label-md text-on-surface">Contraseña</label>
-                <div class="relative">
-                    <input name="password" class="w-full border border-outline-variant rounded-lg pl-3 pr-10 py-2 bg-surface text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Cree una contraseña segura" type="password"/>
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary" type="button">
-                        <span class="material-symbols-outlined text-lg">visibility</span>
+            <div class="flex flex-col gap-2">
+                <label class="font-label-md text-label-md text-on-surface ml-1">Contraseña</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                    <input id="password-input"
+                           name="password" 
+                           class="w-full border <?php echo (!empty($data['password_err'])) ? 'border-error' : 'border-outline-variant'; ?> rounded-xl pl-11 pr-12 py-3 bg-surface/50 text-on-surface font-body-md text-body-md focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all" 
+                           placeholder="••••••••" 
+                           type="password"/>
+                    <button type="button" 
+                            onclick="togglePassword()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors">
+                        <span id="password-icon" class="material-symbols-outlined text-xl">visibility</span>
                     </button>
+                    <?php if(!empty($data['password_err'])): ?>
+                        <span class="text-error text-xs mt-1 ml-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">error</span>
+                            <?php echo $data['password_err']; ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
-            <div class="pt-sm">
-                <button class="w-full border-2 border-primary text-primary hover:bg-surface-container font-label-md text-label-md py-3 rounded-lg transition-colors bg-transparent" type="submit">
-                    Registrarse
+
+            <div class="pt-2">
+                <button class="w-full bg-primary hover:bg-primary/90 text-on-primary font-label-lg text-label-lg py-4 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group" 
+                        type="submit">
+                    <span>Entrar al Sistema</span>
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </button>
+            </div>
+            
+            <div class="pt-4 text-center border-t border-outline-variant/30">
+                <p class="text-sm text-on-surface-variant">
+                    ¿Olvidó sus credenciales? <br>
+                    <span class="text-primary font-medium">Contacte al administrador de la sede</span>
+                </p>
+                <div class="mt-4">
+                    <a href="<?php echo URLROOT; ?>/home/terminos" class="text-xs text-outline hover:text-primary underline decoration-dotted">Términos y condiciones de uso</a>
+                </div>
             </div>
         </form>
     </div>
 </main>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById('password-input');
+    const icon = document.getElementById('password-icon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerText = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.innerText = 'visibility';
+    }
+}
+</script>
 </body>
 </html>

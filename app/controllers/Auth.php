@@ -9,7 +9,7 @@ class Auth extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Process form
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
             $data = [
                 'username' => trim($_POST['username']),
@@ -18,11 +18,13 @@ class Auth extends Controller {
                 'password_err' => ''
             ];
 
-            // Validation logic...
-            // For now, redirect like proclogin.php did
+            // Simple Auth Logic
             if ($data['username'] === 'admin' && $data['password'] === 'password') {
-                $_SESSION['username'] = $data['username'];
-                header('Location: ' . URLROOT . '/admin/dashboard'); // Note: we need to handle admin MVC too
+                $_SESSION['username'] = 'Administrador';
+                header('Location: ' . URLROOT . '/admin/dashboard');
+            } elseif ($data['username'] === 'familia' && $data['password'] === 'password') {
+                $_SESSION['username'] = 'Bedoya Zuluaga';
+                header('Location: ' . URLROOT . '/padres/dashboard');
             } else {
                 $data['password_err'] = 'Credenciales incorrectas';
                 $this->view('auth/login', $data);

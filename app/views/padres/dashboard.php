@@ -1,135 +1,222 @@
 <?php require APPROOT . '/views/inc/header.php'; ?>
 
-<body class="bg-background text-on-background font-body-md graph-paper-bg min-h-screen flex flex-col md:flex-row">
-    <!-- SideNavBar -->
-    <nav class="hidden md:flex flex-col fixed left-0 top-0 h-full py-4 docked w-64 border-r border-outline-variant bg-white z-40">
-        <div class="px-6 pb-6">
-            <h1 class="text-primary font-headline-md text-headline-md">Edusaft Portal</h1>
-            <p class="text-on-surface-variant font-body-md text-body-md">Gestión Educativa</p>
+<body class="bg-surface-container-lowest text-on-background font-lexend min-h-screen">
+    <!-- Mobile Header -->
+    <header class="md:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-10 w-10 rounded-full" alt="Logo">
+            <span class="font-bold text-primary">EduSaft</span>
         </div>
-        
-        <div class="flex-grow flex flex-col gap-1">
-            <a class="bg-primary-container text-on-primary-container font-semibold rounded-lg mx-2 px-4 py-3 flex items-center gap-3" href="<?php echo URLROOT; ?>/padres/dashboard">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                Panel Principal
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/padres/camino">
-                <span class="material-symbols-outlined">map</span>
-                Tu Camino
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="#">
-                <span class="material-symbols-outlined">event_available</span>
-                Asistencia
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="#">
-                <span class="material-symbols-outlined">family_restroom</span>
-                Hijos
-            </a>
-        </div>
+        <button id="mobile-menu-toggle" class="p-2 text-on-surface-variant">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+    </header>
 
-        <div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">
-            <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="#">
-                <span class="material-symbols-outlined">settings</span>
-                Configuración
-            </a>
-            <a class="text-error px-4 py-3 mx-2 hover:bg-error-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/auth/logout">
-                <span class="material-symbols-outlined">logout</span>
-                Cerrar Sesión
-            </a>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
-        <!-- TopAppBar -->
-        <header class="flex justify-between items-center h-16 px-6 w-full bg-white docked full-width top-0 z-50 border-b border-outline-variant shadow-sm">
-            <div class="text-2xl font-extrabold tracking-tight text-primary font-headline-md md:hidden">
-                Edusaft
-            </div>
-            <div class="hidden md:block text-on-surface-variant font-label-md">
-                Bienvenido, Familia <?php echo $_SESSION['username']; ?>
-            </div>
-            <div class="flex items-center gap-4">
-                <button class="hover:bg-surface-container transition-all p-2 rounded-full active:scale-95 duration-150 relative">
-                    <span class="material-symbols-outlined text-primary">notifications</span>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
-                </button>
-                <img alt="Perfil" class="w-10 h-10 rounded-full border-2 border-primary-fixed object-cover" src="<?php echo URLROOT; ?>/assets/img/logo.png"/>
-            </div>
-        </header>
-
-        <!-- Page Content -->
-        <main class="flex-1 p-4 md:p-8 max-w-[1280px] mx-auto w-full flex flex-col gap-6">
-            <!-- Gamification Path Card -->
-            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col">
-                <div class="bg-primary text-on-primary p-6">
-                    <h2 class="font-headline-md text-headline-md">Tu Camino al Éxito</h2>
-                    <p class="text-on-primary/80">Sigue el progreso de tu familia y desbloquea recompensas.</p>
+    <div class="flex">
+        <!-- Premium Sidebar -->
+        <nav class="hidden md:flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-all duration-300">
+            <div class="p-8">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-primary/10 rounded-xl">
+                        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-8 w-8" alt="Logo">
+                    </div>
+                    <span class="text-2xl font-bold text-primary tracking-tight">EduSaft</span>
                 </div>
-                <div class="p-8 flex flex-col items-center justify-center min-h-[200px] border-b border-outline-variant/30">
-                    <div class="w-full max-w-2xl bg-surface-container-high h-4 rounded-full relative overflow-hidden">
-                        <div class="absolute left-0 top-0 h-full bg-tertiary w-1/3 shadow-[0_0_10px_rgba(63,210,152,0.5)]"></div>
-                    </div>
-                    <div class="flex justify-between w-full max-w-2xl mt-4 px-2">
-                        <span class="font-label-sm text-primary">Inicio</span>
-                        <span class="font-label-sm text-tertiary font-bold">Nivel 3: Exploradores</span>
-                        <span class="font-label-sm text-outline">Meta</span>
-                    </div>
-                    <div class="mt-8">
-                        <a href="<?php echo URLROOT; ?>/padres/camino" class="bg-secondary text-on-secondary px-6 py-2 rounded-full font-label-md shadow-sm hover:opacity-90 transition-opacity">
-                            Ver Mapa Interactivo
-                        </a>
-                    </div>
-                </div>
+                <p class="text-xs text-outline uppercase tracking-widest font-bold ml-1">Portal de Padres</p>
+            </div>
+            
+            <div class="flex-grow px-4 space-y-2">
+                <a href="<?php echo URLROOT; ?>/padres/dashboard" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all group">
+                    <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    <span class="font-medium">Panel Principal</span>
+                </a>
+                <a href="<?php echo URLROOT; ?>/padres/camino" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
+                    <span class="material-symbols-outlined transition-transform group-hover:scale-110">map</span>
+                    <span class="font-medium">Camino de Éxito</span>
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
+                    <span class="material-symbols-outlined transition-transform group-hover:scale-110">library_books</span>
+                    <span class="font-medium">Contenidos</span>
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
+                    <span class="material-symbols-outlined transition-transform group-hover:scale-110">event_available</span>
+                    <span class="font-medium">Asistencias</span>
+                </a>
             </div>
 
-            <!-- Dashboard Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Notifications Card -->
-                <div class="bg-surface border border-outline-variant rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="font-headline-md text-headline-md text-primary">Notificaciones</h3>
-                        <span class="material-symbols-outlined text-outline">notifications_active</span>
+            <div class="p-4 mt-auto space-y-2">
+                <div class="bg-surface-container rounded-2xl p-4 mb-4 border border-outline-variant/50">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="material-symbols-outlined text-secondary">workspace_premium</span>
+                        <span class="text-sm font-bold text-on-surface">Puntos Totales</span>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex gap-4 p-4 bg-surface-container-low rounded-lg border-l-4 border-primary">
-                            <span class="material-symbols-outlined text-primary">info</span>
-                            <div>
-                                <p class="font-label-md">Reunión de Padres</p>
-                                <p class="text-sm text-on-surface-variant">Mañana a las 8:00 AM en el auditorio principal.</p>
-                            </div>
+                    <div class="text-2xl font-black text-secondary">245 <span class="text-xs font-normal text-outline">pts</span></div>
+                </div>
+                <a href="<?php echo URLROOT; ?>/auth/logout" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-error hover:bg-error/10 transition-all">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="font-medium">Cerrar Sesión</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 md:ml-72 min-h-screen bg-surface-container-lowest flex flex-col">
+            <!-- Top Bar -->
+            <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
+                <div>
+                    <h2 class="text-xl font-bold text-on-surface">Panel de Control</h2>
+                    <p class="text-sm text-on-surface-variant">Bienvenido, Familia <span class="text-primary font-bold"><?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'Invitada'; ?></span></p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="relative group cursor-pointer p-2 rounded-full hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-primary">notifications</span>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-white"></span>
+                    </div>
+                    <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-on-surface">Sede Principal</p>
+                            <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Acudiente</p>
                         </div>
-                        <div class="flex gap-4 p-4 bg-surface-container-low rounded-lg border-l-4 border-tertiary">
-                            <span class="material-symbols-outlined text-tertiary">check_circle</span>
-                            <div>
-                                <p class="font-label-md">Tarea Completada</p>
-                                <p class="text-sm text-on-surface-variant">Celeste ha entregado la actividad de Matemáticas.</p>
-                            </div>
+                        <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+                            <span class="material-symbols-outlined text-primary">person</span>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                <!-- Children Status Card -->
-                <div class="bg-surface border border-outline-variant rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="font-headline-md text-headline-md text-primary">Estado de Hijos</h3>
-                        <span class="material-symbols-outlined text-outline">face</span>
+            <div class="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
+                <!-- Gamification Preview Card -->
+                <div class="relative bg-primary rounded-[2.5rem] p-8 md:p-12 text-on-primary overflow-hidden shadow-2xl shadow-primary/30 group">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-secondary/20 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+                    
+                    <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
+                        <div class="flex-1 text-center md:text-left">
+                            <span class="inline-block px-4 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest mb-4">Nivel 3: Exploradores</span>
+                            <h3 class="text-3xl md:text-4xl font-black mb-4 tracking-tight">Tu camino al éxito escolar</h3>
+                            <p class="text-on-primary/80 mb-8 max-w-md">¡Faltan solo 55 puntos para desbloquear la siguiente estación en tu mapa!</p>
+                            <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                                <a href="<?php echo URLROOT; ?>/padres/camino" class="bg-white text-primary px-8 py-3.5 rounded-2xl font-bold text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                                    Ver Mapa Interactivo
+                                    <span class="material-symbols-outlined">map</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div class="flex justify-between items-end mb-4">
+                                <span class="text-sm font-bold">Progreso Actual</span>
+                                <span class="text-2xl font-black">245 <span class="text-xs opacity-60">/ 300</span></span>
+                            </div>
+                            <div class="w-full bg-white/20 h-4 rounded-full overflow-hidden">
+                                <div class="bg-secondary h-full w-[82%] shadow-[0_0_15px_rgba(169,51,73,0.5)] transition-all duration-1000"></div>
+                            </div>
+                            <p class="text-[10px] mt-4 opacity-70 text-center italic">"Cada asistencia cuenta para el futuro de tus hijos"</p>
+                        </div>
                     </div>
-                    <div class="flex gap-4 overflow-x-auto pb-2">
-                        <button class="flex flex-col items-center gap-2 p-3 rounded-xl bg-tertiary-container text-on-tertiary-container min-w-[100px]">
-                            <span class="material-symbols-outlined text-3xl">face</span>
-                            <span class="font-label-sm">Celeste</span>
-                            <span class="text-[10px] bg-tertiary text-on-tertiary px-2 py-0.5 rounded-full">9°2</span>
-                        </button>
-                        <button class="flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container-high hover:bg-surface-container transition-colors min-w-[100px]">
-                            <span class="material-symbols-outlined text-3xl">face_3</span>
-                            <span class="font-label-sm">Emily</span>
-                            <span class="text-[10px] bg-outline text-white px-2 py-0.5 rounded-full">5°3</span>
-                        </button>
+                </div>
+
+                <!-- Stats and Hijos Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Hijos Section -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xl font-bold text-on-surface">Mis Hijos</h4>
+                            <a href="#" class="text-primary text-sm font-bold hover:underline">Ver detalles</a>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-all group">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="w-16 h-16 rounded-2xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+                                        <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">face</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-on-surface">Celeste Bedoya</h5>
+                                        <p class="text-xs text-outline font-bold uppercase tracking-tighter">Grado 9°2 - Jornada Mañana</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Asistencia Escolar</span>
+                                        <span class="font-bold text-tertiary">95%</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+                                        <div class="bg-tertiary h-full w-[95%]"></div>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-6 py-3 bg-surface-container-high rounded-xl text-xs font-bold text-on-surface group-hover:bg-primary group-hover:text-on-primary transition-all flex items-center justify-center gap-2">
+                                    Ver Notas
+                                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                                </button>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-all group">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="w-16 h-16 rounded-2xl bg-secondary-fixed flex items-center justify-center text-secondary">
+                                        <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">face_3</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-on-surface">Emily Bedoya</h5>
+                                        <p class="text-xs text-outline font-bold uppercase tracking-tighter">Grado 5°3 - Jornada Tarde</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Asistencia Escolar</span>
+                                        <span class="font-bold text-secondary">88%</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+                                        <div class="bg-secondary h-full w-[88%]"></div>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-6 py-3 bg-surface-container-high rounded-xl text-xs font-bold text-on-surface group-hover:bg-primary group-hover:text-on-primary transition-all flex items-center justify-center gap-2">
+                                    Ver Notas
+                                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Puntos Summary -->
+                    <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm h-full">
+                        <h4 class="text-xl font-bold text-on-surface mb-6">¿Cómo ganar puntos?</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors group">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">
+                                    <span class="material-symbols-outlined text-sm">groups</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold">Reunión General</p>
+                                    <p class="text-[10px] text-outline">Participación presencial</p>
+                                </div>
+                                <span class="text-sm font-black text-secondary">+50</span>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors group">
+                                <div class="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-on-tertiary transition-all">
+                                    <span class="material-symbols-outlined text-sm">school</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold">Talleres/Escuelas</p>
+                                    <p class="text-[10px] text-outline">Formación para padres</p>
+                                </div>
+                                <span class="text-sm font-black text-secondary">+30</span>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors group">
+                                <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-all">
+                                    <span class="material-symbols-outlined text-sm">play_circle</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold">Videos Educativos</p>
+                                    <p class="text-[10px] text-outline">Contenido interactivo</p>
+                                </div>
+                                <span class="text-sm font-black text-secondary">+10</span>
+                            </div>
+                        </div>
+                        <div class="mt-10 p-6 bg-surface-container-high rounded-2xl text-center">
+                            <p class="text-xs text-on-surface-variant italic leading-relaxed">"Su participación activa otorga puntos que desbloquean beneficios para su familia."</p>
+                        </div>
                     </div>
                 </div>
             </div>
+            <?php require APPROOT . '/views/inc/footer.php'; ?>
         </main>
     </div>
-
-    <?php require APPROOT . '/views/inc/footer.php'; ?>

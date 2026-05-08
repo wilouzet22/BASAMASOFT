@@ -1,0 +1,9 @@
+# Configuración de Rutas Amigables para AcademiaAds
+RewriteEngine On
+
+# Si el archivo o directorio no existe como entidad física en el servidor
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Capturar toda la cadena y mandarla a index.php bajo la variable "url"
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
