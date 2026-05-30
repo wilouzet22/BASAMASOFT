@@ -30,7 +30,7 @@
                     <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">dashboard</span>
                     <span class="font-medium">Panel Principal</span>
                 </a>
-                <a href="<?php echo URLROOT; ?>/padres/camino" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
+                <a href="/padres/camino" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
                     <span class="material-symbols-outlined transition-transform group-hover:scale-110">map</span>
                     <span class="font-medium">Camino de Éxito</span>
                 </a>
@@ -38,7 +38,7 @@
                     <span class="material-symbols-outlined transition-transform group-hover:scale-110">library_books</span>
                     <span class="font-medium">Contenidos</span>
                 </a>
-                <a href="#" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
+                <a href="<?php echo URLROOT; ?>/padres/asistencias" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
                     <span class="material-symbols-outlined transition-transform group-hover:scale-110">event_available</span>
                     <span class="font-medium">Asistencias</span>
                 </a>

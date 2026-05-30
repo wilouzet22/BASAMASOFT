@@ -17,6 +17,10 @@
             <span class="material-symbols-outlined">apartment</span>
             Sedes
         </a>
+        <a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container rounded-lg transition-colors flex items-center gap-3" href="<?php echo URLROOT; ?>/admin/asistencias">
+            <span class="material-symbols-outlined">how_to_reg</span>
+            Asistencias
+        </a>
     </div>
 
     <div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">

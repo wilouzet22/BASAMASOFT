@@ -15,4 +15,8 @@ class Admin extends Controller {
     public function usuarios() {
         $this->view('admin/usuarios');
     }
+
+    public function asistencias() {
+        $this->view('admin/asistencias');
+    }
 }
