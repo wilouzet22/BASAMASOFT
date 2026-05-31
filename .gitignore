@@ -3,6 +3,7 @@ vendor/
 
 # Database
 *.sql
+!database/*.sql
 
 # Temp
 .temp/
