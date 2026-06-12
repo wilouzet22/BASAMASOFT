@@ -1,149 +1,127 @@
-<?php require APPROOT . '/views/inc/header.php'; ?>
+<?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
 
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen font-sans">
     <!-- SideNavBar -->
     <?php require APPROOT . '/views/admin/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen w-full group/design-root overflow-x-hidden">
-        
+    <div class="flex-1 md:ml-64 flex flex-col min-h-screen w-full overflow-x-hidden">
         <main class="flex-1 p-6">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-wrap justify-between gap-3 p-4">
-                    <p class="text-[#0d141b] tracking-light text-[32px] font-bold leading-tight min-w-72">Gestión de Asistencias</p>
-                    <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#13a4ec] text-white text-sm font-medium leading-normal hover:bg-blue-600 transition-colors">
-                        <span class="material-symbols-outlined mr-2" style="font-size: 20px;">add</span>
-                        <span class="truncate">Registrar Asistencia</span>
-                    </button>
-                </div>
-                
-                <!-- Filters -->
-                <div class="flex gap-3 p-3 flex-wrap pr-4 bg-white rounded-lg shadow-sm mb-4 border border-[#cfdbe7]">
-                    <!-- Date Filter -->
-                    <div class="flex flex-col gap-1 w-full md:w-auto">
-                        <label class="text-sm font-medium text-[#4c739a]">Fecha</label>
-                        <input type="date" class="form-input flex w-full md:w-48 resize-none overflow-hidden rounded-lg text-[#0d141b] focus:outline-0 focus:ring-0 border border-[#cfdbe7] bg-white h-10 px-4 text-sm" value="<?php echo date('Y-m-d'); ?>">
-                    </div>
+            <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
-                    <!-- Student Filter -->
-                    <div class="flex flex-col gap-1 w-full md:w-auto flex-1 md:min-w-[200px]">
-                        <label class="text-sm font-medium text-[#4c739a]">Alumno</label>
-                        <div class="flex w-full items-stretch rounded-lg h-10 border border-[#cfdbe7] bg-white overflow-hidden">
-                            <div class="text-[#4c739a] flex items-center justify-center pl-3">
-                                <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
-                            </div>
-                            <input placeholder="Buscar por nombre..." class="form-input flex w-full min-w-0 resize-none overflow-hidden text-[#0d141b] focus:outline-none border-none bg-transparent px-3 text-sm h-full">
+                <!-- Header -->
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h1 class="text-[#0d141b] tracking-tight text-3xl font-bold leading-tight">Gestión de Asistencias</h1>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl border border-[#cfdbe7] p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <span class="material-symbols-outlined text-blue-600">how_to_reg</span>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-black text-[#0d141b]"><?php echo $data['presentes'] + $data['ausentes']; ?></p>
+                            <p class="text-xs text-[#4c739a] font-medium uppercase tracking-wide">Total Registros</p>
                         </div>
                     </div>
-
-                    <!-- Status Filter -->
-                    <div class="flex flex-col gap-1 w-full md:w-auto">
-                        <label class="text-sm font-medium text-[#4c739a]">Estado</label>
-                        <select class="form-select flex w-full md:w-48 rounded-lg text-[#0d141b] focus:outline-0 focus:ring-0 border border-[#cfdbe7] bg-white h-10 px-4 text-sm">
-                            <option value="">Todos</option>
-                            <option value="presente">Presente</option>
-                            <option value="ausente">Ausente</option>
-                            <option value="retardo">Retardo</option>
-                        </select>
+                    <div class="bg-white rounded-xl border border-[#cfdbe7] p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                            <span class="material-symbols-outlined text-green-600">check_circle</span>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-black text-green-600"><?php echo $data['presentes']; ?></p>
+                            <p class="text-xs text-[#4c739a] font-medium uppercase tracking-wide">Presentes</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-[#cfdbe7] p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
+                            <span class="material-symbols-outlined text-red-600">cancel</span>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-black text-red-600"><?php echo $data['ausentes']; ?></p>
+                            <p class="text-xs text-[#4c739a] font-medium uppercase tracking-wide">Ausentes</p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Table -->
-                <div class="px-4 py-3 @container bg-white rounded-lg shadow-sm border border-[#cfdbe7]">
-                    <div class="flex overflow-hidden rounded-lg">
-                        <table class="flex-1 w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-[#cfdbe7]">
-                                    <th class="px-4 py-3 text-[#4c739a] text-sm font-semibold leading-normal">Fecha</th>
-                                    <th class="px-4 py-3 text-[#4c739a] text-sm font-semibold leading-normal">Alumno</th>
-                                    <th class="px-4 py-3 text-[#4c739a] text-sm font-semibold leading-normal">Curso/Grado</th>
-                                    <th class="px-4 py-3 text-[#4c739a] text-sm font-semibold leading-normal">Estado</th>
-                                    <th class="px-4 py-3 text-[#4c739a] text-sm font-semibold leading-normal text-right">Acciones</th>
+                <div class="bg-white rounded-lg shadow-sm border border-[#cfdbe7] overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-[#cfdbe7]">
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Fecha Registro</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Estudiante</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Grupo / Grado</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Actividad</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Tipo</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Sede</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Profesor</th>
+                                <th class="px-4 py-3 text-[#4c739a] font-semibold">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($data['asistencias'])): ?>
+                                <tr>
+                                    <td colspan="8" class="px-4 py-10 text-center text-[#4c739a]">
+                                        <span class="material-symbols-outlined text-4xl block mb-2">event_busy</span>
+                                        No hay registros de asistencia aún.
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Mock Record 1 -->
+                            <?php else: ?>
+                                <?php foreach ($data['asistencias'] as $asi): ?>
                                 <tr class="border-b border-[#cfdbe7] hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-normal"><?php echo date('d/m/Y'); ?></td>
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-medium">Juan Pérez</td>
-                                    <td class="px-4 py-4 text-[#4c739a] text-sm font-normal">5to Básico</td>
-                                    <td class="px-4 py-4 text-sm font-normal">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Presente
+                                    <td class="px-4 py-3 text-[#0d141b]">
+                                        <?php echo date('d/m/Y H:i', strtotime($asi->fecha_registro)); ?>
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-[#0d141b]">
+                                        <?php echo htmlspecialchars($asi->estudiante_nombre); ?>
+                                    </td>
+                                    <td class="px-4 py-3 text-[#4c739a] text-xs">
+                                        <?php echo htmlspecialchars($asi->nombre_grupo); ?><br>
+                                        <span class="text-[10px]"><?php echo htmlspecialchars($asi->nombre_grado); ?></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-[#0d141b]">
+                                        <?php echo htmlspecialchars($asi->nombre_actividad); ?><br>
+                                        <span class="text-[10px] text-[#4c739a]">
+                                            <?php echo date('d/m/Y H:i', strtotime($asi->fecha_hora_inicio)); ?>
                                         </span>
                                     </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-right flex justify-end gap-2">
-                                        <button class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-md" title="Editar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
-                                        </button>
-                                        <button class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-md" title="Eliminar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Mock Record 2 -->
-                                <tr class="border-b border-[#cfdbe7] hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-normal"><?php echo date('d/m/Y'); ?></td>
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-medium">María González</td>
-                                    <td class="px-4 py-4 text-[#4c739a] text-sm font-normal">5to Básico</td>
-                                    <td class="px-4 py-4 text-sm font-normal">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Ausente
+                                    <td class="px-4 py-3 text-xs">
+                                        <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                            <?php echo htmlspecialchars($asi->nombre_tipo); ?>
                                         </span>
                                     </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-right flex justify-end gap-2">
-                                        <button class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-md" title="Editar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
-                                        </button>
-                                        <button class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-md" title="Eliminar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                                        </button>
+                                    <td class="px-4 py-3 text-[#4c739a] text-xs">
+                                        <?php echo htmlspecialchars($asi->nombre_sede); ?>
+                                    </td>
+                                    <td class="px-4 py-3 text-[#4c739a] text-xs">
+                                        <?php echo htmlspecialchars($asi->profesor_nombre); ?>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <?php if ($asi->presente): ?>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <span class="material-symbols-outlined text-xs" style="font-size:14px">check_circle</span>
+                                                Presente
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <span class="material-symbols-outlined text-xs" style="font-size:14px">cancel</span>
+                                                Ausente
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
-                                <!-- Mock Record 3 -->
-                                <tr class="border-b border-[#cfdbe7] hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-normal"><?php echo date('d/m/Y'); ?></td>
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-medium">Carlos Ruiz</td>
-                                    <td class="px-4 py-4 text-[#4c739a] text-sm font-normal">8vo Básico</td>
-                                    <td class="px-4 py-4 text-sm font-normal">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            Retardo
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-right flex justify-end gap-2">
-                                        <button class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-md" title="Editar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
-                                        </button>
-                                        <button class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-md" title="Eliminar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                                 <!-- Mock Record 4 -->
-                                 <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-normal"><?php echo date('d/m/Y', strtotime('-1 days')); ?></td>
-                                    <td class="px-4 py-4 text-[#0d141b] text-sm font-medium">Ana Martínez</td>
-                                    <td class="px-4 py-4 text-[#4c739a] text-sm font-normal">1ro Medio</td>
-                                    <td class="px-4 py-4 text-sm font-normal">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Presente
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-right flex justify-end gap-2">
-                                        <button class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-md" title="Editar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
-                                        </button>
-                                        <button class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-md" title="Eliminar">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
+
             </div>
         </main>
     </div>
 
     <?php require APPROOT . '/views/inc/footer.php'; ?>
+</body>
+</html>

@@ -21,6 +21,9 @@ class Home extends Controller {
     }
 
     public function errores() {
-        $this->view('home/errores');
+        $data = [
+            'title' => 'Error 404'
+        ];
+        $this->view('home/errores', $data);
     }
 }

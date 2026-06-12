@@ -1,3 +1,4 @@
+<?php $data = $data ?? []; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

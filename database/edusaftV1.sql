@@ -87,7 +87,7 @@ CREATE TABLE `administrador` (
 --
 
 INSERT INTO `administrador` (`id_administrador`, `nombres`, `apellidos`, `correo`, `password_hash`, `telefono`) VALUES
-(1, 'Carlos', 'Restrepo', 'carlos.admin@institucion.edu.co', '$2y$10$abcdefghijklmnopqrstuvwxYZ.AdminHash12345', '3001234567');
+(1, 'Carlos', 'Restrepo', 'carlos.admin@institucion.edu.co', '/q+Oi8pUMHTu1/c9IqWXZg==', '3001234567');
 
 -- --------------------------------------------------------
 
@@ -158,8 +158,8 @@ CREATE TABLE `familias` (
 --
 
 INSERT INTO `familias` (`id_familia`, `nombre_principal_acudiente`, `apellidos_principal_acudiente`, `documento_principal_acudiente`, `email_contacto`, `telefono_contacto`, `username`, `password_hash`) VALUES
-(1, 'Martha', 'Guzmán', '32555666', 'martha.guzman@mail.com', '3159998877', 'mguzman', '$2y$10$FamiliaHashMartha112233'),
-(2, 'Jorge', 'Tobón', '98444333', 'jorge.tobon@mail.com', '3017776655', 'jtobon', '$2y$10$FamiliaHashJorge445566');
+(1, 'Martha', 'Guzmán', '32555666', 'martha.guzman@mail.com', '3159998877', 'mguzman', '/q+Oi8pUMHTu1/c9IqWXZg=='),
+(2, 'Jorge', 'Tobón', '98444333', 'jorge.tobon@mail.com', '3017776655', 'jtobon', '/q+Oi8pUMHTu1/c9IqWXZg==');
 
 -- --------------------------------------------------------
 
@@ -270,8 +270,8 @@ CREATE TABLE `profesores` (
 --
 
 INSERT INTO `profesores` (`id_profesor`, `nombres`, `apellidos`, `documento_identidad`, `email`, `telefono`, `username`, `password_hash`) VALUES
-(1, 'Andrés', 'Mendoza', '71234567', 'andres.mendoza@institucion.edu.co', '3115556677', 'amendoza', '$2y$10$ProfeHashMendoza123456789'),
-(2, 'Beatriz', 'Elena', '43987654', 'beatriz.elena@institucion.edu.co', '3124445566', 'belena', '$2y$10$ProfeHashBeatriz987654321');
+(1, 'Andrés', 'Mendoza', '71234567', 'andres.mendoza@institucion.edu.co', '3115556677', 'amendoza', '/q+Oi8pUMHTu1/c9IqWXZg=='),
+(2, 'Beatriz', 'Elena', '43987654', 'beatriz.elena@institucion.edu.co', '3124445566', 'belena', '/q+Oi8pUMHTu1/c9IqWXZg==');
 
 -- --------------------------------------------------------
 

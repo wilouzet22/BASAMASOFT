@@ -1,4 +1,4 @@
-<?php require APPROOT . '/views/inc/header.php'; ?>
+<?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
 <body class="bg-background text-on-background min-h-screen flex flex-col items-center justify-center p-md graph-paper-bg">
 <!-- Top Branding Section -->
 <header class="flex flex-col md:flex-row items-center gap-md mb-lg max-w-4xl w-full">
