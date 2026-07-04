@@ -5,12 +5,17 @@ $etapas_prueba = [
     ['id' => 2, 'nombre' => 'Bosque de los Ecos', 'estado' => 'completado'],
     ['id' => 3, 'nombre' => 'Puente Colgante', 'estado' => 'completado'],
     ['id' => 4, 'nombre' => 'Refugio Rocoso', 'estado' => 'completado'],
-    ['id' => 5, 'nombre' => 'Valle Perdido', 'estado' => 'completado'],
-    ['id' => 6, 'nombre' => 'Mirador del Águila', 'estado' => 'actual'],
-    ['id' => 7, 'nombre' => 'Cueva de Cristal', 'estado' => 'bloqueado'],
-    ['id' => 8, 'nombre' => 'Paso Nublado', 'estado' => 'bloqueado'],
-    ['id' => 9, 'nombre' => 'Cumbre Helada', 'estado' => 'bloqueado'],
-    ['id' => 10, 'nombre' => 'Cima Zenith', 'estado' => 'bloqueado', 'is_peak' => true]
+    ['id' => 5, 'nombre' => 'Cruce del Zorro', 'estado' => 'completado'],
+    ['id' => 6, 'nombre' => 'Valle Perdido', 'estado' => 'completado'],
+    ['id' => 7, 'nombre' => 'Cascada Escondida', 'estado' => 'completado'],
+    ['id' => 8, 'nombre' => 'Mirador del Águila', 'estado' => 'actual'],
+    ['id' => 9, 'nombre' => 'Cueva de Cristal', 'estado' => 'bloqueado'],
+    ['id' => 10, 'nombre' => 'Garganta Profunda', 'estado' => 'bloqueado'],
+    ['id' => 11, 'nombre' => 'Paso Nublado', 'estado' => 'bloqueado'],
+    ['id' => 12, 'nombre' => 'Ladera de los Vientos', 'estado' => 'bloqueado'],
+    ['id' => 13, 'nombre' => 'Cumbre Helada', 'estado' => 'bloqueado'],
+    ['id' => 14, 'nombre' => 'Escalinata del Cielo', 'estado' => 'bloqueado'],
+    ['id' => 15, 'nombre' => 'Cima Zenith', 'estado' => 'bloqueado', 'is_peak' => true]
 ];
 
 $totalEtapas = count($etapas_prueba);
@@ -27,53 +32,46 @@ $viewBoxH = 1400;
 $centroX = (int)($viewBoxW / 2);
 $baseHalfW = (int)($viewBoxW * 0.75); // La base siempre muy ancha
 
-// Constante global de secciones
-$TOTAL_SECTIONS = 10;
+// Constante global de secciones (altura)
+$TOTAL_SECTIONS = 10; // Mantenemos 10 solo por referencia
+$totalHeight = 1400; // Altura lógica más corta para evitar estiramiento y zoom masivo
 
 /**
- * Genera waypoints para una sección.
- * La montaña lógica mide $vbH * $TOTAL_SECTIONS de alto.
- * Cada sección ocupa una franja de altura $vbH dentro de ese espacio.
- * Y=0 es la cima, Y=totalHeight es la base.
+ * Genera TODOS los waypoints distribuidos en la altura total de la montaña.
  */
-function generarWaypointsPagina(array $etapas, int $pagina, int $perPage, int $totalEtapas, int $vbW, int $vbH): array
+function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int $totalH): array
 {
-    global $TOTAL_SECTIONS;
-    $cx          = (int)($vbW / 2);
-    $totalHeight = $vbH * $TOTAL_SECTIONS;   // altura lógica total
-    $inicio      = $pagina * $perPage;
-    $fin         = min($inicio + $perPage, $totalEtapas);
-    $puntos      = [];
-    $count       = $fin - $inicio;
-
-    // La sección 0 = base (parte baja de la imagen), sección 9 = cima
-    // La franja visible de cada sección ocupa [sectionTop, sectionBottom] en coords. lógicas
-    $sectionBottom = $totalHeight - $pagina * $vbH;       // y baja (base de la sección)
-    $sectionTop    = $sectionBottom - $vbH;               // y alta (tope de la sección)
-
-    // Los waypoints se colocan dentro de la ventana visible con margen
-    $yStart = $sectionBottom - 120;  // algo por encima del borde inferior
-    $yEnd   = $sectionTop   + 180;  // algo por debajo del borde superior
-    $rango  = $yStart - $yEnd;
-
-    for ($i = 0; $i < $count; $i++) {
-        $etapa  = $etapas[$inicio + $i];
-        $t      = $count > 1 ? $i / ($count - 1) : 0.5;
-        $cy     = (int)($yStart - $t * $rango);
-        $offset = ($i % 2 === 0) ? -90 : 90;
-        $cx_pt  = max(180, min($vbW - 180, $cx + $offset));
-        $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy]);
-    }
-
-    // El último punto de la última sección = cima
-    $esUltimaPagina = ($fin >= $totalEtapas);
-    if ($esUltimaPagina && $count > 0) {
-        $puntos[count($puntos) - 1]['cx']     = $cx;
-        $puntos[count($puntos) - 1]['cy']     = $sectionTop + 80;
-        $puntos[count($puntos) - 1]['is_peak'] = true;
+    $cx = (int)($vbW / 2);
+    $puntos = [];
+    
+    // Distribuir a lo largo de toda la montaña (desde arriba hacia arriba)
+    $yStart = $totalH - 450; // Base visible (más arriba para no iniciar en la niebla)
+    $yEnd = 200;             // Cima
+    $rango = $yStart - $yEnd;
+    
+    for ($i = 0; $i < $totalEtapas; $i++) {
+        $etapa = $etapas[$i];
+        $t = $totalEtapas > 1 ? $i / ($totalEtapas - 1) : 0.5;
+        $cy = (int)($yStart - $t * $rango);
+        
+        // Curva sinuosa natural simulando un sendero real
+        $frecuencia = 2.5; // Número de curvas
+        $amplitud = 120 * (1 - ($t * 0.4)); // La amplitud (ancho de la curva) reducida para que sea más sutil
+        
+        $offset = sin($t * M_PI * $frecuencia) * $amplitud;
+        $cx_pt = max(180, min($vbW - 180, $cx + $offset));
+        
+        $is_peak = ($i === $totalEtapas - 1);
+        if ($is_peak) {
+            $cx_pt = $cx;
+            $cy = $yEnd - 30; // Forzar cima un poco más arriba y al centro
+        }
+        
+        $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy, 'is_peak' => $is_peak]);
     }
     return $puntos;
 }
+
 
 // Cálculo del termómetro de asistencia
 $actividadesProgramadas = $totalEtapas;
@@ -334,17 +332,13 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
             </a>
         </nav>
     </aside>
-    <main class="pt-0 pb-4 px-0 mx-auto flex flex-col items-center relative h-screen w-full overflow-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100">
+    <main id="mainScrollContainer" class="pt-0 pb-4 px-0 mx-auto flex flex-col items-center relative h-screen w-full overflow-y-auto overflow-x-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth">
 
-        <!-- ====== MOUNTAIN VIEWPORT (single screen, paginated) ====== -->
-        <div class="relative w-full flex-1 overflow-hidden" id="mountainViewport">
+        <!-- ====== MOUNTAIN VIEWPORT (Native scroll) ====== -->
+        <div class="relative w-full" id="mountainViewport">
             <?php
-            // Pre-generate all pages JSON for JS
-            $allPagesData = [];
-            for ($p = 0; $p < $totalPages; $p++) {
-                $pts = generarWaypointsPagina($etapas_prueba, $p, $perPage, $totalEtapas, $viewBoxW, $viewBoxH);
-                $allPagesData[] = $pts;
-            }
+            // Generar todos los puntos
+            $allPoints = generarTodosLosWaypoints($etapas_prueba, $totalEtapas, $viewBoxW, $totalHeight);
 
             // Determinar colores según la hora del día
             $hora = (int)date('H');
@@ -384,10 +378,10 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
             }
             ?>
 
-            <!-- SVG Container - viewBox pans via JS across 10 sections -->
-            <svg id="mountainSVG" class="w-full h-full" preserveAspectRatio="xMidYMid meet"
-                viewBox="0 <?= $viewBoxH * 9 ?> <?= $viewBoxW ?> <?= $viewBoxH ?>"
-                data-vbw="<?= $viewBoxW ?>" data-vbh="<?= $viewBoxH ?>"
+            <!-- SVG Container -->
+            <svg id="mountainSVG" class="w-full h-auto" preserveAspectRatio="xMidYMid meet"
+                viewBox="0 0 <?= $viewBoxW ?> <?= $totalHeight ?>"
+                data-vbw="<?= $viewBoxW ?>" data-totalh="<?= $totalHeight ?>"
                 data-centrox="<?= $centroX ?>" data-basehalf="<?= $baseHalfW ?>">
                 <defs>
                     <!-- Rock Face Gradients -->
@@ -457,16 +451,16 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                         <!-- 1. Generar deformación natural de bordes -->
                         <feTurbulence type="fractalNoise" baseFrequency="0.008 0.015" numOctaves="4" result="edgeNoise" />
                         <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="40" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-                        
+
                         <!-- 2. Generar textura interna porosa/rocosa (alta frecuencia) -->
                         <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="5" result="surfaceNoise" />
-                        
+
                         <!-- 3. Convertir el ruido en sombras sutiles (20% opacidad negra) -->
                         <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 0.20 0" in="surfaceNoise" result="coloredNoise" />
-                        
+
                         <!-- 4. Recortar la textura para que no se salga de la montaña deformada -->
                         <feComposite operator="in" in="coloredNoise" in2="displaced" result="texture" />
-                        
+
                         <!-- 5. Fusionar la textura rocosa sobre los colores volumétricos de la montaña -->
                         <feBlend mode="multiply" in="texture" in2="displaced" />
                     </filter>
@@ -482,16 +476,16 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 
                 <!-- Stars -->
                 <?php if ($showStars): ?>
-                <g fill="#ffffff" opacity="0.8">
-                    <circle cx="<?= $centroX - 400 ?>" cy="100" r="1.5" />
-                    <circle cx="<?= $centroX + 500 ?>" cy="150" r="2" />
-                    <circle cx="<?= $centroX - 200 ?>" cy="250" r="1" />
-                    <circle cx="<?= $centroX + 100 ?>" cy="50" r="2.5" />
-                    <circle cx="<?= $centroX - 600 ?>" cy="300" r="1.5" />
-                    <circle cx="<?= $centroX + 700 ?>" cy="200" r="2" />
-                    <circle cx="<?= $centroX - 800 ?>" cy="180" r="2" />
-                    <circle cx="<?= $centroX + 300 ?>" cy="280" r="1" />
-                </g>
+                    <g fill="#ffffff" opacity="0.8">
+                        <circle cx="<?= $centroX - 400 ?>" cy="100" r="1.5" />
+                        <circle cx="<?= $centroX + 500 ?>" cy="150" r="2" />
+                        <circle cx="<?= $centroX - 200 ?>" cy="250" r="1" />
+                        <circle cx="<?= $centroX + 100 ?>" cy="50" r="2.5" />
+                        <circle cx="<?= $centroX - 600 ?>" cy="300" r="1.5" />
+                        <circle cx="<?= $centroX + 700 ?>" cy="200" r="2" />
+                        <circle cx="<?= $centroX - 800 ?>" cy="180" r="2" />
+                        <circle cx="<?= $centroX + 300 ?>" cy="280" r="1" />
+                    </g>
                 <?php endif; ?>
 
                 <!-- Glowing orb (Sun/Moon) -->
@@ -503,73 +497,59 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 <path d="M <?= -$baseHalfW ?>,<?= $viewBoxH ?> L <?= $centroX - 300 ?>,700 L <?= $centroX + 150 ?>,500 L <?= $centroX + 600 ?>,800 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[1] ?>" opacity="0.5" />
                 <path d="M <?= $centroX - 400 ?>,<?= $viewBoxH ?> L <?= $centroX + 300 ?>,650 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[2] ?>" opacity="0.6" />
 
-                <!-- ======= MOUNTAIN IMAGE (10x zoom, panned by JS via viewBox) ======= -->
-                <!--
-                     La imagen ocupa toda la altura lógica (viewBoxH * 10).
-                     El SVG tiene un viewBox que se desplaza verticalmente con JS
-                     para mostrar cada una de las 10 secciones.
-                -->
-                <image 
+                <!-- ======= MOUNTAIN IMAGE (10x zoom, natively scrolled) ======= -->
+                <image
                     id="mountainImg"
-                    href="<?= URLROOT ?>/public/assets/img/ago.png" 
-                    x="<?= $centroX - (int)($baseHalfW * 1.68) ?>" 
-                    y="0" 
-                    width="<?= (int)($baseHalfW * 3.36) ?>" 
-                    height="<?= $viewBoxH * 10 ?>" 
-                    preserveAspectRatio="xMidYMax meet" 
-                />
+                    href="<?= URLROOT ?>/public/assets/img/ago.png"
+                    x="<?= -$viewBoxW * 0.25 ?>"
+                    y="<?= -$totalHeight * 0.25 ?>"
+                    width="<?= $viewBoxW * 1.5 ?>"
+                    height="<?= $totalHeight * 1.5 ?>"
+                    preserveAspectRatio="xMidYMid slice" />
 
-                <!-- === ERODED MOUNTAIN TRAIL === -->
-                <g filter="url(#pathErosion)">
-                    <!-- Path base (dirt track shadow) -->
-                    <path id="pathBase" fill="none" stroke="#3f2e1e" stroke-width="18" opacity="0.35" stroke-linecap="round" />
-                    <!-- Scattered stones along edges -->
-                    <path id="pathStones" fill="none" stroke="#64748b" stroke-width="26" stroke-dasharray="2 35" stroke-linecap="round" opacity="0.8" />
-                    <!-- Path core (dirt) -->
-                    <path id="pathDirt" fill="none" stroke="#8b7355" stroke-width="12" opacity="0.6" stroke-linecap="round" />
-                    <!-- Main path worn center -->
-                    <path id="pathMain" class="mountain-path" fill="none" stroke="#d4c3b3" stroke-width="6" stroke-dasharray="25 15" stroke-linecap="round" opacity="0.85" />
-                </g>
+                <!-- ======= HUD GROUP: trail + waypoints + clouds + arrows + title =======
+                     JS translates this entire group to the active section via transform -->
+                <g id="hudGroup">
 
-                <!-- Waypoints container -->
-                <g id="waypointsGroup"></g>
+                    <!-- === ERODED MOUNTAIN TRAIL === -->
+                    <filter id="pathShadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.45"/>
+                    </filter>
+                    
+                    <g filter="url(#pathShadow)">
+                        <!-- Borde exterior (sombra/tierra oscura) -->
+                        <path id="pathBase" fill="none" stroke="#291e12" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+                        <!-- Camino de tierra principal -->
+                        <path id="pathDirt" fill="none" stroke="#8b7355" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+                        <!-- Brillo central mágico -->
+                        <path id="pathMain" class="mountain-path" fill="none" stroke="#fde68a" stroke-width="4" stroke-dasharray="15 20" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" filter="url(#glow)" />
+                    </g>
 
-                <!-- TOP CLOUD BANK (hides upper transition / peak) -->
-                <g filter="url(#cloudBlur)" pointer-events="none" id="topClouds">
-                    <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1195" fill="<?= $cBase ?>" />
-                    <ellipse cx="<?= $centroX ?>" cy="195" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="105" fill="<?= $cMid ?>" />
-                    <ellipse cx="<?= $centroX - 300 ?>" cy="235" rx="600" ry="115" fill="<?= $cTop ?>" />
-                    <ellipse cx="<?= $centroX + 280 ?>" cy="245" rx="550" ry="130" fill="<?= $cBase ?>" />
-                    <ellipse cx="<?= $centroX ?>" cy="285" rx="<?= (int)($viewBoxW * 1.0) ?>" ry="80" fill="<?= $cTop ?>" opacity="0.85" />
-                    <ellipse cx="<?= $centroX ?>" cy="340" rx="<?= (int)($viewBoxW * 0.8) ?>" ry="50" fill="<?= $cMid ?>" opacity="0.6" />
-                </g>
+                    <!-- Waypoints -->
+                    <g id="waypointsGroup"></g>
 
-                <!-- BOTTOM CLOUD BANK (hides lower transition between pages) -->
-                <g filter="url(#cloudBlur)" pointer-events="none" id="bottomClouds">
-                    <rect x="-2000" y="<?= $viewBoxH - 190 ?>" width="<?= $viewBoxW + 4000 ?>" height="200" fill="<?= $cBase ?>" />
-                    <ellipse cx="<?= $centroX ?>" cy="<?= $viewBoxH - 190 ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="110" fill="<?= $cMid ?>" />
-                    <ellipse cx="<?= $centroX - 450 ?>" cy="<?= $viewBoxH - 150 ?>" rx="800" ry="120" fill="<?= $cTop ?>" />
-                    <ellipse cx="<?= $centroX + 400 ?>" cy="<?= $viewBoxH - 160 ?>" rx="750" ry="90" fill="<?= $cBase ?>" />
-                    <ellipse cx="<?= $centroX ?>" cy="<?= $viewBoxH - 110 ?>" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="80" fill="<?= $cTop ?>" opacity="0.8" />
-                </g>
+                    <!-- TOP CLOUD BANK (hides upper transition / peak) -->
+                    <g filter="url(#cloudBlur)" pointer-events="none" id="topClouds">
+                        <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1195" fill="<?= $cBase ?>" />
+                        <ellipse cx="<?= $centroX ?>" cy="195" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="105" fill="<?= $cMid ?>" />
+                        <ellipse cx="<?= $centroX - 300 ?>" cy="235" rx="600" ry="115" fill="<?= $cTop ?>" />
+                        <ellipse cx="<?= $centroX + 280 ?>" cy="245" rx="550" ry="130" fill="<?= $cBase ?>" />
+                        <ellipse cx="<?= $centroX ?>" cy="285" rx="<?= (int)($viewBoxW * 1.0) ?>" ry="80" fill="<?= $cTop ?>" opacity="0.85" />
+                        <ellipse cx="<?= $centroX ?>" cy="340" rx="<?= (int)($viewBoxW * 0.8) ?>" ry="50" fill="<?= $cMid ?>" opacity="0.6" />
+                    </g>
 
-                <!-- Title over top clouds -->
-                <text id="topCloudTitle" x="<?= $centroX ?>" y="200" font-family="'Algerian','Georgia',serif" font-size="<?= max(36, (int)($viewBoxW * 0.042)) ?>" fill="#FFD700" text-anchor="middle" font-weight="bold" style="filter:drop-shadow(2px 4px 5px rgba(0,0,0,0.55)); letter-spacing:2px;">¡Confiamos en ti!</text>
+                    <!-- BOTTOM CLOUD BANK (covers bottom flat color) -->
+                    <g filter="url(#cloudBlur)" pointer-events="none" id="bottomClouds">
+                        <rect x="-2000" y="<?= $totalHeight - 400 ?>" width="<?= $viewBoxW + 4000 ?>" height="500" fill="<?= $cBase ?>" />
+                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight - 350 ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="250" fill="<?= $cMid ?>" />
+                        <ellipse cx="<?= $centroX - 450 ?>" cy="<?= $totalHeight - 300 ?>" rx="800" ry="200" fill="<?= $cTop ?>" />
+                        <ellipse cx="<?= $centroX + 400 ?>" cy="<?= $totalHeight - 250 ?>" rx="750" ry="200" fill="<?= $cBase ?>" />
+                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight - 150 ?>" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="150" fill="<?= $cTop ?>" opacity="0.8" />
+                    </g>
 
-                <!-- Bouncing UP arrow in top cloud (go to previous page) -->
-                <g id="arrowUp" class="cursor-pointer" onclick="mountainNav(-1)" style="display:none;">
-                    <circle cx="<?= $centroX ?>" cy="290" r="28" fill="#154212" opacity="0.85" />
-                    <text x="<?= $centroX ?>" y="300" text-anchor="middle" font-size="32" fill="#ffffff">&#8679;</text>
-                </g>
-
-                <!-- Bouncing DOWN arrow in bottom cloud (go to next page) -->
-                <g id="arrowDown" class="cursor-pointer" onclick="mountainNav(1)">
-                    <circle cx="<?= $centroX ?>" cy="<?= $viewBoxH - 135 ?>" r="28" fill="#154212" opacity="0.85" />
-                    <text x="<?= $centroX ?>" y="<?= $viewBoxH - 123 ?>" text-anchor="middle" font-size="32" fill="#ffffff">&#8681;</text>
-                </g>
-
-                <!-- Page indicator -->
-                <text id="pageIndicator" x="<?= $centroX ?>" y="<?= $viewBoxH - 20 ?>" text-anchor="middle" font-family="Manrope,sans-serif" font-size="22" fill="#64748b" opacity="0.7">Tramo 1 de <?= $totalPages ?></text>
+                    <!-- Title over top clouds -->
+                    <text id="topCloudTitle" x="<?= $centroX ?>" y="200" font-family="'Algerian','Georgia',serif" font-size="<?= max(36, (int)($viewBoxW * 0.042)) ?>" fill="#FFD700" text-anchor="middle" font-weight="bold" style="filter:drop-shadow(2px 4px 5px rgba(0,0,0,0.55)); letter-spacing:2px;">¡Confiamos en ti!</text>
+                </g><!-- end hudGroup -->
             </svg>
         </div><!-- end mountainViewport -->
 
@@ -613,88 +593,18 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
             <span class="text-[11px] font-bold text-primary mt-1"><?= $porcentajeTermometro ?>%</span>
         </div>
 
-        <!-- Inline styles for bouncing arrow animation -->
-        <style>
-            @keyframes bounce-y {
-
-                0%,
-                100% {
-                    transform: translateY(0);
-                }
-
-                50% {
-                    transform: translateY(8px);
-                }
-            }
-
-            #arrowDown {
-                animation: bounce-y 1.4s ease-in-out infinite;
-                transform-origin: center;
-            }
-
-            @keyframes bounce-y-up {
-
-                0%,
-                100% {
-                    transform: translateY(0);
-                }
-
-                50% {
-                    transform: translateY(-8px);
-                }
-            }
-
-            #arrowUp {
-                animation: bounce-y-up 1.4s ease-in-out infinite;
-                transform-origin: center;
-            }
-        </style>
-
-
         <script>
-            // ====== MOUNTAIN PAGINATION (10 secciones con pan de cámara) ======
-            const allPages   = <?= json_encode($allPagesData) ?>;
-            const totalPages = <?= $totalPages ?>;
-            const vbW        = <?= $viewBoxW ?>;
-            const vbH        = <?= $viewBoxH ?>;
-            const centroX    = <?= $centroX ?>;
-            const baseHalfW  = <?= $baseHalfW ?>;
-            const SECTIONS   = 10;             // divisiones de la imagen
-            const totalLogH  = vbH * SECTIONS; // altura lógica total SVG
-            let currentPage  = 0;
-
-            // Inicializar el viewBox del SVG con toda la altura lógica
-            // (se recortará a la ventana visible con el atributo de tamaño del SVG)
-            const svg = document.getElementById('mountainSVG');
-
-            /**
-             * Anima el viewBox del SVG deslizándolo hacia la sección solicitada.
-             * La sección 0 = base de la montaña, sección 9 = cima.
-             */
-            function panToSection(section) {
-                // La base de la sección 0 está al fondo del espacio lógico
-                // La cima (sección 9) está en y=0
-                const targetY = totalLogH - (section + 1) * vbH;
-                const startY  = parseFloat(svg.getAttribute('viewBox').split(' ')[1]) || 0;
-                const dur     = 600; // ms
-                const start   = performance.now();
-
-                function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-
-                function step(now) {
-                    const t = Math.min((now - start) / dur, 1);
-                    const y = startY + (targetY - startY) * ease(t);
-                    svg.setAttribute('viewBox', `0 ${y} ${vbW} ${vbH}`);
-                    if (t < 1) requestAnimationFrame(step);
-                }
-                requestAnimationFrame(step);
-            }
+            // ====== MOUNTAIN RENDER ======
+            const pts = <?= json_encode($allPoints) ?>;
+            const vbW = <?= $viewBoxW ?>;
+            const totalH = <?= $totalHeight ?>;
 
             function buildSVGPath(pts) {
                 if (pts.length === 0) return '';
                 let d = `M ${pts[0].cx},${pts[0].cy}`;
                 for (let i = 1; i < pts.length; i++) {
-                    const prev = pts[i - 1], cur = pts[i];
+                    const prev = pts[i - 1],
+                        cur = pts[i];
                     const mx = (prev.cx + cur.cx) / 2;
                     const my = (prev.cy + cur.cy) / 2;
                     d += ` Q ${prev.cx},${prev.cy} ${mx},${my}`;
@@ -704,62 +614,79 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 return d;
             }
 
-            function renderPage(page) {
-                const pts = allPages[page] || [];
-
-                // Desplazar la cámara (viewBox) a la sección
-                panToSection(page);
-
-                // Calcular el Y superior de la sección actual para reubicar HUD elements
-                const sectionTopY = totalLogH - (page + 1) * vbH;
-
+            function renderAll() {
                 // Update path
                 const pathD = buildSVGPath(pts);
                 document.getElementById('pathBase').setAttribute('d', pathD);
-                document.getElementById('pathStones').setAttribute('d', pathD);
                 document.getElementById('pathDirt').setAttribute('d', pathD);
                 document.getElementById('pathMain').setAttribute('d', pathD);
 
                 // Update waypoints
                 const g = document.getElementById('waypointsGroup');
                 g.innerHTML = '';
+                
+                let activeY = totalH; // default to bottom
+
                 pts.forEach(pt => {
+                    if (pt.estado === 'actual') activeY = pt.cy; // Guardar Y del punto activo
+
                     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                     group.setAttribute('class', 'cursor-pointer');
                     group.setAttribute('style', `transform-origin:${pt.cx}px ${pt.cy}px`);
 
+                    // Renderización de los nodos (puntos) con diseño premium
                     if (pt.is_peak) {
                         const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         c1.setAttribute('cx', pt.cx); c1.setAttribute('cy', pt.cy);
-                        c1.setAttribute('r', '18');
+                        c1.setAttribute('r', '22');
                         c1.setAttribute('fill', pt.estado === 'completado' ? '#fcd34d' : '#ffffff');
-                        c1.setAttribute('stroke', '#fcd34d'); c1.setAttribute('stroke-width', '4');
+                        c1.setAttribute('stroke', '#fbbf24'); c1.setAttribute('stroke-width', '4');
                         c1.setAttribute('filter', 'url(#glow)');
+                        
                         const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c2.setAttribute('cx', pt.cx); c2.setAttribute('cy', pt.cy); c2.setAttribute('r', '8');
+                        c2.setAttribute('cx', pt.cx); c2.setAttribute('cy', pt.cy);
+                        c2.setAttribute('r', '10');
                         c2.setAttribute('fill', pt.estado === 'completado' ? '#ffffff' : '#fcd34d');
+                        
                         group.appendChild(c1); group.appendChild(c2);
                     } else {
                         const colors = {
-                            completado: { fill: '#a1d494', stroke: '#ffffff' },
-                            actual:     { fill: '#fcd34d', stroke: '#ffffff' },
-                            bloqueado:  { fill: '#154212', stroke: '#4a7c59' }
+                            completado: { fill: '#34d399', stroke: '#059669', outer: '#a7f3d0' },
+                            actual:     { fill: '#fbbf24', stroke: '#d97706', outer: '#fde68a' },
+                            bloqueado:  { fill: '#94a3b8', stroke: '#475569', outer: '#e2e8f0' }
                         };
                         const c = colors[pt.estado] || colors.bloqueado;
+                        
+                        // Outer glowing ring
+                        const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        outer.setAttribute('cx', pt.cx); outer.setAttribute('cy', pt.cy);
+                        outer.setAttribute('r', '16');
+                        outer.setAttribute('fill', c.outer); outer.setAttribute('opacity', '0.6');
+                        if(pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
+                        
+                        // Main circle
                         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         circle.setAttribute('cx', pt.cx); circle.setAttribute('cy', pt.cy);
-                        circle.setAttribute('r', '14');
+                        circle.setAttribute('r', '10');
                         circle.setAttribute('fill', c.fill); circle.setAttribute('stroke', c.stroke);
                         circle.setAttribute('stroke-width', '3');
+                        
+                        group.appendChild(outer);
                         group.appendChild(circle);
+
+                        // Animated ping for current level
                         if (pt.estado === 'actual') {
                             const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                             pulse.setAttribute('cx', pt.cx); pulse.setAttribute('cy', pt.cy);
-                            pulse.setAttribute('r', '6'); pulse.setAttribute('fill', '#154212');
-                            pulse.setAttribute('class', 'animate-pulse');
+                            pulse.setAttribute('r', '24'); 
+                            pulse.setAttribute('fill', 'none');
+                            pulse.setAttribute('stroke', '#fbbf24');
+                            pulse.setAttribute('stroke-width', '3');
+                            pulse.setAttribute('class', 'animate-ping');
                             group.appendChild(pulse);
                         }
                     }
+                    
                     // Tooltip text
                     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     txt.setAttribute('x', pt.cx + 20); txt.setAttribute('y', pt.cy + 5);
@@ -771,34 +698,15 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                     g.appendChild(group);
                 });
 
-                // Mover los elementos HUD (nubes, flechas, indicador) a la sección visible
-                const topClouds    = document.getElementById('topClouds');
-                const bottomClouds = document.getElementById('bottomClouds');
-                const arrowUpG     = document.getElementById('arrowUp');
-                const arrowDownG   = document.getElementById('arrowDown');
-                const pageInd      = document.getElementById('pageIndicator');
-                const cloudTitle   = document.getElementById('topCloudTitle');
-
-                // Desplazar grupos HUD al Y actual de la sección
-                [topClouds, bottomClouds, arrowUpG, arrowDownG, pageInd, cloudTitle].forEach(el => {
-                    if (el) el.setAttribute('transform', `translate(0, ${sectionTopY})`);
-                });
-
-                // Visibility de flechas
-                const isFirst = page === 0;
-                const isLast  = page >= totalPages - 1;
-                arrowUpG.style.display   = isFirst ? 'none' : '';
-                arrowDownG.style.display = isLast  ? 'none' : '';
-                cloudTitle.style.display = isLast  ? '' : 'none';
-
-                pageInd.textContent = `Sección ${page + 1} de ${totalPages}`;
-                currentPage = page;
-            }
-
-            function mountainNav(dir) {
-                const next = currentPage + dir;
-                if (next < 0 || next >= totalPages) return;
-                renderPage(next);
+                // Scroll to active position after rendering
+                setTimeout(() => {
+                    const scrollContainer = document.getElementById('mainScrollContainer');
+                    const svg = document.getElementById('mountainSVG');
+                    // Calculate relative scroll position
+                    const ratio = svg.clientHeight / totalH;
+                    const scrollTarget = (activeY * ratio) - (scrollContainer.clientHeight / 2);
+                    scrollContainer.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+                }, 100);
             }
 
             // Sidebar Toggle & Tooltip Logic
@@ -851,9 +759,7 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 
             // Init
             document.addEventListener('DOMContentLoaded', () => {
-                // Posicionar en la sección base (0) antes de renderizar
-                svg.setAttribute('viewBox', `0 ${totalLogH - vbH} ${vbW} ${vbH}`);
-                renderPage(0);
+                renderAll();
             });
         </script>
 
