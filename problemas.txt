@@ -1,0 +1,9 @@
+en el portal de inicio hay botones como "carrera" que no cumplen ninguna funcion, debido a que despues de iniciar sesion no se puede volver a ese 
+ese portal de inicio
+
+el modo visitante esta o mal hecho o es inutil, debido a que el modo visitante solo te lleva a una parte del portal de inicio
+ya existente, comuniqueseme que se quiere hacer ahi por favor
+
+a su vez en ingresar sesion dice contactar a la institucion, esto es especialmente peligroso si un grupo de jovenes decide llamar a la 
+institucion y hacer llamadas de bromas o falsificar identidades de otros alumnos
+
