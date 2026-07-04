@@ -14,8 +14,9 @@ $etapas_prueba = [
 ];
 
 $totalEtapas = count($etapas_prueba);
-$perPage = 6;
-$totalPages = (int)ceil($totalEtapas / $perPage);
+$totalSections = 10;            // La imagen se divide en 10 secciones
+$perPage      = 4;             // Máx 4 actividades por sección (40 total)
+$totalPages   = max($totalSections, (int)ceil($totalEtapas / $perPage)); // siempre 10 páginas
 
 // Ancho dinámico de la montaña basado en cant. de actividades (min 900, max 2000)
 // Escala desde 1 hasta 50 actividades. Siempre gruesa.
@@ -26,36 +27,49 @@ $viewBoxH = 1400;
 $centroX = (int)($viewBoxW / 2);
 $baseHalfW = (int)($viewBoxW * 0.75); // La base siempre muy ancha
 
-// SVG path serpentino dinámico (6 puntos por página en viewBox de 1400 alto)
+// Constante global de secciones
+$TOTAL_SECTIONS = 10;
+
+/**
+ * Genera waypoints para una sección.
+ * La montaña lógica mide $vbH * $TOTAL_SECTIONS de alto.
+ * Cada sección ocupa una franja de altura $vbH dentro de ese espacio.
+ * Y=0 es la cima, Y=totalHeight es la base.
+ */
 function generarWaypointsPagina(array $etapas, int $pagina, int $perPage, int $totalEtapas, int $vbW, int $vbH): array
 {
-    $cx = (int)($vbW / 2);
-    $inicio = $pagina * $perPage;
-    $fin = min($inicio + $perPage, $totalEtapas);
-    $puntos = [];
-    $count = $fin - $inicio;
-    $esUltimaPagina = ($fin >= $totalEtapas);
+    global $TOTAL_SECTIONS;
+    $cx          = (int)($vbW / 2);
+    $totalHeight = $vbH * $TOTAL_SECTIONS;   // altura lógica total
+    $inicio      = $pagina * $perPage;
+    $fin         = min($inicio + $perPage, $totalEtapas);
+    $puntos      = [];
+    $count       = $fin - $inicio;
 
-    // Distribuir entre y=1200 (base visible) y y=180 (cima / borde superior)
-    $yStart = 1200;
-    $yEnd = $esUltimaPagina ? 100 : 250;
-    $rango = $yStart - $yEnd;
+    // La sección 0 = base (parte baja de la imagen), sección 9 = cima
+    // La franja visible de cada sección ocupa [sectionTop, sectionBottom] en coords. lógicas
+    $sectionBottom = $totalHeight - $pagina * $vbH;       // y baja (base de la sección)
+    $sectionTop    = $sectionBottom - $vbH;               // y alta (tope de la sección)
+
+    // Los waypoints se colocan dentro de la ventana visible con margen
+    $yStart = $sectionBottom - 120;  // algo por encima del borde inferior
+    $yEnd   = $sectionTop   + 180;  // algo por debajo del borde superior
+    $rango  = $yStart - $yEnd;
 
     for ($i = 0; $i < $count; $i++) {
-        $etapa = $etapas[$inicio + $i];
-        $t = $count > 1 ? $i / ($count - 1) : 0;
-        $cy = (int)($yStart - $t * $rango);
-        // Serpenteo: alterna izquierda/derecha
-        $offset = ($i % 2 === 0) ? -80 : 80;
-        $cx_pt = $cx + $offset;
-        // Asegurar dentro de la montaña
-        $cx_pt = max(180, min($vbW - 180, $cx_pt));
+        $etapa  = $etapas[$inicio + $i];
+        $t      = $count > 1 ? $i / ($count - 1) : 0.5;
+        $cy     = (int)($yStart - $t * $rango);
+        $offset = ($i % 2 === 0) ? -90 : 90;
+        $cx_pt  = max(180, min($vbW - 180, $cx + $offset));
         $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy]);
     }
-    // Si es la última página, el último punto es la cima
+
+    // El último punto de la última sección = cima
+    $esUltimaPagina = ($fin >= $totalEtapas);
     if ($esUltimaPagina && $count > 0) {
-        $puntos[count($puntos) - 1]['cx'] = $cx;
-        $puntos[count($puntos) - 1]['cy'] = 120;
+        $puntos[count($puntos) - 1]['cx']     = $cx;
+        $puntos[count($puntos) - 1]['cy']     = $sectionTop + 80;
         $puntos[count($puntos) - 1]['is_peak'] = true;
     }
     return $puntos;
@@ -331,24 +345,96 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 $pts = generarWaypointsPagina($etapas_prueba, $p, $perPage, $totalEtapas, $viewBoxW, $viewBoxH);
                 $allPagesData[] = $pts;
             }
+
+            // Determinar colores según la hora del día
+            $hora = (int)date('H');
+            $isNight = ($hora >= 19 || $hora < 6);
+            $isTwilight = ($hora == 6 || $hora == 18);
+
+            if ($isNight) {
+                // Noche
+                $skyStops = ['#020617', '#0f172a', '#1e1b4b', '#312e81'];
+                $mntStops = ['#475569', '#334155', '#1e293b', '#0f172a']; // Silvery moonlight slate
+                $distMnt = ['#1e1b4b', '#0f172a', '#020617'];
+                $orb = ['fill' => '#e2e8f0', 'glow' => '#f1f5f9', 'r1' => 80, 'r2' => 60, 'opacity' => 0.4]; // Luna
+                $showStars = true;
+                $cBase = '#0f172a';
+                $cMid  = '#1e293b';
+                $cTop  = '#334155';
+            } elseif ($isTwilight) {
+                // Amanecer / Atardecer
+                $skyStops = ['#1e1b4b', '#4c1d95', '#be185d', '#f59e0b'];
+                $mntStops = ['#475569', '#334155', '#166534', '#14532d'];
+                $distMnt = ['#4c1d95', '#312e81', '#1e1b4b'];
+                $orb = ['fill' => '#fffbeb', 'glow' => '#fcd34d', 'r1' => 120, 'r2' => 90, 'opacity' => 0.6]; // Sol cálido
+                $showStars = true;
+                $cBase = '#fbcfe8'; // Rosa claro
+                $cMid  = '#fdf2f8'; // Rosa muy claro
+                $cTop  = '#ffffff';
+            } else {
+                // Día
+                $skyStops = ['#38bdf8', '#7dd3fc', '#bae6fd', '#e0f2fe'];
+                $mntStops = ['#22c55e', '#16a34a', '#15803d', '#166534'];
+                $distMnt = ['#0ea5e9', '#0284c7', '#0369a1'];
+                $orb = ['fill' => '#fef08a', 'glow' => '#fde047', 'r1' => 100, 'r2' => 80, 'opacity' => 0.5]; // Sol intenso
+                $showStars = false;
+                $cBase = '#f1f5f9';
+                $cMid  = '#f8fafc';
+                $cTop  = '#ffffff';
+            }
             ?>
 
-            <!-- SVG Container - page 0 shown by default -->
-            <svg id="mountainSVG" class="w-full h-full overflow-visible" preserveAspectRatio="xMidYMid meet"
-                viewBox="0 0 <?= $viewBoxW ?> <?= $viewBoxH ?>"
+            <!-- SVG Container - viewBox pans via JS across 10 sections -->
+            <svg id="mountainSVG" class="w-full h-full" preserveAspectRatio="xMidYMid meet"
+                viewBox="0 <?= $viewBoxH * 9 ?> <?= $viewBoxW ?> <?= $viewBoxH ?>"
                 data-vbw="<?= $viewBoxW ?>" data-vbh="<?= $viewBoxH ?>"
                 data-centrox="<?= $centroX ?>" data-basehalf="<?= $baseHalfW ?>">
                 <defs>
-                    <linearGradient id="mntMain" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stop-color="#475569" />
-                        <stop offset="35%" stop-color="#334155" />
-                        <stop offset="65%" stop-color="#166534" />
-                        <stop offset="100%" stop-color="#14532d" />
+                    <!-- Rock Face Gradients -->
+                    <linearGradient id="mntBody" x1="15%" y1="0%" x2="85%" y2="100%">
+                        <stop offset="0%" stop-color="<?= $mntStops[0] ?>" />
+                        <stop offset="40%" stop-color="<?= $mntStops[1] ?>" />
+                        <stop offset="100%" stop-color="<?= $mntStops[3] ?>" />
                     </linearGradient>
-                    <linearGradient id="mntHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="rgba(255,255,255,0.18)" />
-                        <stop offset="50%" stop-color="rgba(0,0,0,0)" />
+                    <linearGradient id="mntShadowL" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="rgba(0,0,0,0.55)" />
+                        <stop offset="60%" stop-color="rgba(0,0,0,0)" />
+                    </linearGradient>
+                    <linearGradient id="mntShadowR" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="40%" stop-color="rgba(0,0,0,0)" />
                         <stop offset="100%" stop-color="rgba(0,0,0,0.45)" />
+                    </linearGradient>
+                    <linearGradient id="mntLit" x1="30%" y1="0%" x2="60%" y2="100%">
+                        <stop offset="0%" stop-color="rgba(255,255,255,0.30)" />
+                        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                    </linearGradient>
+                    <linearGradient id="rockFace1" x1="20%" y1="0%" x2="80%" y2="100%">
+                        <stop offset="0%" stop-color="<?= $mntStops[1] ?>" />
+                        <stop offset="100%" stop-color="<?= $mntStops[2] ?>" />
+                    </linearGradient>
+                    <linearGradient id="rockFace2" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="<?= $mntStops[0] ?>" stop-opacity="0.9" />
+                        <stop offset="100%" stop-color="<?= $mntStops[3] ?>" />
+                    </linearGradient>
+                    <linearGradient id="vegGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#4ade80" />
+                        <stop offset="100%" stop-color="#15803d" />
+                    </linearGradient>
+                    <linearGradient id="rockGray" x1="20%" y1="0%" x2="80%" y2="100%">
+                        <stop offset="0%" stop-color="#94a3b8" />
+                        <stop offset="100%" stop-color="#475569" />
+                    </linearGradient>
+                    <linearGradient id="rockDark" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#334155" />
+                        <stop offset="100%" stop-color="#1e293b" />
+                    </linearGradient>
+                    <linearGradient id="rockOcre" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#a16207" stop-opacity="0.5" />
+                        <stop offset="100%" stop-color="#78350f" stop-opacity="0.3" />
+                    </linearGradient>
+                    <linearGradient id="meadow" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#86efac" />
+                        <stop offset="100%" stop-color="#16a34a" />
                     </linearGradient>
                     <linearGradient id="snowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stop-color="#ffffff" />
@@ -360,79 +446,111 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                     <filter id="cloudBlur" x="-60%" y="-60%" width="220%" height="220%">
                         <feGaussianBlur in="SourceGraphic" stdDeviation="40" />
                     </filter>
+                    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="<?= $skyStops[0] ?>" />
+                        <stop offset="35%" stop-color="<?= $skyStops[1] ?>" />
+                        <stop offset="65%" stop-color="<?= $skyStops[2] ?>" />
+                        <stop offset="100%" stop-color="<?= $skyStops[3] ?>" />
+                    </linearGradient>
+                    <!-- Filtro para textura de roca orgánica y detalles de superficie hiper-realistas -->
+                    <filter id="organicRock" x="-20%" y="-20%" width="140%" height="140%">
+                        <!-- 1. Generar deformación natural de bordes -->
+                        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.015" numOctaves="4" result="edgeNoise" />
+                        <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="40" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+                        
+                        <!-- 2. Generar textura interna porosa/rocosa (alta frecuencia) -->
+                        <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="5" result="surfaceNoise" />
+                        
+                        <!-- 3. Convertir el ruido en sombras sutiles (20% opacidad negra) -->
+                        <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 0.20 0" in="surfaceNoise" result="coloredNoise" />
+                        
+                        <!-- 4. Recortar la textura para que no se salga de la montaña deformada -->
+                        <feComposite operator="in" in="coloredNoise" in2="displaced" result="texture" />
+                        
+                        <!-- 5. Fusionar la textura rocosa sobre los colores volumétricos de la montaña -->
+                        <feBlend mode="multiply" in="texture" in2="displaced" />
+                    </filter>
+                    <!-- Filtro para el sendero (erosión e irregularidad) -->
+                    <filter id="pathErosion" x="-20%" y="-20%" width="140%" height="140%">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" result="noise" />
+                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+                    </filter>
                 </defs>
 
                 <!-- Background sky gradient -->
-                <rect x="0" y="0" width="<?= $viewBoxW ?>" height="<?= $viewBoxH ?>" fill="url(#skyGrad)" opacity="0.3" />
+                <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="<?= $viewBoxH + 2000 ?>" fill="url(#skyGrad)" opacity="1" />
+
+                <!-- Stars -->
+                <?php if ($showStars): ?>
+                <g fill="#ffffff" opacity="0.8">
+                    <circle cx="<?= $centroX - 400 ?>" cy="100" r="1.5" />
+                    <circle cx="<?= $centroX + 500 ?>" cy="150" r="2" />
+                    <circle cx="<?= $centroX - 200 ?>" cy="250" r="1" />
+                    <circle cx="<?= $centroX + 100 ?>" cy="50" r="2.5" />
+                    <circle cx="<?= $centroX - 600 ?>" cy="300" r="1.5" />
+                    <circle cx="<?= $centroX + 700 ?>" cy="200" r="2" />
+                    <circle cx="<?= $centroX - 800 ?>" cy="180" r="2" />
+                    <circle cx="<?= $centroX + 300 ?>" cy="280" r="1" />
+                </g>
+                <?php endif; ?>
+
+                <!-- Glowing orb (Sun/Moon) -->
+                <circle cx="<?= $centroX + 350 ?>" cy="450" r="<?= $orb['r1'] ?>" fill="<?= $orb['glow'] ?>" filter="url(#glow)" opacity="<?= $orb['opacity'] ?>" />
+                <circle cx="<?= $centroX + 350 ?>" cy="450" r="<?= $orb['r2'] ?>" fill="<?= $orb['fill'] ?>" opacity="0.9" />
 
                 <!-- Distant mountains for depth -->
-                <path d="M <?= -$baseHalfW ?>,<?= $viewBoxH ?> L <?= $centroX - 300 ?>,500 L <?= $centroX + 200 ?>,<?= $viewBoxH ?> Z" fill="#0f2d1a" opacity="0.2" />
-                <path d="M <?= $centroX - 100 ?>,<?= $viewBoxH ?> L <?= $centroX + 350 ?>,550 L <?= $viewBoxW + 200 ?>,<?= $viewBoxH ?> Z" fill="#0a2215" opacity="0.15" />
+                <path d="M <?= -$baseHalfW ?>,<?= $viewBoxH ?> L <?= $centroX - 500 ?>,600 L <?= $centroX - 100 ?>,400 L <?= $centroX + 400 ?>,700 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[0] ?>" opacity="0.4" />
+                <path d="M <?= -$baseHalfW ?>,<?= $viewBoxH ?> L <?= $centroX - 300 ?>,700 L <?= $centroX + 150 ?>,500 L <?= $centroX + 600 ?>,800 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[1] ?>" opacity="0.5" />
+                <path d="M <?= $centroX - 400 ?>,<?= $viewBoxH ?> L <?= $centroX + 300 ?>,650 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[2] ?>" opacity="0.6" />
 
-                <!-- MAIN MOUNTAIN - dynamic width, steep & narrow -->
-                <path id="mntPath" d="
-        M <?= -$baseHalfW ?>,<?= $viewBoxH ?>
-        L <?= $centroX - (int)($baseHalfW * 0.85) ?>,1100
-        L <?= $centroX - (int)($baseHalfW * 0.65) ?>,850
-        L <?= $centroX - (int)($baseHalfW * 0.40) ?>,550
-        L <?= $centroX - (int)($baseHalfW * 0.25) ?>,300
-        L <?= $centroX - (int)($baseHalfW * 0.15) ?>,-50
-        L <?= $centroX + (int)($baseHalfW * 0.15) ?>,-50
-        L <?= $centroX + (int)($baseHalfW * 0.25) ?>,300
-        L <?= $centroX + (int)($baseHalfW * 0.40) ?>,550
-        L <?= $centroX + (int)($baseHalfW * 0.65) ?>,850
-        L <?= $centroX + (int)($baseHalfW * 0.85) ?>,1100
-        L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z"
-                    fill="url(#mntMain)" />
-                <path d="
-        M <?= -$baseHalfW ?>,<?= $viewBoxH ?>
-        L <?= $centroX - (int)($baseHalfW * 0.85) ?>,1100
-        L <?= $centroX - (int)($baseHalfW * 0.65) ?>,850
-        L <?= $centroX - (int)($baseHalfW * 0.40) ?>,550
-        L <?= $centroX - (int)($baseHalfW * 0.25) ?>,300
-        L <?= $centroX - (int)($baseHalfW * 0.15) ?>,-50
-        L <?= $centroX + (int)($baseHalfW * 0.15) ?>,-50
-        L <?= $centroX + (int)($baseHalfW * 0.25) ?>,300
-        L <?= $centroX + (int)($baseHalfW * 0.40) ?>,550
-        L <?= $centroX + (int)($baseHalfW * 0.65) ?>,850
-        L <?= $centroX + (int)($baseHalfW * 0.85) ?>,1100
-        L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z"
-                    fill="url(#mntHighlight)" opacity="0.6" />
+                <!-- ======= MOUNTAIN IMAGE (10x zoom, panned by JS via viewBox) ======= -->
+                <!--
+                     La imagen ocupa toda la altura lógica (viewBoxH * 10).
+                     El SVG tiene un viewBox que se desplaza verticalmente con JS
+                     para mostrar cada una de las 10 secciones.
+                -->
+                <image 
+                    id="mountainImg"
+                    href="<?= URLROOT ?>/public/assets/img/ago.png" 
+                    x="<?= $centroX - (int)($baseHalfW * 1.68) ?>" 
+                    y="0" 
+                    width="<?= (int)($baseHalfW * 3.36) ?>" 
+                    height="<?= $viewBoxH * 10 ?>" 
+                    preserveAspectRatio="xMidYMax meet" 
+                />
 
-                <!-- Mountain ridge shadows -->
-                <path d="M <?= $centroX ?>,-50 L <?= $centroX - (int)($baseHalfW * 0.10) ?>,300 L <?= $centroX - (int)($baseHalfW * 0.25) ?>,600 L <?= $centroX - (int)($baseHalfW * 0.65) ?>,<?= $viewBoxH ?> L <?= $centroX ?>,<?= $viewBoxH ?> Z" fill="#064e3b" opacity="0.3" />
-                <path d="M <?= $centroX ?>,-50 L <?= $centroX + (int)($baseHalfW * 0.10) ?>,300 L <?= $centroX + (int)($baseHalfW * 0.25) ?>,600 L <?= $centroX + (int)($baseHalfW * 0.65) ?>,<?= $viewBoxH ?> L <?= $centroX ?>,<?= $viewBoxH ?> Z" fill="#022c22" opacity="0.35" />
-
-                <!-- Snow cap -->
-                <path d="M <?= $centroX - (int)($baseHalfW * 0.15) ?>,-50 L <?= $centroX - (int)($baseHalfW * 0.12) ?>,250 Q <?= $centroX ?>,300 <?= $centroX + (int)($baseHalfW * 0.12) ?>,250 L <?= $centroX + (int)($baseHalfW * 0.15) ?>,-50 Z" fill="url(#snowGrad)" />
-
-                <!-- Path glow (drawn by JS) -->
-                <path id="pathGlow" fill="none" stroke="#a1d494" stroke-width="18" opacity="0.25" stroke-linecap="round" filter="url(#glow)" />
-                <!-- Main path -->
-                <path id="pathMain" class="mountain-path" fill="none" stroke="#a1d494" stroke-width="7" stroke-dasharray="14,9" stroke-linecap="round" />
-                <!-- White overlay -->
-                <path id="pathWhite" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.75" />
+                <!-- === ERODED MOUNTAIN TRAIL === -->
+                <g filter="url(#pathErosion)">
+                    <!-- Path base (dirt track shadow) -->
+                    <path id="pathBase" fill="none" stroke="#3f2e1e" stroke-width="18" opacity="0.35" stroke-linecap="round" />
+                    <!-- Scattered stones along edges -->
+                    <path id="pathStones" fill="none" stroke="#64748b" stroke-width="26" stroke-dasharray="2 35" stroke-linecap="round" opacity="0.8" />
+                    <!-- Path core (dirt) -->
+                    <path id="pathDirt" fill="none" stroke="#8b7355" stroke-width="12" opacity="0.6" stroke-linecap="round" />
+                    <!-- Main path worn center -->
+                    <path id="pathMain" class="mountain-path" fill="none" stroke="#d4c3b3" stroke-width="6" stroke-dasharray="25 15" stroke-linecap="round" opacity="0.85" />
+                </g>
 
                 <!-- Waypoints container -->
                 <g id="waypointsGroup"></g>
 
                 <!-- TOP CLOUD BANK (hides upper transition / peak) -->
                 <g filter="url(#cloudBlur)" pointer-events="none" id="topClouds">
-                    <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1195" fill="#f1f5f9" />
-                    <ellipse cx="<?= $centroX ?>" cy="195" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="105" fill="#f8fafc" />
-                    <ellipse cx="<?= $centroX - 300 ?>" cy="235" rx="600" ry="115" fill="#ffffff" />
-                    <ellipse cx="<?= $centroX + 280 ?>" cy="245" rx="550" ry="130" fill="#f1f5f9" />
-                    <ellipse cx="<?= $centroX ?>" cy="285" rx="<?= (int)($viewBoxW * 1.0) ?>" ry="80" fill="#ffffff" opacity="0.85" />
-                    <ellipse cx="<?= $centroX ?>" cy="340" rx="<?= (int)($viewBoxW * 0.8) ?>" ry="50" fill="#f8fafc" opacity="0.6" />
+                    <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1195" fill="<?= $cBase ?>" />
+                    <ellipse cx="<?= $centroX ?>" cy="195" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="105" fill="<?= $cMid ?>" />
+                    <ellipse cx="<?= $centroX - 300 ?>" cy="235" rx="600" ry="115" fill="<?= $cTop ?>" />
+                    <ellipse cx="<?= $centroX + 280 ?>" cy="245" rx="550" ry="130" fill="<?= $cBase ?>" />
+                    <ellipse cx="<?= $centroX ?>" cy="285" rx="<?= (int)($viewBoxW * 1.0) ?>" ry="80" fill="<?= $cTop ?>" opacity="0.85" />
+                    <ellipse cx="<?= $centroX ?>" cy="340" rx="<?= (int)($viewBoxW * 0.8) ?>" ry="50" fill="<?= $cMid ?>" opacity="0.6" />
                 </g>
 
                 <!-- BOTTOM CLOUD BANK (hides lower transition between pages) -->
                 <g filter="url(#cloudBlur)" pointer-events="none" id="bottomClouds">
-                    <rect x="-2000" y="<?= $viewBoxH - 190 ?>" width="<?= $viewBoxW + 4000 ?>" height="200" fill="#f1f5f9" />
-                    <ellipse cx="<?= $centroX ?>" cy="<?= $viewBoxH - 190 ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="110" fill="#f8fafc" />
-                    <ellipse cx="<?= $centroX - 450 ?>" cy="<?= $viewBoxH - 150 ?>" rx="800" ry="120" fill="#ffffff" />
-                    <ellipse cx="<?= $centroX + 400 ?>" cy="<?= $viewBoxH - 160 ?>" rx="750" ry="90" fill="#f1f5f9" />
-                    <ellipse cx="<?= $centroX ?>" cy="<?= $viewBoxH - 110 ?>" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="80" fill="#ffffff" opacity="0.8" />
+                    <rect x="-2000" y="<?= $viewBoxH - 190 ?>" width="<?= $viewBoxW + 4000 ?>" height="200" fill="<?= $cBase ?>" />
+                    <ellipse cx="<?= $centroX ?>" cy="<?= $viewBoxH - 190 ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="110" fill="<?= $cMid ?>" />
+                    <ellipse cx="<?= $centroX - 450 ?>" cy="<?= $viewBoxH - 150 ?>" rx="800" ry="120" fill="<?= $cTop ?>" />
+                    <ellipse cx="<?= $centroX + 400 ?>" cy="<?= $viewBoxH - 160 ?>" rx="750" ry="90" fill="<?= $cBase ?>" />
+                    <ellipse cx="<?= $centroX ?>" cy="<?= $viewBoxH - 110 ?>" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="80" fill="<?= $cTop ?>" opacity="0.8" />
                 </g>
 
                 <!-- Title over top clouds -->
@@ -534,21 +652,49 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 
 
         <script>
-            // ====== MOUNTAIN PAGINATION ======
-            const allPages = <?= json_encode($allPagesData) ?>;
+            // ====== MOUNTAIN PAGINATION (10 secciones con pan de cámara) ======
+            const allPages   = <?= json_encode($allPagesData) ?>;
             const totalPages = <?= $totalPages ?>;
-            const vbW = <?= $viewBoxW ?>;
-            const vbH = <?= $viewBoxH ?>;
-            const centroX = <?= $centroX ?>;
-            const baseHalfW = <?= $baseHalfW ?>;
-            let currentPage = 0;
+            const vbW        = <?= $viewBoxW ?>;
+            const vbH        = <?= $viewBoxH ?>;
+            const centroX    = <?= $centroX ?>;
+            const baseHalfW  = <?= $baseHalfW ?>;
+            const SECTIONS   = 10;             // divisiones de la imagen
+            const totalLogH  = vbH * SECTIONS; // altura lógica total SVG
+            let currentPage  = 0;
+
+            // Inicializar el viewBox del SVG con toda la altura lógica
+            // (se recortará a la ventana visible con el atributo de tamaño del SVG)
+            const svg = document.getElementById('mountainSVG');
+
+            /**
+             * Anima el viewBox del SVG deslizándolo hacia la sección solicitada.
+             * La sección 0 = base de la montaña, sección 9 = cima.
+             */
+            function panToSection(section) {
+                // La base de la sección 0 está al fondo del espacio lógico
+                // La cima (sección 9) está en y=0
+                const targetY = totalLogH - (section + 1) * vbH;
+                const startY  = parseFloat(svg.getAttribute('viewBox').split(' ')[1]) || 0;
+                const dur     = 600; // ms
+                const start   = performance.now();
+
+                function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+                function step(now) {
+                    const t = Math.min((now - start) / dur, 1);
+                    const y = startY + (targetY - startY) * ease(t);
+                    svg.setAttribute('viewBox', `0 ${y} ${vbW} ${vbH}`);
+                    if (t < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
 
             function buildSVGPath(pts) {
                 if (pts.length === 0) return '';
                 let d = `M ${pts[0].cx},${pts[0].cy}`;
                 for (let i = 1; i < pts.length; i++) {
-                    const prev = pts[i - 1],
-                        cur = pts[i];
+                    const prev = pts[i - 1], cur = pts[i];
                     const mx = (prev.cx + cur.cx) / 2;
                     const my = (prev.cy + cur.cy) / 2;
                     d += ` Q ${prev.cx},${prev.cy} ${mx},${my}`;
@@ -559,14 +705,20 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
             }
 
             function renderPage(page) {
-                const pts = allPages[page];
-                const svg = document.getElementById('mountainSVG');
+                const pts = allPages[page] || [];
+
+                // Desplazar la cámara (viewBox) a la sección
+                panToSection(page);
+
+                // Calcular el Y superior de la sección actual para reubicar HUD elements
+                const sectionTopY = totalLogH - (page + 1) * vbH;
 
                 // Update path
                 const pathD = buildSVGPath(pts);
-                document.getElementById('pathGlow').setAttribute('d', pathD);
+                document.getElementById('pathBase').setAttribute('d', pathD);
+                document.getElementById('pathStones').setAttribute('d', pathD);
+                document.getElementById('pathDirt').setAttribute('d', pathD);
                 document.getElementById('pathMain').setAttribute('d', pathD);
-                document.getElementById('pathWhite').setAttribute('d', pathD);
 
                 // Update waypoints
                 const g = document.getElementById('waypointsGroup');
@@ -578,95 +730,75 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 
                     if (pt.is_peak) {
                         const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c1.setAttribute('cx', pt.cx);
-                        c1.setAttribute('cy', pt.cy);
-                        c1.setAttribute('r', '16');
+                        c1.setAttribute('cx', pt.cx); c1.setAttribute('cy', pt.cy);
+                        c1.setAttribute('r', '18');
                         c1.setAttribute('fill', pt.estado === 'completado' ? '#fcd34d' : '#ffffff');
-                        c1.setAttribute('stroke', '#fcd34d');
-                        c1.setAttribute('stroke-width', '4');
+                        c1.setAttribute('stroke', '#fcd34d'); c1.setAttribute('stroke-width', '4');
                         c1.setAttribute('filter', 'url(#glow)');
                         const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c2.setAttribute('cx', pt.cx);
-                        c2.setAttribute('cy', pt.cy);
-                        c2.setAttribute('r', '7');
+                        c2.setAttribute('cx', pt.cx); c2.setAttribute('cy', pt.cy); c2.setAttribute('r', '8');
                         c2.setAttribute('fill', pt.estado === 'completado' ? '#ffffff' : '#fcd34d');
-                        group.appendChild(c1);
-                        group.appendChild(c2);
+                        group.appendChild(c1); group.appendChild(c2);
                     } else {
                         const colors = {
-                            completado: {
-                                fill: '#a1d494',
-                                stroke: '#ffffff'
-                            },
-                            actual: {
-                                fill: '#fcd34d',
-                                stroke: '#ffffff'
-                            },
-                            bloqueado: {
-                                fill: '#154212',
-                                stroke: '#4a7c59'
-                            }
+                            completado: { fill: '#a1d494', stroke: '#ffffff' },
+                            actual:     { fill: '#fcd34d', stroke: '#ffffff' },
+                            bloqueado:  { fill: '#154212', stroke: '#4a7c59' }
                         };
                         const c = colors[pt.estado] || colors.bloqueado;
                         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', pt.cx);
-                        circle.setAttribute('cy', pt.cy);
-                        circle.setAttribute('r', '12');
-                        circle.setAttribute('fill', c.fill);
-                        circle.setAttribute('stroke', c.stroke);
+                        circle.setAttribute('cx', pt.cx); circle.setAttribute('cy', pt.cy);
+                        circle.setAttribute('r', '14');
+                        circle.setAttribute('fill', c.fill); circle.setAttribute('stroke', c.stroke);
                         circle.setAttribute('stroke-width', '3');
                         group.appendChild(circle);
                         if (pt.estado === 'actual') {
                             const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                            pulse.setAttribute('cx', pt.cx);
-                            pulse.setAttribute('cy', pt.cy);
-                            pulse.setAttribute('r', '5');
-                            pulse.setAttribute('fill', '#154212');
+                            pulse.setAttribute('cx', pt.cx); pulse.setAttribute('cy', pt.cy);
+                            pulse.setAttribute('r', '6'); pulse.setAttribute('fill', '#154212');
                             pulse.setAttribute('class', 'animate-pulse');
                             group.appendChild(pulse);
                         }
                     }
                     // Tooltip text
                     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    txt.setAttribute('x', pt.cx + 18);
-                    txt.setAttribute('y', pt.cy + 5);
-                    txt.setAttribute('fill', '#ffffff');
-                    txt.setAttribute('font-size', '15');
-                    txt.setAttribute('font-weight', 'bold');
-                    txt.setAttribute('font-family', 'Manrope,sans-serif');
-                    txt.setAttribute('class', 'opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none');
+                    txt.setAttribute('x', pt.cx + 20); txt.setAttribute('y', pt.cy + 5);
+                    txt.setAttribute('fill', '#ffffff'); txt.setAttribute('font-size', '16');
+                    txt.setAttribute('font-weight', 'bold'); txt.setAttribute('font-family', 'Manrope,sans-serif');
                     txt.setAttribute('filter', 'url(#glow)');
                     txt.textContent = pt.nombre;
                     group.appendChild(txt);
                     g.appendChild(group);
                 });
 
-                // Arrow visibility
-                document.getElementById('arrowUp').style.display = page > 0 ? '' : 'none';
-                const isLast = page >= totalPages - 1;
-                document.getElementById('arrowDown').style.display = isLast ? 'none' : '';
+                // Mover los elementos HUD (nubes, flechas, indicador) a la sección visible
+                const topClouds    = document.getElementById('topClouds');
+                const bottomClouds = document.getElementById('bottomClouds');
+                const arrowUpG     = document.getElementById('arrowUp');
+                const arrowDownG   = document.getElementById('arrowDown');
+                const pageInd      = document.getElementById('pageIndicator');
+                const cloudTitle   = document.getElementById('topCloudTitle');
 
-                // Title on last page
-                const title = document.getElementById('topCloudTitle');
-                title.style.display = isLast ? '' : '';
+                // Desplazar grupos HUD al Y actual de la sección
+                [topClouds, bottomClouds, arrowUpG, arrowDownG, pageInd, cloudTitle].forEach(el => {
+                    if (el) el.setAttribute('transform', `translate(0, ${sectionTopY})`);
+                });
 
-                // Page indicator
-                document.getElementById('pageIndicator').textContent = `Tramo ${page+1} de ${totalPages}`;
+                // Visibility de flechas
+                const isFirst = page === 0;
+                const isLast  = page >= totalPages - 1;
+                arrowUpG.style.display   = isFirst ? 'none' : '';
+                arrowDownG.style.display = isLast  ? 'none' : '';
+                cloudTitle.style.display = isLast  ? '' : 'none';
 
+                pageInd.textContent = `Sección ${page + 1} de ${totalPages}`;
                 currentPage = page;
             }
 
             function mountainNav(dir) {
                 const next = currentPage + dir;
                 if (next < 0 || next >= totalPages) return;
-                // Fade out, switch, fade in
-                const vp = document.getElementById('mountainViewport');
-                vp.style.transition = 'opacity 0.35s';
-                vp.style.opacity = '0';
-                setTimeout(() => {
-                    renderPage(next);
-                    vp.style.opacity = '1';
-                }, 350);
+                renderPage(next);
             }
 
             // Sidebar Toggle & Tooltip Logic
@@ -719,6 +851,8 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 
             // Init
             document.addEventListener('DOMContentLoaded', () => {
+                // Posicionar en la sección base (0) antes de renderizar
+                svg.setAttribute('viewBox', `0 ${totalLogH - vbH} ${vbW} ${vbH}`);
                 renderPage(0);
             });
         </script>
