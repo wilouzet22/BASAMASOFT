@@ -269,7 +269,7 @@ if ($porcentajeTermometro >= 75) {
 </a>
 </nav>
 </aside>
-<main class="pt-24 pb-24 px-container-padding max-w-7xl mx-auto flex flex-col items-center relative h-[calc(100vh-120px)]">
+<main class="pt-16 pb-20 px-0 mx-auto flex flex-col items-center relative h-screen w-full overflow-hidden">
 <!-- Background Elements -->
 <div class="absolute inset-0 -z-10 overflow-hidden">
 <!-- Floating Clouds -->
@@ -288,8 +288,8 @@ if ($porcentajeTermometro >= 75) {
 <!-- Main Content Area (Mountain & Vidas) -->
 <div class="relative w-full h-full flex flex-col md:flex-row items-center justify-center gap-gutter">
 <!-- Central Mountain Component -->
-<div class="relative w-[80vw] max-w-[1200px] h-full flex flex-col items-center justify-center">
-    <svg class="w-full h-full drop-shadow-2xl" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid meet">
+<div class="relative w-full h-full flex flex-col items-center justify-end">
+    <svg class="w-full h-full drop-shadow-2xl" viewBox="0 0 600 800" preserveAspectRatio="xMidYMax slice">
         <defs>
             <linearGradient id="mntMain" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stop-color="#64748b" /> <!-- Slate top -->
