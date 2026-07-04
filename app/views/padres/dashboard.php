@@ -14,7 +14,7 @@
 
     <div class="flex">
         <!-- Premium Sidebar -->
-        <nav class="hidden md:flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-all duration-300">
+        <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-transform duration-300 -translate-x-full lg:translate-x-0">
             <div class="p-8">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="p-2 bg-primary/10 rounded-xl">
@@ -56,11 +56,14 @@
         <main class="flex-1 md:ml-72 min-h-screen bg-surface-container-lowest flex flex-col">
             <!-- Top Bar -->
             <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
-                <div>
-                    <h2 class="text-xl font-bold text-on-surface">Panel de Control</h2>
-                    <p class="text-sm text-on-surface-variant">
-                        Bienvenido, <span class="text-primary font-bold"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
-                    </p>
+                <div class="flex items-center gap-4">
+                    <button id="desktop-menu-toggle" class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95">menu</button>
+                    <div>
+                        <h2 class="text-xl font-bold text-on-surface">Panel de Control</h2>
+                        <p class="text-sm text-on-surface-variant">
+                            Bienvenido, <span class="text-primary font-bold"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
+                        </p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
@@ -68,9 +71,9 @@
                             <p class="text-sm font-bold text-on-surface">Acudiente</p>
                             <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Portal Familiar</p>
                         </div>
-                        <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+                        <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
                             <span class="material-symbols-outlined text-primary">person</span>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </header>
@@ -253,5 +256,29 @@
             <?php require APPROOT . '/views/inc/footer.php'; ?>
         </main>
     </div>
+
+    <style>
+        .force-close { transform: translateX(-100%) !important; }
+        .force-open { transform: translateX(0%) !important; }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('userSidebar');
+            const mobileBtn = document.getElementById('mobile-menu-toggle');
+            const desktopBtn = document.getElementById('desktop-menu-toggle');
+
+            if(mobileBtn && sidebar) {
+                mobileBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('force-open');
+                });
+            }
+
+            if(desktopBtn && sidebar) {
+                desktopBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('force-close');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
