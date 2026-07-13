@@ -84,5 +84,7 @@
             background-size: 32px 32px;
         }
     </style>
+    <?php if (!empty($extraStyles)) echo $extraStyles; ?>
 </head>
-<body class="bg-gray-50">
+<?php $bodyClass = $bodyClass ?? 'bg-gray-50'; ?>
+<body class="<?php echo $bodyClass; ?>">

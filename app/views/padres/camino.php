@@ -1,24 +1,54 @@
 <?php
-// Datos genéricos de prueba - 10 actividades
-$etapas_prueba = [
-    ['id' => 1, 'nombre' => 'Inicio del Sendero', 'estado' => 'completado'],
-    ['id' => 2, 'nombre' => 'Bosque de los Ecos', 'estado' => 'completado'],
-    ['id' => 3, 'nombre' => 'Puente Colgante', 'estado' => 'completado'],
-    ['id' => 4, 'nombre' => 'Refugio Rocoso', 'estado' => 'completado'],
-    ['id' => 5, 'nombre' => 'Cruce del Zorro', 'estado' => 'completado'],
-    ['id' => 6, 'nombre' => 'Valle Perdido', 'estado' => 'completado'],
-    ['id' => 7, 'nombre' => 'Cascada Escondida', 'estado' => 'completado'],
-    ['id' => 8, 'nombre' => 'Mirador del Águila', 'estado' => 'actual'],
-    ['id' => 9, 'nombre' => 'Cueva de Cristal', 'estado' => 'bloqueado'],
-    ['id' => 10, 'nombre' => 'Garganta Profunda', 'estado' => 'bloqueado'],
-    ['id' => 11, 'nombre' => 'Paso Nublado', 'estado' => 'bloqueado'],
-    ['id' => 12, 'nombre' => 'Ladera de los Vientos', 'estado' => 'bloqueado'],
-    ['id' => 13, 'nombre' => 'Cumbre Helada', 'estado' => 'bloqueado'],
-    ['id' => 14, 'nombre' => 'Escalinata del Cielo', 'estado' => 'bloqueado'],
-    ['id' => 15, 'nombre' => 'Cima Zenith', 'estado' => 'bloqueado', 'is_peak' => true]
-];
+$data = $data ?? [];
+$actividades = $data['actividades_camino'] ?? [];
+$etapas = [];
+$actual_assigned = false;
+$now = new DateTime();
 
-$totalEtapas = count($etapas_prueba);
+foreach ($actividades as $index => $act) {
+    $fechaInicio = new DateTime($act->fecha_hora_inicio);
+    $estado = 'bloqueado';
+    
+    if ($fechaInicio <= $now) {
+        // Pasado
+        if ($act->asistencia_registrada > 0) {
+            $estado = 'completado';
+        } else {
+            $estado = 'inasistencia';
+        }
+    } else {
+        // Futuro
+        if (!$actual_assigned) {
+            $estado = 'actual';
+            $actual_assigned = true;
+        } else {
+            $estado = 'bloqueado';
+        }
+    }
+
+    $is_peak = ($index === count($actividades) - 1);
+    $fecha_fmt = $fechaInicio->format('d M Y, h:i A');
+
+    $etapas[] = [
+        'id' => $act->id_actividad,
+        'nombre' => $act->nombre_actividad,
+        'estado' => $estado,
+        'is_peak' => $is_peak,
+        'fecha' => $fecha_fmt,
+        'descripcion' => $act->descripcion ?? 'Sin descripción',
+        'tipo' => $act->nombre_tipo,
+        'sede' => $act->nombre_sede
+    ];
+}
+
+if (empty($etapas)) {
+    $etapas[] = [
+        'id' => 1, 'nombre' => 'Sin actividades asignadas', 'estado' => 'bloqueado', 'is_peak' => true,
+        'fecha' => '', 'descripcion' => '', 'tipo' => '', 'sede' => ''
+    ];
+}
+
+$totalEtapas = count($etapas);
 $totalSections = 10;            // La imagen se divide en 10 secciones
 $perPage      = 4;             // Máx 4 actividades por sección (40 total)
 $totalPages   = max($totalSections, (int)ceil($totalEtapas / $perPage)); // siempre 10 páginas
@@ -43,30 +73,31 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
 {
     $cx = (int)($vbW / 2);
     $puntos = [];
-    
-    // Distribuir a lo largo de toda la montaña (desde arriba hacia arriba)
-    $yStart = $totalH - 450; // Base visible (más arriba para no iniciar en la niebla)
-    $yEnd = 200;             // Cima
-    $rango = $yStart - $yEnd;
-    
+
+    // El camino ahora arranca casi en la base real de la montaña
+    $yStart = $totalH - 80;  // Base de la montaña (casi al fondo del SVG)
+    $yEnd   = 200;            // Cima
+    $rango  = $yStart - $yEnd;
+
     for ($i = 0; $i < $totalEtapas; $i++) {
         $etapa = $etapas[$i];
         $t = $totalEtapas > 1 ? $i / ($totalEtapas - 1) : 0.5;
         $cy = (int)($yStart - $t * $rango);
-        
-        // Curva sinuosa natural simulando un sendero real
-        $frecuencia = 2.5; // Número de curvas
-        $amplitud = 120 * (1 - ($t * 0.4)); // La amplitud (ancho de la curva) reducida para que sea más sutil
-        
+
+        // Curvas más pronunciadas: mayor frecuencia y mayor amplitud
+        $frecuencia = 3.5;  // Más curvas a lo largo del sendero
+        // Amplitud alta en la base, se reduce gradualmente hacia la cima
+        $amplitud = 320 * (1 - ($t * 0.55));
+
         $offset = sin($t * M_PI * $frecuencia) * $amplitud;
-        $cx_pt = max(180, min($vbW - 180, $cx + $offset));
-        
+        $cx_pt = max(120, min($vbW - 120, $cx + $offset));
+
         $is_peak = ($i === $totalEtapas - 1);
         if ($is_peak) {
             $cx_pt = $cx;
             $cy = $yEnd - 30; // Forzar cima un poco más arriba y al centro
         }
-        
+
         $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy, 'is_peak' => $is_peak]);
     }
     return $puntos;
@@ -76,7 +107,7 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
 // Cálculo del termómetro de asistencia
 $actividadesProgramadas = $totalEtapas;
 $actividadesAsistidas = 0;
-foreach ($etapas_prueba as $e) {
+foreach ($etapas as $e) {
     if ($e['estado'] === 'completado') $actividadesAsistidas++;
 }
 if (isset($estadisticas) && is_array($estadisticas)) {
@@ -94,251 +125,222 @@ if ($porcentajeTermometro >= 75) $activeMoodIndex = 0;
 elseif ($porcentajeTermometro >= 50) $activeMoodIndex = 1;
 elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 ?>
-<!DOCTYPE html>
-
-<html class="light" lang="es">
-
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Mi Camino - Zenith Path</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Manrope:wght@400;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "error-container": "#ffdad6",
-                        "secondary-container": "#68abff",
-                        "primary-fixed-dim": "#a1d494",
-                        "inverse-on-surface": "#eef1ef",
-                        "primary": "#154212",
-                        "primary-container": "#2d5a27",
-                        "on-primary-container": "#9dd090",
-                        "on-surface-variant": "#42493e",
-                        "tertiary-fixed": "#ffdcc3",
-                        "on-background": "#181c1b",
-                        "on-secondary": "#ffffff",
-                        "on-tertiary-fixed-variant": "#693b10",
-                        "primary-fixed": "#bcf0ae",
-                        "outline": "#72796e",
-                        "surface-variant": "#e0e3e1",
-                        "surface-container": "#ebefed",
-                        "on-tertiary": "#ffffff",
-                        "surface-dim": "#d7dbd9",
-                        "outline-variant": "#c2c9bb",
-                        "on-primary": "#ffffff",
-                        "inverse-primary": "#a1d494",
-                        "on-secondary-container": "#003e73",
-                        "secondary-fixed": "#d4e3ff",
-                        "secondary": "#0060ac",
-                        "on-surface": "#181c1b",
-                        "on-primary-fixed": "#002201",
-                        "inverse-surface": "#2d3130",
-                        "error": "#ba1a1a",
-                        "tertiary-container": "#744419",
-                        "on-tertiary-container": "#f8b47f",
-                        "on-primary-fixed-variant": "#23501e",
-                        "surface-bright": "#f7faf8",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-high": "#e6e9e7",
-                        "background": "#f7faf8",
-                        "on-error-container": "#93000a",
-                        "secondary-fixed-dim": "#a4c9ff",
-                        "surface-container-low": "#f1f4f2",
-                        "on-secondary-fixed": "#001c39",
-                        "tertiary": "#592e03",
-                        "surface": "#f7faf8",
-                        "on-secondary-fixed-variant": "#004883",
-                        "surface-container-highest": "#e0e3e1",
-                        "on-tertiary-fixed": "#2f1500",
-                        "on-error": "#ffffff",
-                        "tertiary-fixed-dim": "#fcb882",
-                        "surface-tint": "#3b6934"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "container-padding": "20px",
-                        "margin-sm": "12px",
-                        "gutter": "16px",
-                        "margin-lg": "40px",
-                        "unit": "8px",
-                        "margin-md": "24px"
-                    },
-                    "fontFamily": {
-                        "label-md": ["Manrope"],
-                        "headline-lg": ["Plus Jakarta Sans"],
-                        "body-lg": ["Manrope"],
-                        "headline-md": ["Plus Jakarta Sans"],
-                        "headline-sm": ["Plus Jakarta Sans"],
-                        "body-md": ["Manrope"],
-                        "headline-lg-mobile": ["Plus Jakarta Sans"],
-                        "headline-sm-mobile": ["Plus Jakarta Sans"]
-                    },
-                    "fontSize": {
-                        "label-md": ["14px", {
-                            "lineHeight": "20px",
-                            "letterSpacing": "0.02em",
-                            "fontWeight": "600"
-                        }],
-                        "headline-lg": ["32px", {
-                            "lineHeight": "40px",
-                            "fontWeight": "700"
-                        }],
-                        "body-lg": ["18px", {
-                            "lineHeight": "28px",
-                            "fontWeight": "400"
-                        }],
-                        "headline-md": ["24px", {
-                            "lineHeight": "32px",
-                            "fontWeight": "600"
-                        }],
-                        "headline-sm": ["20px", {
-                            "lineHeight": "28px",
-                            "fontWeight": "600"
-                        }],
-                        "body-md": ["16px", {
-                            "lineHeight": "24px",
-                            "fontWeight": "400"
-                        }],
-                        "headline-lg-mobile": ["28px", {
-                            "lineHeight": "36px",
-                            "fontWeight": "700"
-                        }],
-                        "headline-sm-mobile": ["18px", {
-                            "lineHeight": "24px",
-                            "fontWeight": "600"
-                        }]
-                    }
-                },
-            },
-        }
-    </script>
+<?php
+$data = $data ?? [];
+$bodyClass = 'bg-surface-container-lowest text-on-background font-lexend min-h-screen overflow-x-hidden select-none';
+$extraStyles = '
     <style>
         .glass-panel {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-
-        .mountain-path {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            animation: dash 3s linear forwards;
-        }
-
-        @keyframes dash {
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
-
-        .floating {
-            animation: floating 4s ease-in-out infinite;
-        }
-
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+        .floating { animation: floating 4s ease-in-out infinite; }
         @keyframes floating {
-            0% {
-                transform: translateY(0px);
-            }
+            0%   { transform: translateY(0px); }
+            50%  { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .force-close { transform: translateX(-100%) !important; }
+        .force-open  { transform: translateX(0%)    !important; }
 
-            50% {
-                transform: translateY(-10px);
-            }
-
-            100% {
-                transform: translateY(0px);
-            }
+        /* Animacion escalera helicoptero para items del submenu */
+        @keyframes submenu-drop {
+            0%   { opacity: 0; transform: translateY(-18px); }
+            60%  { opacity: 1; transform: translateY(4px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        #asistenciaSubmenu.open .submenu-item {
+            animation: submenu-drop 0.32s cubic-bezier(0.34,1.56,0.64,1) both;
         }
 
-        .force-close {
-            transform: translateX(-100%) !important;
+        /* ── Responsive mountain layout ── */
+        body { min-height: 100dvh; overflow-x: hidden; }
+
+        /* Main scroll container fills full height minus the mobile top-bar */
+        #mainScrollContainer {
+            height: calc(100dvh - 65px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        @media (min-width: 1024px) {
+            #mainScrollContainer { height: 100dvh; }
         }
 
-        .force-open {
-            transform: translateX(0%) !important;
+        /* SVG always fills its container width; height driven by viewBox ratio */
+        #mountainSVG {
+            width: 100%;
+            height: auto;
+            display: block;
+            /* Minimum visual height so the mountain is not too flat on wide screens */
+            min-height: 60vw;
+        }
+        @media (min-width: 768px) {
+            #mountainSVG { min-height: 40vw; }
+        }
+        @media (min-width: 1024px) {
+            #mountainSVG { min-height: 120vh; }
+        }
+
+        /* Thermometer: bottom-right on mobile, mid-right on desktop */
+        #thermometerWidget {
+            position: fixed;
+            right: 0.75rem;
+            bottom: 1rem;
+            top: auto;
+            transform: none;
+            z-index: 40;
+        }
+        @media (min-width: 768px) {
+            #thermometerWidget {
+                top: 50%;
+                bottom: auto;
+                transform: translateY(-50%);
+                right: 1rem;
+            }
+        }
+        /* Shrink thermometer tube on very small screens */
+        @media (max-width: 479px) {
+            #thermometerWidget { display: none; }
+            #thermometerMini   { display: flex !important; }
+        }
+
+        /* Sidebar collapse */
+        @media (min-width: 1024px) {
+            body.sidebar-collapsed #userSidebar { width: 5.5rem; }
+            body.sidebar-collapsed #mainScrollContainer { margin-left: 5.5rem; }
+            body.sidebar-collapsed .sidebar-text { display: none !important; }
+            body.sidebar-collapsed .sidebar-search-container { display: none !important; }
+            body.sidebar-collapsed .sidebar-profile-info { display: none !important; }
+            body.sidebar-collapsed .sidebar-header { padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 4rem; }
+            body.sidebar-collapsed .sidebar-logo-container { flex-direction: column; gap: 0.25rem; }
+            body.sidebar-collapsed .sidebar-item-link { padding-left: 0; padding-right: 0; justify-content: center; }
+            body.sidebar-collapsed #collapseSidebarBtn span { transform: rotate(180deg); }
+        }
+
+        /* Dropdown submenu animation */
+        #asistenciaSubmenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+            opacity: 0;
+        }
+        #asistenciaSubmenu.open {
+            max-height: 320px;
+            opacity: 1;
+        }
+
+        /* Activity detail modal — mobile first */
+        #actividadModal {
+            padding: 0.5rem;
+        }
+        #actividadModal .modal-card {
+            max-height: 90dvh;
+            overflow-y: auto;
+            width: 100%;
+            max-width: 32rem;
+            border-radius: 1.5rem;
+        }
+        @media (min-width: 640px) {
+            #actividadModal { padding: 1.5rem; }
+            #actividadModal .modal-card { border-radius: 2rem; }
         }
     </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
-    </style>
-</head>
+';
+require APPROOT . '/views/inc/header.php';
+?>
 
-<body class="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden select-none">
-    <!-- TopAppBar -->
-    <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding py-unit bg-surface shadow-sm rounded-b-xl border-b border-outline-variant max-w-7xl mx-auto">
-        <div class="flex items-center gap-margin-sm">
-            <div class="relative flex">
-                <button id="menuToggleBtn" class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95">menu</button>
-                <div id="sidebarTooltip" class="absolute top-12 left-0 w-48 bg-primary text-on-primary text-label-md p-3 rounded-lg shadow-lg opacity-0 pointer-events-none transition-opacity duration-500 delay-500 z-50">
-                    <div class="absolute -top-2 left-4 w-4 h-4 bg-primary rotate-45"></div>
-                    Click aquí para hacer pequeña la barra lateral
+<!-- Mobile Header -->
+<header class="lg:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <span class="font-bold text-primary text-lg">Zenith Path</span>
+    </div>
+    <button id="menuToggleBtn" class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+</header>
+
+<div class="flex">
+    <!-- Sidebar -->
+    <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-50 transition-all duration-300 -translate-x-full lg:translate-x-0 overflow-hidden">
+        <button id="closeSidebarBtn" class="lg:hidden absolute top-6 right-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95" title="Cerrar menú">close</button>
+        <button id="collapseSidebarBtn" class="hidden lg:block absolute top-4 left-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 z-10" title="Colapsar menú">
+            <span class="material-symbols-outlined transition-transform duration-300">menu_open</span>
+        </button>
+        <div class="p-8 pb-4 sidebar-header transition-all duration-300">
+            <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
+                <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
+                    <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-16 w-16 object-contain" alt="Logo">
+                </div>
+                <span class="text-2xl font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
+            </div>
+            <p class="text-xs text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
+        </div>
+
+        <div class="px-6 mb-4 sidebar-search-container transition-all duration-300">
+            <div class="relative w-full">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-sm">search</span>
+                <input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-xs font-medium focus:ring-2 focus:ring-primary transition-all" placeholder="Buscar" type="text" />
+            </div>
+        </div>
+
+        <div class="flex-grow px-4 space-y-1 overflow-y-auto">
+            <a class="sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/dashboard">
+                <span class="material-symbols-outlined flex-shrink-0">dashboard</span>
+                <span class="font-medium text-sm sidebar-text">Panel Principal</span>
+            </a>
+
+            <!-- Historial Asistencias (Dropdown) -->
+            <div class="space-y-1">
+                <button id="asistenciaDropdownBtn"
+                        class="sidebar-item-link w-full flex items-center justify-between px-4 py-3 rounded-2xl text-primary bg-primary/5 transition-all group focus:outline-none">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined flex-shrink-0">history</span>
+                        <span class="font-medium text-sm sidebar-text">Historial Asistencias</span>
+                    </div>
+                    <span id="asistenciaDropdownChevron" class="material-symbols-outlined text-sm sidebar-text transition-transform duration-300" style="transform:rotate(180deg)">expand_more</span>
+                </button>
+
+                <div id="asistenciaSubmenu" class="space-y-1 open">
+                    <a class="submenu-item sidebar-item-link bg-primary text-on-primary shadow-sm rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/camino" style="animation-delay:0ms">
+                        <span class="material-symbols-outlined flex-shrink-0" style="font-variation-settings:'FILL' 1;">mountain_flag</span>
+                        <span class="font-medium text-sm sidebar-text">Camino de Montaña</span>
+                    </a>
+                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/puntos" style="animation-delay:80ms">
+                        <span class="material-symbols-outlined flex-shrink-0">workspace_premium</span>
+                        <span class="font-medium text-sm sidebar-text">Mis Puntos</span>
+                    </a>
+                    <button class="submenu-item sidebar-item-link w-full text-left text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all cursor-pointer" onclick="openModal('contactosModal')" style="animation-delay:160ms">
+                        <span class="material-symbols-outlined flex-shrink-0">group</span>
+                        <span class="font-medium text-sm sidebar-text">Contáctanos</span>
+                    </button>
+                    <button class="submenu-item sidebar-item-link w-full text-left text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all cursor-pointer" onclick="openModal('opinionModal')" style="animation-delay:240ms">
+                        <span class="material-symbols-outlined flex-shrink-0">chat_bubble</span>
+                        <span class="font-medium text-sm sidebar-text">Opinión</span>
+                    </button>
                 </div>
             </div>
-            <div class="relative flex-1 min-w-[200px]">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">search</span>
-                <input class="w-full pl-12 pr-4 py-2 bg-surface-container-low border-none rounded-full text-label-md font-label-md focus:ring-2 focus:ring-primary transition-all text-center" placeholder="Buscar" type="text" />
+        </div>
+
+        <div class="p-4 mt-auto border-t border-outline-variant/30 flex items-center justify-center lg:justify-between transition-all duration-300">
+            <div class="flex items-center gap-3 w-full sidebar-item-link">
+                <img alt="User Profile" class="w-10 h-10 rounded-full object-cover border border-outline-variant flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4-sZziL98gyg-93o6NhBHrP9O1Mjg_PrtJ-VzMuxDcwNbPGr5nxHChNA__Afx1axDdlsUMxN0xhHaIfyQ4BJfSa1VKn5BjHv8Hso4JGk4t_9P9ByngNDbUCc2P7c1f4pRZM6NBUD-aFvlmReMobzBGytlvFkVx0doS8C7fu7znh8lOkuwi3f_zoHfXtkbgbMl8I_rcZhDiqgDqlXFzj8xwpAy8gYUn9ysa3z36Snvz1Y8nZVPo8VBtjuCETR-kIr1O9lPZ0BJzoC3" />
+                <div class="flex flex-col sidebar-profile-info">
+                    <span class="text-sm font-bold text-on-surface">Usuario</span>
+                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="text-xs text-error hover:underline">Cerrar sesión</a>
+                </div>
             </div>
         </div>
-        <div class="flex items-center gap-margin-sm">
-            <span class="hidden md:block font-headline-sm text-secondary">Zenith Path</span>
-            <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border-2 border-primary-fixed cursor-pointer block hover:ring-2 hover:ring-primary transition-all shadow-md" title="Cerrar sesión">
-                <img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional studio headshot of a smiling user against a soft, blurred mountain landscape background. The lighting is bright and warm, reflecting a sense of progress and wellness. High-end portrait photography style with crisp detail and natural skin tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4-sZziL98gyg-93o6NhBHrP9O1Mjg_PrtJ-VzMuxDcwNbPGr5nxHChNA__Afx1axDdlsUMxN0xhHaIfyQ4BJfSa1VKn5BjHv8Hso4JGk4t_9P9ByngNDbUCc2P7c1f4pRZM6NBUD-aFvlmReMobzBGytlvFkVx0doS8C7fu7znh8lOkuwi3f_zoHfXtkbgbMl8I_rcZhDiqgDqlXFzj8xwpAy8gYUn9ysa3z36Snvz1Y8nZVPo8VBtjuCETR-kIr1O9lPZ0BJzoC3" />
-            </a>
-        </div>
-    </header>
-    <!-- Side Navigation Drawer -->
-    <aside id="userSidebar" class="fixed left-0 top-0 h-full w-80 bg-surface-container-low flex flex-col z-50 shadow-lg transition-transform duration-300 rounded-r-xl pt-24 -translate-x-full">
-        <button id="closeSidebarBtn" class="absolute top-6 right-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95" title="Cerrar menú">close</button>
-        <div class="px-6 mb-8 text-left">
-            <h2 class="text-headline-md font-headline-md text-primary">Mi Camino</h2>
-            <p class="text-body-md text-on-surface-variant">Nivel: Base de Montaña</p>
-        </div>
-        <nav class="flex flex-col gap-1">
-            <a class="text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/dashboard">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="font-label-md">Panel Principal</span>
-            </a>
-            <a class="bg-primary-container text-on-primary-container hover:bg-surface-variant rounded-full px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/camino">
-                <span class="material-symbols-outlined">mountain_flag</span>
-                <span class="font-label-md">Camino de Progreso</span>
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 my-1 flex items-center gap-3 hover:bg-surface-variant rounded-full transition-all" href="<?php echo URLROOT; ?>/padres/asistencias">
-                <span class="material-symbols-outlined">history</span>
-                <span class="font-label-md">Historial Asistencia</span>
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 my-1 flex items-center gap-3 hover:bg-surface-variant rounded-full transition-all" href="<?php echo URLROOT; ?>/padres/puntos">
-                <span class="material-symbols-outlined">workspace_premium</span>
-                <span class="font-label-md">Mis Puntos</span>
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 my-1 flex items-center gap-3 hover:bg-surface-variant rounded-full transition-all cursor-pointer" onclick="openModal('contactosModal')">
-                <span class="material-symbols-outlined">group</span>
-                <span class="font-label-md">Contactos</span>
-            </a>
-            <a class="text-on-surface-variant px-4 py-3 mx-2 my-1 flex items-center gap-3 hover:bg-surface-variant rounded-full transition-all cursor-pointer" onclick="openModal('opinionModal')">
-                <span class="material-symbols-outlined">chat_bubble</span>
-                <span class="font-label-md">Opinión</span>
-            </a>
-        </nav>
-    </aside>
-    <main id="mainScrollContainer" class="pt-0 pb-4 px-0 mx-auto flex flex-col items-center relative h-screen w-full overflow-y-auto overflow-x-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth">
+    </nav>
+
+    <main id="mainScrollContainer" class="flex-1 lg:ml-72 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
 
         <!-- ====== MOUNTAIN VIEWPORT (Native scroll) ====== -->
         <div class="relative w-full" id="mountainViewport">
             <?php
             // Generar todos los puntos
-            $allPoints = generarTodosLosWaypoints($etapas_prueba, $totalEtapas, $viewBoxW, $totalHeight);
+            $allPoints = generarTodosLosWaypoints($etapas, $totalEtapas, $viewBoxW, $totalHeight);
 
             // Determinar colores según la hora del día
             $hora = (int)date('H');
@@ -352,9 +354,6 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 $distMnt = ['#1e1b4b', '#0f172a', '#020617'];
                 $orb = ['fill' => '#e2e8f0', 'glow' => '#f1f5f9', 'r1' => 80, 'r2' => 60, 'opacity' => 0.4]; // Luna
                 $showStars = true;
-                $cBase = '#0f172a';
-                $cMid  = '#1e293b';
-                $cTop  = '#334155';
             } elseif ($isTwilight) {
                 // Amanecer / Atardecer
                 $skyStops = ['#1e1b4b', '#4c1d95', '#be185d', '#f59e0b'];
@@ -362,9 +361,6 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 $distMnt = ['#4c1d95', '#312e81', '#1e1b4b'];
                 $orb = ['fill' => '#fffbeb', 'glow' => '#fcd34d', 'r1' => 120, 'r2' => 90, 'opacity' => 0.6]; // Sol cálido
                 $showStars = true;
-                $cBase = '#fbcfe8'; // Rosa claro
-                $cMid  = '#fdf2f8'; // Rosa muy claro
-                $cTop  = '#ffffff';
             } else {
                 // Día
                 $skyStops = ['#38bdf8', '#7dd3fc', '#bae6fd', '#e0f2fe'];
@@ -372,9 +368,6 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 $distMnt = ['#0ea5e9', '#0284c7', '#0369a1'];
                 $orb = ['fill' => '#fef08a', 'glow' => '#fde047', 'r1' => 100, 'r2' => 80, 'opacity' => 0.5]; // Sol intenso
                 $showStars = false;
-                $cBase = '#f1f5f9';
-                $cMid  = '#f8fafc';
-                $cTop  = '#ffffff';
             }
             ?>
 
@@ -438,7 +431,7 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                         <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
                     </filter>
                     <filter id="cloudBlur" x="-60%" y="-60%" width="220%" height="220%">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="40" />
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="35" />
                     </filter>
                     <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stop-color="<?= $skyStops[0] ?>" />
@@ -513,50 +506,103 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
 
                     <!-- === ERODED MOUNTAIN TRAIL === -->
                     <filter id="pathShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.45"/>
+                        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.45" />
                     </filter>
-                    
+
                     <g filter="url(#pathShadow)">
                         <!-- Borde exterior (sombra/tierra oscura) -->
                         <path id="pathBase" fill="none" stroke="#291e12" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
                         <!-- Camino de tierra principal -->
                         <path id="pathDirt" fill="none" stroke="#8b7355" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
-                        <!-- Brillo central mágico -->
-                        <path id="pathMain" class="mountain-path" fill="none" stroke="#fde68a" stroke-width="4" stroke-dasharray="15 20" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" filter="url(#glow)" />
                     </g>
 
                     <!-- Waypoints -->
                     <g id="waypointsGroup"></g>
 
-                    <!-- TOP CLOUD BANK (hides upper transition / peak) -->
-                    <g filter="url(#cloudBlur)" pointer-events="none" id="topClouds">
-                        <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1195" fill="<?= $cBase ?>" />
-                        <ellipse cx="<?= $centroX ?>" cy="195" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="105" fill="<?= $cMid ?>" />
-                        <ellipse cx="<?= $centroX - 300 ?>" cy="235" rx="600" ry="115" fill="<?= $cTop ?>" />
-                        <ellipse cx="<?= $centroX + 280 ?>" cy="245" rx="550" ry="130" fill="<?= $cBase ?>" />
-                        <ellipse cx="<?= $centroX ?>" cy="285" rx="<?= (int)($viewBoxW * 1.0) ?>" ry="80" fill="<?= $cTop ?>" opacity="0.85" />
-                        <ellipse cx="<?= $centroX ?>" cy="340" rx="<?= (int)($viewBoxW * 0.8) ?>" ry="50" fill="<?= $cMid ?>" opacity="0.6" />
+                    <!-- NUBES SOLO EN LA CIMA (zona alta del SVG) -->
+                    <g filter="url(#cloudBlur)" pointer-events="none" id="peakClouds">
+                        <!-- Fondo base grisáceo -->
+                        <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1080" fill="#f1f5f9" />
+                        
+                        <!-- Capa de nubes densas y oscuras (atrás) -->
+                        <ellipse cx="<?= $centroX - 150 ?>" cy="220" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="140" fill="#cbd5e1" opacity="0.8" />
+                        <ellipse cx="<?= $centroX + 200 ?>" cy="230" rx="<?= (int)($viewBoxW * 1.3) ?>" ry="130" fill="#94a3b8" opacity="0.5" />
+                        
+                        <!-- Capa intermedia principal -->
+                        <ellipse cx="<?= $centroX ?>" cy="260" rx="<?= (int)($viewBoxW * 1.68) ?>" ry="108" fill="#e2e8f0" opacity="0.9" />
+                        <ellipse cx="<?= $centroX - 350 ?>" cy="285" rx="700" ry="120" fill="#f1f5f9" opacity="0.85" />
+                        <ellipse cx="<?= $centroX + 320 ?>" cy="290" rx="650" ry="114" fill="#e2e8f0" opacity="0.95" />
+                        
+                        <!-- Capa frontal más dispersa y translúcida -->
+                        <ellipse cx="<?= $centroX - 100 ?>" cy="330" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="85" fill="#f8fafc" opacity="0.6" />
+                        <ellipse cx="<?= $centroX + 150 ?>" cy="340" rx="<?= (int)($viewBoxW * 0.9) ?>" ry="75" fill="#cbd5e1" opacity="0.4" />
+                        <ellipse cx="<?= $centroX ?>" cy="360" rx="<?= (int)($viewBoxW * 1.08) ?>" ry="90" fill="#e2e8f0" opacity="0.7" />
+                        
+                        <!-- Niebla baja -->
+                        <ellipse cx="<?= $centroX - 400 ?>" cy="380" rx="800" ry="60" fill="#f1f5f9" opacity="0.3" />
+                        <ellipse cx="<?= $centroX + 400 ?>" cy="385" rx="800" ry="60" fill="#cbd5e1" opacity="0.2" />
                     </g>
 
-                    <!-- BOTTOM CLOUD BANK (covers bottom flat color) -->
-                    <g filter="url(#cloudBlur)" pointer-events="none" id="bottomClouds">
-                        <rect x="-2000" y="<?= $totalHeight - 400 ?>" width="<?= $viewBoxW + 4000 ?>" height="500" fill="<?= $cBase ?>" />
-                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight - 350 ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="250" fill="<?= $cMid ?>" />
-                        <ellipse cx="<?= $centroX - 450 ?>" cy="<?= $totalHeight - 300 ?>" rx="800" ry="200" fill="<?= $cTop ?>" />
-                        <ellipse cx="<?= $centroX + 400 ?>" cy="<?= $totalHeight - 250 ?>" rx="750" ry="200" fill="<?= $cBase ?>" />
-                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight - 150 ?>" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="150" fill="<?= $cTop ?>" opacity="0.8" />
+                    <!-- NUBES EN LA BASE (móviles muy pequeños) para tapar el final de la montaña -->
+                    <g filter="url(#cloudBlur)" pointer-events="none" id="baseClouds" class="md:hidden">
+                        <!-- Capas extra añadidas por encima de la base -->
+                        <ellipse cx="<?= $centroX - 300 ?>" cy="<?= $totalHeight - 280 ?>" rx="600" ry="120" fill="#f8fafc" opacity="0.6" />
+                        <ellipse cx="<?= $centroX + 250 ?>" cy="<?= $totalHeight - 260 ?>" rx="650" ry="110" fill="#f8fafc" opacity="0.5" />
+                        <ellipse cx="<?= $centroX - 700 ?>" cy="<?= $totalHeight - 220 ?>" rx="700" ry="140" fill="#f1f5f9" opacity="0.7" />
+                        <ellipse cx="<?= $centroX + 600 ?>" cy="<?= $totalHeight - 200 ?>" rx="750" ry="150" fill="#f1f5f9" opacity="0.75" />
+                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight - 190 ?>" rx="800" ry="160" fill="#f8fafc" opacity="0.8" />
+
+                        <!-- Capa trasera lejana -->
+                        <ellipse cx="<?= $centroX - 600 ?>" cy="<?= $totalHeight - 150 ?>" rx="900" ry="150" fill="#f8fafc" opacity="0.8" />
+                        <ellipse cx="<?= $centroX + 600 ?>" cy="<?= $totalHeight - 120 ?>" rx="950" ry="140" fill="#f8fafc" opacity="0.8" />
+                        
+                        <!-- Capa intermedia alta -->
+                        <ellipse cx="<?= $centroX - 200 ?>" cy="<?= $totalHeight - 80 ?>" rx="700" ry="200" fill="#f1f5f9" opacity="0.9" />
+                        <ellipse cx="<?= $centroX + 300 ?>" cy="<?= $totalHeight - 70 ?>" rx="750" ry="220" fill="#f1f5f9" opacity="0.9" />
+                        
+                        <!-- Capa principal central -->
+                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="300" fill="#e2e8f0" opacity="0.95" />
+                        
+                        <!-- Capas laterales densas -->
+                        <ellipse cx="<?= $centroX - 500 ?>" cy="<?= $totalHeight + 20 ?>" rx="850" ry="280" fill="#e2e8f0" opacity="0.95" />
+                        <ellipse cx="<?= $centroX + 450 ?>" cy="<?= $totalHeight + 30 ?>" rx="800" ry="260" fill="#e2e8f0" opacity="0.95" />
+                        
+                        <!-- Nubes oscuras de base (transición hacia el fondo sólido) -->
+                        <ellipse cx="<?= $centroX - 800 ?>" cy="<?= $totalHeight + 80 ?>" rx="1000" ry="350" fill="#cbd5e1" opacity="0.9" />
+                        <ellipse cx="<?= $centroX + 700 ?>" cy="<?= $totalHeight + 100 ?>" rx="1100" ry="380" fill="#cbd5e1" opacity="0.95" />
+                        
+                        <!-- Base sólida final -->
+                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight + 150 ?>" rx="<?= (int)($viewBoxW * 1.8) ?>" ry="450" fill="#cbd5e1" opacity="1" />
                     </g>
 
-                    <!-- Title over top clouds -->
-                    <text id="topCloudTitle" x="<?= $centroX ?>" y="200" font-family="'Algerian','Georgia',serif" font-size="<?= max(36, (int)($viewBoxW * 0.042)) ?>" fill="#FFD700" text-anchor="middle" font-weight="bold" style="filter:drop-shadow(2px 4px 5px rgba(0,0,0,0.55)); letter-spacing:2px;">¡Confiamos en ti!</text>
                 </g><!-- end hudGroup -->
             </svg>
         </div><!-- end mountainViewport -->
 
-        <!-- ====== THERMOMETER (fixed right) ====== -->
-        <div class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col items-center z-40 bg-white/90 backdrop-blur-md p-3 rounded-[48px] border border-outline-variant shadow-2xl gap-2">
+        <!-- Filler para tapar el espacio en blanco hasta el footer en móviles -->
+        <div class="w-full flex-1 bg-slate-300 md:hidden block min-h-[100px]"></div>
+
+        <!-- ====== THERMOMETER (responsive — hidden on xs, fixed on sm+) ====== -->
+        <!-- Mini pill shown only on xs (< 480px) -->
+        <div id="thermometerMini" class="fixed bottom-4 right-4 z-40 hidden items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-2 rounded-full border border-outline-variant shadow-xl">
+            <span class="material-symbols-outlined text-base" style="color:<?php
+                if ($porcentajeTermometro >= 75) echo '#22c55e';
+                elseif ($porcentajeTermometro >= 50) echo '#eab308';
+                elseif ($porcentajeTermometro >= 25) echo '#f97316';
+                else echo '#ef4444';
+            ?>;"><?php
+                if ($porcentajeTermometro >= 75) echo 'sentiment_very_satisfied';
+                elseif ($porcentajeTermometro >= 50) echo 'sentiment_neutral';
+                elseif ($porcentajeTermometro >= 25) echo 'sentiment_dissatisfied';
+                else echo 'sentiment_very_dissatisfied';
+            ?></span>
+            <span class="text-xs font-black text-primary"><?= $porcentajeTermometro ?>%</span>
+        </div>
+
+        <!-- Full thermometer for sm+ -->
+        <div id="thermometerWidget" class="flex flex-col items-center bg-white/90 backdrop-blur-md p-3 rounded-[48px] border border-outline-variant shadow-2xl gap-2">
             <!-- Tube + Faces inside -->
-            <div class="relative flex flex-col items-center" style="height:200px; width:40px;">
+            <div class="relative flex flex-col items-center" style="height:180px; width:36px;">
                 <!-- Tube background -->
                 <div class="absolute inset-x-2 top-0 bottom-0 rounded-t-full bg-slate-200/70 border border-slate-300 shadow-inner overflow-hidden">
                     <!-- Liquid fill -->
@@ -566,26 +612,25 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 <!-- Faces overlaid inside the tube at 25%, 50%, 75%, 100% positions -->
                 <?php
                 $faces = [
-                    ['icon' => 'sentiment_very_dissatisfied', 'pct' => 0, 'color' => '#ef4444'],
-                    ['icon' => 'sentiment_dissatisfied', 'pct' => 33, 'color' => '#f97316'],
-                    ['icon' => 'sentiment_neutral', 'pct' => 58, 'color' => '#eab308'],
-                    ['icon' => 'sentiment_very_satisfied', 'pct' => 83, 'color' => '#22c55e'],
+                    ['icon' => 'sentiment_very_dissatisfied', 'pct' => 0,  'color' => '#ef4444'],
+                    ['icon' => 'sentiment_dissatisfied',      'pct' => 33, 'color' => '#f97316'],
+                    ['icon' => 'sentiment_neutral',           'pct' => 58, 'color' => '#eab308'],
+                    ['icon' => 'sentiment_very_satisfied',    'pct' => 83, 'color' => '#22c55e'],
                 ];
                 foreach ($faces as $face):
-                    // bottom-% = face pct; top = 100 - pct - small offset
                     $topPct = 100 - $face['pct'] - 12;
                     $covered = $porcentajeTermometro >= ($face['pct'] + 10);
                 ?>
                     <div class="absolute left-0 right-0 flex justify-center" style="top:<?= $topPct ?>%;">
                         <span class="material-symbols-outlined transition-all duration-700"
-                            style="font-size:18px; color:<?= $covered ? '#ffffff' : $face['color'] ?>;">
+                            style="font-size:16px; color:<?= $covered ? '#ffffff' : $face['color'] ?>;">
                             <?= $face['icon'] ?>
                         </span>
                     </div>
                 <?php endforeach; ?>
             </div>
             <!-- Bulb -->
-            <div class="w-10 h-10 rounded-full -mt-1 z-10 flex items-center justify-center border-2 border-white shadow-md"
+            <div class="w-9 h-9 rounded-full -mt-1 z-10 flex items-center justify-center border-2 border-white shadow-md"
                 style="background:<?= $porcentajeTermometro > 0 ? '#ef4444' : '#94a3b8' ?>;">
                 <div class="w-3 h-3 bg-white/40 rounded-full"></div>
             </div>
@@ -619,12 +664,11 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 const pathD = buildSVGPath(pts);
                 document.getElementById('pathBase').setAttribute('d', pathD);
                 document.getElementById('pathDirt').setAttribute('d', pathD);
-                document.getElementById('pathMain').setAttribute('d', pathD);
 
                 // Update waypoints
                 const g = document.getElementById('waypointsGroup');
                 g.innerHTML = '';
-                
+
                 let activeY = totalH; // default to bottom
 
                 pts.forEach(pt => {
@@ -637,62 +681,118 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                     // Renderización de los nodos (puntos) con diseño premium
                     if (pt.is_peak) {
                         const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c1.setAttribute('cx', pt.cx); c1.setAttribute('cy', pt.cy);
+                        c1.setAttribute('cx', pt.cx);
+                        c1.setAttribute('cy', pt.cy);
                         c1.setAttribute('r', '22');
                         c1.setAttribute('fill', pt.estado === 'completado' ? '#fcd34d' : '#ffffff');
-                        c1.setAttribute('stroke', '#fbbf24'); c1.setAttribute('stroke-width', '4');
+                        c1.setAttribute('stroke', '#fbbf24');
+                        c1.setAttribute('stroke-width', '4');
                         c1.setAttribute('filter', 'url(#glow)');
-                        
+
                         const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c2.setAttribute('cx', pt.cx); c2.setAttribute('cy', pt.cy);
+                        c2.setAttribute('cx', pt.cx);
+                        c2.setAttribute('cy', pt.cy);
                         c2.setAttribute('r', '10');
                         c2.setAttribute('fill', pt.estado === 'completado' ? '#ffffff' : '#fcd34d');
-                        
-                        group.appendChild(c1); group.appendChild(c2);
+
+                        group.appendChild(c1);
+                        group.appendChild(c2);
                     } else {
                         const colors = {
-                            completado: { fill: '#34d399', stroke: '#059669', outer: '#a7f3d0' },
-                            actual:     { fill: '#fbbf24', stroke: '#d97706', outer: '#fde68a' },
-                            bloqueado:  { fill: '#94a3b8', stroke: '#475569', outer: '#e2e8f0' }
+                            completado: { fill: '#10b981', stroke: '#047857', outer: '#34d399' },
+                            actual: { fill: '#f59e0b', stroke: '#b45309', outer: '#fbbf24' },
+                            inasistencia: { fill: '#ef4444', stroke: '#991b1b', outer: '#f87171' },
+                            bloqueado: { fill: '#94a3b8', stroke: '#475569', outer: '#cbd5e1' }
                         };
                         const c = colors[pt.estado] || colors.bloqueado;
-                        
+
+                        // Interactive Group
+                        const pointGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        pointGroup.setAttribute('class', 'cursor-pointer transition-transform hover:scale-110');
+                        pointGroup.style.transformOrigin = `${pt.cx}px ${pt.cy}px`;
+                        pointGroup.addEventListener('click', () => {
+                            abrirModalActividad(pt);
+                        });
+
                         // Outer glowing ring
                         const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        outer.setAttribute('cx', pt.cx); outer.setAttribute('cy', pt.cy);
+                        outer.setAttribute('cx', pt.cx);
+                        outer.setAttribute('cy', pt.cy);
                         outer.setAttribute('r', '16');
-                        outer.setAttribute('fill', c.outer); outer.setAttribute('opacity', '0.6');
-                        if(pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
-                        
+                        outer.setAttribute('fill', c.outer);
+                        outer.setAttribute('opacity', '0.6');
+                        if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
+
                         // Main circle
                         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', pt.cx); circle.setAttribute('cy', pt.cy);
+                        circle.setAttribute('cx', pt.cx);
+                        circle.setAttribute('cy', pt.cy);
                         circle.setAttribute('r', '10');
-                        circle.setAttribute('fill', c.fill); circle.setAttribute('stroke', c.stroke);
+                        circle.setAttribute('fill', c.fill);
+                        circle.setAttribute('stroke', c.stroke);
                         circle.setAttribute('stroke-width', '3');
-                        
-                        group.appendChild(outer);
-                        group.appendChild(circle);
 
-                        // Animated ping for current level
+                        pointGroup.appendChild(outer);
+                        pointGroup.appendChild(circle);
+
+                        // Animated heartbeat (latido lento) for current level
                         if (pt.estado === 'actual') {
                             const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                            pulse.setAttribute('cx', pt.cx); pulse.setAttribute('cy', pt.cy);
-                            pulse.setAttribute('r', '24'); 
+                            pulse.setAttribute('cx', pt.cx);
+                            pulse.setAttribute('cy', pt.cy);
+                            pulse.setAttribute('r', '16');
                             pulse.setAttribute('fill', 'none');
                             pulse.setAttribute('stroke', '#fbbf24');
                             pulse.setAttribute('stroke-width', '3');
-                            pulse.setAttribute('class', 'animate-ping');
-                            group.appendChild(pulse);
+                            pulse.setAttribute('opacity', '0.8');
+
+                            // Animación del radio (Latido: bum-bum... bum-bum...)
+                            const animR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                            animR.setAttribute('attributeName', 'r');
+                            animR.setAttribute('values', '16; 20; 16; 26; 16; 16');
+                            animR.setAttribute('keyTimes', '0; 0.15; 0.3; 0.45; 0.7; 1');
+                            animR.setAttribute('dur', '2.5s');
+                            animR.setAttribute('repeatCount', 'indefinite');
+                            pulse.appendChild(animR);
+
+                            // Animación de la opacidad sincronizada
+                            const animOpacity = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                            animOpacity.setAttribute('attributeName', 'opacity');
+                            animOpacity.setAttribute('values', '0.8; 0.5; 0.8; 0; 0.8; 0.8');
+                            animOpacity.setAttribute('keyTimes', '0; 0.15; 0.3; 0.45; 0.7; 1');
+                            animOpacity.setAttribute('dur', '2.5s');
+                            animOpacity.setAttribute('repeatCount', 'indefinite');
+                            pulse.appendChild(animOpacity);
+                            
+                            pointGroup.appendChild(pulse);
                         }
+                        
+                        group.appendChild(pointGroup);
                     }
-                    
-                    // Tooltip text
+
+                    // Tooltip: background pill + text for readability on all screen sizes
+                    const labelFontSize = Math.max(18, Math.round(vbW / 70));
+                    const labelX = pt.cx + 22;
+                    const labelY = pt.cy + Math.round(labelFontSize * 0.38);
+                    const labelW = pt.nombre.length * labelFontSize * 0.55 + 20;
+                    const labelH = labelFontSize + 14;
+
+                    const pill = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    pill.setAttribute('x', labelX - 6);
+                    pill.setAttribute('y', labelY - Math.round(labelFontSize * 0.82));
+                    pill.setAttribute('width', labelW);
+                    pill.setAttribute('height', labelH);
+                    pill.setAttribute('rx', labelH / 2);
+                    pill.setAttribute('fill', 'rgba(0,0,0,0.55)');
+                    group.appendChild(pill);
+
                     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    txt.setAttribute('x', pt.cx + 20); txt.setAttribute('y', pt.cy + 5);
-                    txt.setAttribute('fill', '#ffffff'); txt.setAttribute('font-size', '16');
-                    txt.setAttribute('font-weight', 'bold'); txt.setAttribute('font-family', 'Manrope,sans-serif');
-                    txt.setAttribute('filter', 'url(#glow)');
+                    txt.setAttribute('x', labelX);
+                    txt.setAttribute('y', labelY);
+                    txt.setAttribute('fill', '#ffffff');
+                    txt.setAttribute('font-size', labelFontSize);
+                    txt.setAttribute('font-weight', 'bold');
+                    txt.setAttribute('font-family', 'Manrope,sans-serif');
                     txt.textContent = pt.nombre;
                     group.appendChild(txt);
                     g.appendChild(group);
@@ -702,28 +802,31 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 setTimeout(() => {
                     const scrollContainer = document.getElementById('mainScrollContainer');
                     const svg = document.getElementById('mountainSVG');
-                    // Calculate relative scroll position
-                    const ratio = svg.clientHeight / totalH;
-                    const scrollTarget = (activeY * ratio) - (scrollContainer.clientHeight / 2);
-                    scrollContainer.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+                    if (!svg) return;
+                    const ratio = svg.getBoundingClientRect().height / totalH;
+                    const scrollTarget = (activeY * ratio) - (scrollContainer.clientHeight * 0.55);
+                    scrollContainer.scrollTo({
+                        top: Math.max(0, scrollTarget),
+                        behavior: 'smooth'
+                    });
                 }, 100);
             }
 
-            // Sidebar Toggle & Tooltip Logic
+            // Sidebar Toggle Logic
             const menuBtn = document.getElementById('menuToggleBtn');
             const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
             const sidebar = document.getElementById('userSidebar');
-            const tooltip = document.getElementById('sidebarTooltip');
 
-            if (window.innerWidth >= 1024 && tooltip) {
-                setTimeout(() => {
-                    tooltip.classList.remove('opacity-0');
-                }, 1000);
+            if (collapseSidebarBtn) {
+                collapseSidebarBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('sidebar-collapsed');
+                });
             }
+
             if (menuBtn && sidebar) {
                 menuBtn.addEventListener('click', () => {
-                    sidebar.classList.add('force-open');
-                    if (tooltip) tooltip.classList.add('opacity-0');
+                    sidebar.classList.toggle('force-open');
                 });
             }
             if (closeSidebarBtn && sidebar) {
@@ -731,6 +834,41 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                     sidebar.classList.remove('force-open');
                 });
             }
+
+            // ── Historial Asistencias Dropdown ──
+            const dropBtn  = document.getElementById('asistenciaDropdownBtn');
+            const submenu  = document.getElementById('asistenciaSubmenu');
+            const chevron  = document.getElementById('asistenciaDropdownChevron');
+
+            // This page is a child — start opened
+            if (submenu) {
+                submenu.classList.remove('hidden');
+                submenu.offsetHeight; // reflow
+                submenu.classList.add('open');
+            }
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+
+            if (dropBtn && submenu) {
+                dropBtn.addEventListener('click', () => {
+                    if (submenu.classList.contains('open')) {
+                        submenu.classList.remove('open');
+                        chevron && (chevron.style.transform = 'rotate(0deg)');
+                        dropBtn.classList.remove('text-primary', 'bg-primary/5');
+                    } else {
+                        submenu.classList.remove('hidden');
+                        submenu.offsetHeight;
+                        submenu.classList.add('open');
+                        chevron && (chevron.style.transform = 'rotate(180deg)');
+                        dropBtn.classList.add('text-primary', 'bg-primary/5');
+                    }
+                });
+            }
+
+            // ── Auto-abrir modal por hash de URL ──
+            // Permite que otros sidebars enlacen a camino#contactos o camino#opinion
+            const hash = window.location.hash;
+            if (hash === '#contactos') { setTimeout(() => openModal('contactosModal'), 400); }
+            if (hash === '#opinion')   { setTimeout(() => openModal('opinionModal'),   400); }
 
             // Modal Logic
             function openModal(id) {
@@ -757,6 +895,45 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 }
             }
 
+            function abrirModalActividad(pt) {
+                // Seleccionar los elementos del modal
+                const modalTitle = document.getElementById('actTitle');
+                const modalDate = document.getElementById('actDate');
+                const modalDesc = document.getElementById('actDesc');
+                const modalStatus = document.getElementById('actStatus');
+                const modalType = document.getElementById('actType');
+                const modalSede = document.getElementById('actSede');
+
+                // Llenar datos
+                modalTitle.textContent = pt.nombre;
+                modalDate.textContent = pt.fecha;
+                modalDesc.textContent = pt.descripcion;
+                modalType.textContent = pt.tipo;
+                modalSede.textContent = pt.sede;
+
+                // Estilizar el badge de estado
+                modalStatus.className = 'px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider';
+                let icon = '';
+                
+                if (pt.estado === 'completado') {
+                    modalStatus.classList.add('bg-emerald-100', 'text-emerald-700');
+                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">check_circle</span> Completado';
+                } else if (pt.estado === 'inasistencia') {
+                    modalStatus.classList.add('bg-red-100', 'text-red-700');
+                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">cancel</span> Inasistencia';
+                } else if (pt.estado === 'actual') {
+                    modalStatus.classList.add('bg-amber-100', 'text-amber-700');
+                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">star</span> Próxima';
+                } else {
+                    modalStatus.classList.add('bg-slate-100', 'text-slate-700');
+                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">lock</span> Bloqueado';
+                }
+                modalStatus.innerHTML = icon;
+
+                // Abrir el modal
+                openModal('actividadModal');
+            }
+
             // Init
             document.addEventListener('DOMContentLoaded', () => {
                 renderAll();
@@ -777,6 +954,54 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
         </div>
 
         <!-- Modals -->
+        
+        <!-- Modal Detalles de Actividad -->
+        <div id="actividadModal" class="fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
+            <div class="modal-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
+                <!-- Imagen cabecera representativa -->
+                <div class="h-40 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-6xl opacity-20 absolute">landscape</span>
+                    <button onclick="closeModal('actividadModal')" class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                    <!-- Status Badge sobre la imagen -->
+                    <div id="actStatus" class="absolute bottom-4 left-6 bg-white shadow px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider">
+                        Estado
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <h2 id="actTitle" class="text-2xl font-black text-primary mb-2">Nombre de Actividad</h2>
+                    
+                    <div class="flex items-center gap-4 text-sm text-on-surface-variant mb-4 pb-4 border-b border-outline-variant">
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[18px]">event</span>
+                            <span id="actDate">Fecha</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[18px]">location_on</span>
+                            <span id="actSede">Sede</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[18px]">category</span>
+                            <span id="actType">Tipo</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-sm font-bold text-on-surface mb-1">Resumen de la Actividad</h4>
+                        <p id="actDesc" class="text-sm text-on-surface-variant leading-relaxed">
+                            Descripción detallada de la actividad aquí.
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-surface-container p-4 flex justify-end">
+                    <button onclick="closeModal('actividadModal')" class="px-6 py-2 bg-primary text-on-primary font-bold rounded-full hover:bg-primary-hover transition-colors shadow-sm">Entendido</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Contactos Modal -->
         <div id="contactosModal" class="fixed inset-0 z-[60] hidden">
             <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
@@ -822,6 +1047,11 @@ elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
                 </form>
             </div>
         </div>
+
+    </main>
+</div><!-- end flex -->
+
+<?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 
 </html>

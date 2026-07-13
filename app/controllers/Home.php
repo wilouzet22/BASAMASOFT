@@ -1,15 +1,29 @@
 <?php
 class Home extends Controller {
+    private $actividadModel;
+
     public function __construct() {
-        // No specific model needed for landing page yet
+        $this->actividadModel = $this->model('ActividadModel');
     }
 
     public function index() {
+        $actividades = $this->actividadModel->getProximasActividadesVisitante(3);
         $data = [
-            'title' => 'EduSaft'
+            'title' => 'EduSaft',
+            'actividades' => $actividades
         ];
 
         $this->view('home/index', $data);
+    }
+
+    public function calendario() {
+        $actividades = $this->actividadModel->getAllActividadesVisitante();
+        $data = [
+            'title' => 'Calendario de Actividades',
+            'actividades' => $actividades
+        ];
+
+        $this->view('home/calendario', $data);
     }
 
     public function terminos() {

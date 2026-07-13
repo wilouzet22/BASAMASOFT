@@ -1,6 +1,28 @@
 <?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
 
 <body class="bg-surface-container-lowest text-on-background font-lexend min-h-screen">
+<style>
+    /* Dropdown submenu animation */
+    #asistenciaSubmenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+        opacity: 0;
+    }
+    #asistenciaSubmenu.open {
+        max-height: 320px;
+        opacity: 1;
+    }
+    /* Animacion escalera helicoptero para items del submenu */
+    @keyframes submenu-drop {
+        0%   { opacity: 0; transform: translateY(-18px); }
+        60%  { opacity: 1; transform: translateY(4px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    #asistenciaSubmenu.open .submenu-item {
+        animation: submenu-drop 0.32s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+</style>
     <!-- Mobile Header -->
     <header class="md:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
         <div class="flex items-center gap-3">
@@ -15,14 +37,14 @@
     <div class="flex">
         <!-- Premium Sidebar -->
         <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-transform duration-300 -translate-x-full lg:translate-x-0">
-            <div class="p-8">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-primary/10 rounded-xl">
-                        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-8 w-8" alt="Logo">
+            <div class="p-8 sidebar-header transition-all duration-300">
+                <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
+                    <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
+                        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-16 w-16 object-contain" alt="Logo">
                     </div>
-                    <span class="text-2xl font-bold text-primary tracking-tight">EduSaft</span>
+                    <span class="text-2xl font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
                 </div>
-                <p class="text-xs text-outline uppercase tracking-widest font-bold ml-1">Portal de Padres</p>
+                <p class="text-xs text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
             </div>
 
             <div class="flex-grow px-4 space-y-2">
@@ -31,16 +53,41 @@
                     <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">dashboard</span>
                     <span class="font-medium">Panel Principal</span>
                 </a>
-                <a href="<?php echo URLROOT; ?>/padres/camino"
-                   class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
-                    <span class="material-symbols-outlined transition-transform group-hover:scale-110">map</span>
-                    <span class="font-medium">Historial Asistencias</span>
-                </a>
-                <a href="<?php echo URLROOT; ?>/padres/puntos"
-                   class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group">
-                    <span class="material-symbols-outlined transition-transform group-hover:scale-110">workspace_premium</span>
-                    <span class="font-medium">Mis Puntos</span>
-                </a>
+                
+                <!-- Historial Asistencias (Dropdown Menu) -->
+                <div class="space-y-1">
+                    <button id="asistenciaDropdownBtn" 
+                            class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group focus:outline-none">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">history</span>
+                            <span class="font-medium">Historial Asistencias</span>
+                        </div>
+                        <span id="asistenciaDropdownChevron" class="material-symbols-outlined text-sm transition-transform duration-300">expand_more</span>
+                    </button>
+                    
+                    <div id="asistenciaSubmenu" class="hidden space-y-1 overflow-hidden transition-all duration-300 max-h-0">
+                        <a href="<?php echo URLROOT; ?>/padres/camino"
+                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:0ms">
+                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">mountain_flag</span>
+                            <span class="font-medium">Camino de Montaña</span>
+                        </a>
+                        <a href="<?php echo URLROOT; ?>/padres/puntos"
+                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:80ms">
+                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">workspace_premium</span>
+                            <span class="font-medium">Mis Puntos</span>
+                        </a>
+                        <a href="<?php echo URLROOT; ?>/padres/camino#contactos"
+                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:160ms">
+                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">group</span>
+                            <span class="font-medium">Contáctanos</span>
+                        </a>
+                        <a href="<?php echo URLROOT; ?>/padres/camino#opinion"
+                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:240ms">
+                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">chat_bubble</span>
+                            <span class="font-medium">Opinión</span>
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div class="p-4 mt-auto space-y-2">
@@ -259,24 +306,57 @@
 
     <style>
         .force-close { transform: translateX(-100%) !important; }
-        .force-open { transform: translateX(0%) !important; }
+        .force-open  { transform: translateX(0%) !important;    }
+        /* Dropdown submenu animation */
+        #asistenciaSubmenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
+                        opacity   0.25s ease;
+            opacity: 0;
+        }
+        #asistenciaSubmenu.open {
+            max-height: 320px;
+            opacity: 1;
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('userSidebar');
-            const mobileBtn = document.getElementById('mobile-menu-toggle');
+            /* ── Sidebar toggle (mobile / desktop) ── */
+            const sidebar    = document.getElementById('userSidebar');
+            const mobileBtn  = document.getElementById('mobile-menu-toggle');
             const desktopBtn = document.getElementById('desktop-menu-toggle');
 
-            if(mobileBtn && sidebar) {
-                mobileBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('force-open');
-                });
-            }
+            mobileBtn  && mobileBtn.addEventListener('click',  () => sidebar.classList.toggle('force-open'));
+            desktopBtn && desktopBtn.addEventListener('click', () => sidebar.classList.toggle('force-close'));
 
-            if(desktopBtn && sidebar) {
-                desktopBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('force-close');
-                });
+            /* ── Historial Asistencias dropdown ── */
+            const dropBtn  = document.getElementById('asistenciaDropdownBtn');
+            const submenu  = document.getElementById('asistenciaSubmenu');
+            const chevron  = document.getElementById('asistenciaDropdownChevron');
+
+            // Auto-open if current page is a child route
+            const path = window.location.pathname;
+            const isChild = path.includes('/padres/camino') || path.includes('/padres/puntos');
+            if (isChild) { openDropdown(); }
+
+            dropBtn && dropBtn.addEventListener('click', () => {
+                submenu.classList.contains('open') ? closeDropdown() : openDropdown();
+            });
+
+            function openDropdown() {
+                submenu.classList.remove('hidden');
+                // force reflow so transition fires
+                submenu.offsetHeight;
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+                dropBtn.classList.add('text-primary', 'bg-primary/5');
+            }
+            function closeDropdown() {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+                dropBtn.classList.remove('text-primary', 'bg-primary/5');
+                submenu.addEventListener('transitionend', () => submenu.classList.add('hidden'), { once: true });
             }
         });
     </script>

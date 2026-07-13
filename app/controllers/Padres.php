@@ -93,25 +93,33 @@ class Padres extends Controller {
             );
         }
 
+        $actividades_camino = $model->getAllActividadesPath($id_familia);
+
         $data = [
-            'title'       => 'Camino de Éxito',
-            'estudiantes' => $estudiantes,
-            'estadisticas'=> $estadisticas,
+            'title'              => 'Camino de Éxito',
+            'estudiantes'        => $estudiantes,
+            'estadisticas'       => $estadisticas,
+            'actividades_camino' => $actividades_camino
         ];
 
         $this->view('padres/camino', $data);
     }
 
     /**
-     * Vista de puntos/gamificación.
+     * Vista de puntos/gamificación con dashboards de progreso.
      */
     public function puntos() {
-        $model     = $this->model('FamiliaModel');
+        $model      = $this->model('FamiliaModel');
         $id_familia = $_SESSION['user_id'];
 
         $data = [
-            'title'       => 'Mis Puntos',
-            'asistencias' => $model->getAsistenciasByFamilia($id_familia, 50),
+            'title'          => 'Mis Puntos',
+            'globales'       => $model->getEstadisticasGlobales($id_familia),
+            'por_tipo'       => $model->getAsistenciaPorTipo($id_familia),
+            'por_mes'        => $model->getAsistenciaPorMes($id_familia),
+            'racha'          => $model->getRachaActual($id_familia),
+            'asistencias'    => $model->getAsistenciasByFamilia($id_familia, 10),
+            'estudiantes'    => $model->getEstudiantesByFamilia($id_familia),
         ];
 
         $this->view('padres/puntos', $data);
