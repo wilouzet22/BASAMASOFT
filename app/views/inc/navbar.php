@@ -12,7 +12,6 @@
                     </a>
                     <div class="hidden md:ml-10 md:flex md:space-x-8">
                         <a href="<?php echo URLROOT; ?>" class="text-on-surface inline-flex items-center px-1 pt-1 border-b-2 border-primary font-label-md text-label-md">Inicio</a>
-                        <a href="#" class="text-on-surface-variant hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-primary-fixed transition-all font-label-md text-label-md">Carrera</a>
                         <a href="#" class="text-on-surface-variant hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-primary-fixed transition-all font-label-md text-label-md">Contenidos</a>
                         <a href="#" class="text-on-surface-variant hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-primary-fixed transition-all font-label-md text-label-md">Eventos</a>
                     </div>

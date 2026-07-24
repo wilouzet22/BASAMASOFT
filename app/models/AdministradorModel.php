@@ -65,10 +65,19 @@ class AdministradorModel {
     }
 
     /**
-     * Obtiene el total de registros de asistencia.
+     * Obtiene el total de registros de asistencia (totales, hayan asistido o no).
      */
     public function countAsistencias() {
         $this->db->query('SELECT COUNT(*) AS total FROM asistencia');
+        $row = $this->db->single();
+        return $row ? (int)$row->total : 0;
+    }
+
+    /**
+     * Obtiene el total de asistencias confirmadas (presente = 1).
+     */
+    public function countAsistenciasPresentes() {
+        $this->db->query('SELECT COUNT(*) AS total FROM asistencia WHERE presente = 1');
         $row = $this->db->single();
         return $row ? (int)$row->total : 0;
     }
