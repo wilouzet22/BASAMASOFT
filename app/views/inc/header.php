@@ -90,6 +90,129 @@
         }
     </script>
     <style>
+        /* ================================================================
+           RESPONSIVE GLOBAL — Aplicado a todo el sitio
+        ================================================================ */
+
+        /* Viewport fix para evitar overflow horizontal en móvil */
+        *, *::before, *::after { box-sizing: border-box; }
+        html { overflow-x: hidden; }
+
+        /* Tablas: scroll horizontal en móvil */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { min-width: 500px; }
+        .overflow-x-auto table { min-width: 0; }
+
+        /* Imágenes fluidas */
+        img { max-width: 100%; height: auto; }
+
+        /* Botones y links full-width en móvil cuando se usan en bloque */
+        @media (max-width: 767px) {
+            /* Sidebar: siempre oculto hasta activar por hamburguesa */
+            #admin-sidebar, #docentes-sidebar {
+                transform: translateX(-100%);
+            }
+
+            /* Contenido principal sin margen del sidebar en móvil */
+            #main-content-wrap {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+
+            /* Tablas: hacer que cada fila sea un bloque en móvil (card mode) para tablas simples */
+            .mobile-card-table thead { display: none; }
+            .mobile-card-table tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.75rem;
+                padding: 0.75rem;
+                background: white;
+            }
+            .mobile-card-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.35rem 0.25rem;
+                border: none !important;
+                font-size: 0.8125rem;
+            }
+            .mobile-card-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #64748b;
+                margin-right: 0.5rem;
+                flex-shrink: 0;
+            }
+
+            /* Grids: forzar 1 columna en móvil si no tienen clase específica */
+            .auto-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Headers de página: texto más pequeño */
+            h1 { font-size: 1.5rem !important; }
+            h2 { font-size: 1.25rem !important; }
+
+            /* Padding reducido en móvil */
+            .mobile-p-reduced { padding: 1rem !important; }
+
+            /* Flex que se apila en móvil */
+            .mobile-stack {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            /* Ocultar texto de labels en navbars */
+            .mobile-icon-only span:not(.material-symbols-outlined) { display: none; }
+
+            /* Footer margen en móvil */
+            footer { padding-bottom: 5rem; } /* espacio para bottom nav */
+        }
+
+        /* Breakpoint tablet (768px - 1024px) */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            #main-content-wrap {
+                margin-left: 4rem; /* sidebar colapsado por defecto en tablet */
+            }
+        }
+
+        /* Bottom navigation bar para móvil — solo visible en <768px */
+        #mobile-bottom-nav {
+            display: none;
+        }
+        @media (max-width: 767px) {
+            #mobile-bottom-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 50;
+                background: white;
+                border-top: 1px solid #e2e8f0;
+                padding: 0.5rem 0;
+                padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            }
+        }
+        .dark #mobile-bottom-nav { background: #1e293b !important; border-color: #334155 !important; }
+        .superdark #mobile-bottom-nav { background: #0d0d0d !important; border-color: #262626 !important; }
+
+        /* Responsive: cards en grid que se adaptan */
+        @media (max-width: 479px) {
+            .grid-cols-2 { grid-template-columns: 1fr; }
+            .grid-cols-3 { grid-template-columns: 1fr; }
+        }
+        @media (min-width: 480px) and (max-width: 767px) {
+            .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Contenedores max-width fluid en móvil */
+        @media (max-width: 767px) {
+            .max-w-7xl, .max-w-\[1280px\] { padding-left: 1rem; padding-right: 1rem; }
+        }
+
         body, .animated-bg, .graph-paper-bg, .bg-gray-50, .bg-background {
             font-family: "Lexend", sans-serif;
             transition: background-color 0.2s ease, color 0.2s ease;

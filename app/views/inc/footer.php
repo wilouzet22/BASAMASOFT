@@ -133,5 +133,85 @@
 </script>
 
 <script src="<?php echo URLROOT; ?>/assets/js/main.js"></script>
+
+<?php
+    $uri_nav = $_SERVER['REQUEST_URI'] ?? '';
+    $isAdmin    = strpos($uri_nav, '/admin') !== false;
+    $isDocente  = strpos($uri_nav, '/docentes') !== false;
+    $isFamilia  = strpos($uri_nav, '/padres') !== false;
+?>
+
+<!-- Bottom Navigation Bar (solo móvil) -->
+<nav id="mobile-bottom-nav" aria-label="Navegación móvil">
+    <?php if ($isAdmin): ?>
+        <a href="<?php echo URLROOT; ?>/admin/dashboard"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/dashboard') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/dashboard') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">dashboard</span>
+            <span>Panel</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/estudiantes"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/estudiantes') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/estudiantes') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">groups</span>
+            <span>Estudiantes</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/asistencias"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/asistencias') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/asistencias') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">how_to_reg</span>
+            <span>Asistencias</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/actividades"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/actividades') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/actividades') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">event</span>
+            <span>Actividades</span>
+        </a>
+        <button type="button" onclick="toggleMobileSidebar()"
+                class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+            <span>Más</span>
+        </button>
+    <?php elseif ($isDocente): ?>
+        <a href="<?php echo URLROOT; ?>/docentes/dashboard"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/docentes/dashboard') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">dashboard</span>
+            <span>Panel</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/actividades"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/docentes/actividades') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">assignment</span>
+            <span>Actividades</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/asistencia"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/docentes/asistencia') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">event_available</span>
+            <span>Asistencia</span>
+        </a>
+        <button type="button" onclick="toggleDocentesMobileSidebar()"
+                class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+            <span>Más</span>
+        </button>
+    <?php elseif ($isFamilia): ?>
+        <a href="<?php echo URLROOT; ?>/padres/dashboard"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/dashboard') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">home</span>
+            <span>Inicio</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/padres/camino"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/camino') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">route</span>
+            <span>Camino</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/padres/puntos"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/puntos') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">stars</span>
+            <span>Puntos</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/auth/logout"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-red-500">
+            <span class="material-symbols-outlined text-2xl">logout</span>
+            <span>Salir</span>
+        </a>
+    <?php endif; ?>
+</nav>
 </body>
 </html>

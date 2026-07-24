@@ -3,7 +3,7 @@
 <body class="bg-background text-on-background font-body-md graph-paper-bg min-h-screen flex flex-col md:flex-row">
     <?php require APPROOT . '/views/docentes/sidebar.php'; ?>
 
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen" style="margin-left:16rem">
         <header class="flex justify-between items-center h-16 px-6 w-full bg-white top-0 z-50 border-b border-outline-variant shadow-sm">
             <div class="text-2xl font-extrabold tracking-tight text-primary font-headline-md md:hidden">Edusaft</div>
             <div class="hidden md:block text-on-surface-variant font-label-md">Mis Actividades</div>
