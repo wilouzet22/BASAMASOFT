@@ -1,57 +1,111 @@
 <?php
-$data = $data ?? [];
+$data        = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
-$etapas = [];
-$actual_assigned = false;
-$now = new DateTime();
+$now         = new DateTime();
 
-foreach ($actividades as $index => $act) {
+// ── Agrupar actividades por número de semana del año ──
+$actsByWeek = []; // [weekNum => [act, ...]]
+foreach ($actividades as $act) {
     $fechaInicio = new DateTime($act->fecha_hora_inicio);
-    $estado = 'bloqueado';
-    
-    if ($fechaInicio <= $now) {
-        // Pasado
-        if ($act->asistencia_registrada > 0) {
-            $estado = 'completado';
-        } else {
-            $estado = 'inasistencia';
-        }
+    $semana = (int)$fechaInicio->format('W'); // ISO week number
+    if (!isset($actsByWeek[$semana])) {
+        $actsByWeek[$semana] = [];
+    }
+    $actsByWeek[$semana][] = $act;
+}
+
+// ── Siempre generar exactamente 40 semanas fijas ──
+// La semana de referencia es la primera semana que tenga actividad,
+// o la semana actual si no hay actividades.
+$totalSemanas = 40;
+$etapas = [];
+
+if (!empty($actsByWeek)) {
+    $allWeekNums = array_keys($actsByWeek);
+    sort($allWeekNums);
+    $startWeek = $allWeekNums[0]; // semana inicial del programa
+} else {
+    $startWeek = (int)(new DateTime())->format('W');
+}
+
+$actual_assigned = false;
+for ($s = 1; $s <= $totalSemanas; $s++) {
+    $weekNum = $startWeek + ($s - 1);
+    $acts    = $actsByWeek[$weekNum] ?? [];
+    $count   = count($acts);
+
+    // Determinar estado de la semana
+    if ($count === 0) {
+        // Sin actividades → bloqueado si es futuro, inasistencia si es pasado
+        // Calculamos la fecha de esa semana (lunes)
+        $weekDate = new DateTime();
+        $weekDate->setISODate((int)(new DateTime())->format('Y'), $weekNum);
+        $estado = ($weekDate > $now) ? 'bloqueado' : 'inasistencia';
     } else {
-        // Futuro
-        if (!$actual_assigned) {
-            $estado = 'actual';
-            $actual_assigned = true;
+        // Calcular estado basado en actividades de la semana
+        $completadas  = 0;
+        $inasistencias = 0;
+        $futuras      = 0;
+        foreach ($acts as $act) {
+            $fd = new DateTime($act->fecha_hora_inicio);
+            if ($fd <= $now) {
+                if ($act->asistencia_registrada > 0) $completadas++;
+                else $inasistencias++;
+            } else {
+                $futuras++;
+            }
+        }
+        if ($futuras > 0 && $completadas === 0 && $inasistencias === 0) {
+            if (!$actual_assigned) { $estado = 'actual'; $actual_assigned = true; }
+            else $estado = 'bloqueado';
+        } elseif ($completadas > 0 && $inasistencias === 0) {
+            $estado = 'completado';
+        } elseif ($inasistencias > 0 && $completadas === 0) {
+            $estado = 'inasistencia';
         } else {
-            $estado = 'bloqueado';
+            $estado = 'mixto'; // tiene completadas e inasistencias
         }
     }
 
-    $is_peak = ($index === count($actividades) - 1);
-    $fecha_fmt = $fechaInicio->format('d M Y, h:i A');
+    // Preparar sub-actividades (máx 5 días) para mostrar en popup
+    $dias = [];
+    $dayNames = ['Lun','Mar','Mié','Jue','Vie'];
+    foreach (array_slice($acts, 0, 5) as $act) {
+        $fd = new DateTime($act->fecha_hora_inicio);
+        $actEstado = 'bloqueado';
+        if ($fd <= $now) {
+            $actEstado = $act->asistencia_registrada > 0 ? 'completado' : 'inasistencia';
+        } else {
+            $actEstado = 'futuro';
+        }
+        $dias[] = [
+            'id'          => $act->id_actividad,
+            'nombre'      => $act->nombre_actividad,
+            'fecha'       => $fd->format('d M Y'),
+            'hora'        => $fd->format('h:i A'),
+            'dia_semana'  => $dayNames[$fd->format('N') - 1] ?? $fd->format('D'),
+            'estado'      => $actEstado,
+            'descripcion' => $act->descripcion ?? '',
+            'tipo'        => $act->nombre_tipo ?? '',
+            'sede'        => $act->nombre_sede ?? '',
+        ];
+    }
 
     $etapas[] = [
-        'id' => $act->id_actividad,
-        'nombre' => $act->nombre_actividad,
-        'estado' => $estado,
-        'is_peak' => $is_peak,
-        'fecha' => $fecha_fmt,
-        'descripcion' => $act->descripcion ?? 'Sin descripción',
-        'tipo' => $act->nombre_tipo,
-        'sede' => $act->nombre_sede
+        'semana'       => $s,
+        'nombre'       => 'Semana ' . $s,
+        'estado'       => $estado,
+        'is_peak'      => ($s === $totalSemanas),
+        'multiple'     => ($count > 2), // azul si >2 actividades
+        'dias'         => $dias,
+        'total_acts'   => $count,
     ];
 }
 
-if (empty($etapas)) {
-    $etapas[] = [
-        'id' => 1, 'nombre' => 'Sin actividades asignadas', 'estado' => 'bloqueado', 'is_peak' => true,
-        'fecha' => '', 'descripcion' => '', 'tipo' => '', 'sede' => ''
-    ];
-}
-
-$totalEtapas = count($etapas);
-$totalSections = 10;            // La imagen se divide en 10 secciones
-$perPage      = 4;             // Máx 4 actividades por sección (40 total)
-$totalPages   = max($totalSections, (int)ceil($totalEtapas / $perPage)); // siempre 10 páginas
+$totalEtapas  = count($etapas); // always 40
+$totalSections = 10;
+$perPage       = 4;
+$totalPages    = max($totalSections, (int)ceil($totalEtapas / $perPage));
 
 // Ancho dinámico de la montaña basado en cant. de actividades (min 900, max 2000)
 // Escala desde 1 hasta 50 actividades. Siempre gruesa.
@@ -71,34 +125,137 @@ $totalHeight = 1400; // Altura lógica más corta para evitar estiramiento y zoo
  */
 function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int $totalH): array
 {
-    $cx = (int)($vbW / 2);
+    // ========================================================================
+    // COORDENADAS X,Y DE LAS 40 SEMANAS EN LA IMAGEN (Resolución 2048 x 1152)
+    // ========================================================================
+    // Para editar la ubicación de un punto, simplemente cambia el valor de 'x' (horizontal) y 'y' (vertical).
+    // Nota: El punto 1 es la base y el punto 40 es la cima de la montaña.
+    // ── OFFSET para centrar los puntos en el camino visible ──
+    // Ajusta $offsetCorrX para mover todos los puntos horizontalmente (+= derecha, -= izquierda)
+    // Ajusta $offsetCorrY para mover todos los puntos verticalmente   (+= abajo,  -= arriba)
+    $offsetCorrX = 0; // desplazamiento horizontal global
+    $offsetCorrY =  0; // desplazamiento vertical global
+
+    $refPoints = [
+        1  => ['x' => 1000.00 + $offsetCorrX, 'y' => 1145.00 + $offsetCorrY], // Semana 1 (Base)
+        2  => ['x' =>  960.00 + $offsetCorrX, 'y' => 1100.00 + $offsetCorrY],
+        3  => ['x' =>  905.00 + $offsetCorrX, 'y' => 1055.00 + $offsetCorrY],
+        4  => ['x' =>  930.00 + $offsetCorrX, 'y' => 1010.00 + $offsetCorrY],
+        5  => ['x' =>  995.00 + $offsetCorrX, 'y' =>  970.00 + $offsetCorrY],
+        6  => ['x' => 1030.00 + $offsetCorrX, 'y' =>  930.00 + $offsetCorrY],
+        7  => ['x' =>  990.00 + $offsetCorrX, 'y' =>  895.00 + $offsetCorrY],
+        8  => ['x' =>  945.00 + $offsetCorrX, 'y' =>  865.00 + $offsetCorrY],
+        9  => ['x' =>  .00 + $offsetCorrX, 'y' =>  838.00 + $offsetCorrY],
+        10 => ['x' =>  860.00 + $offsetCorrX, 'y' =>  810.00 + $offsetCorrY],
+        11 => ['x' =>  820.00 + $offsetCorrX, 'y' =>  785.00 + $offsetCorrY],
+        12 => ['x' =>  790.00 + $offsetCorrX, 'y' =>  750.00 + $offsetCorrY],
+        13 => ['x' =>  770.00 + $offsetCorrX, 'y' =>  710.00 + $offsetCorrY],
+        14 => ['x' =>  775.00 + $offsetCorrX, 'y' =>  670.00 + $offsetCorrY],
+        15 => ['x' =>  800.00 + $offsetCorrX, 'y' =>  635.00 + $offsetCorrY],
+        16 => ['x' =>  835.00 + $offsetCorrX, 'y' =>  605.00 + $offsetCorrY],
+        17 => ['x' =>  865.00 + $offsetCorrX, 'y' =>  575.00 + $offsetCorrY],
+        18 => ['x' =>  880.00 + $offsetCorrX, 'y' =>  540.00 + $offsetCorrY],
+        19 => ['x' =>  870.00 + $offsetCorrX, 'y' =>  500.00 + $offsetCorrY],
+        20 => ['x' =>  850.00 + $offsetCorrX, 'y' =>  465.00 + $offsetCorrY],
+        21 => ['x' =>  859.56 + $offsetCorrX, 'y' =>  450.67 + $offsetCorrY],
+        22 => ['x' =>  869.11 + $offsetCorrX, 'y' =>  436.33 + $offsetCorrY],
+        23 => ['x' =>  878.67 + $offsetCorrX, 'y' =>  422.00 + $offsetCorrY],
+        24 => ['x' =>  890.49 + $offsetCorrX, 'y' =>  409.51 + $offsetCorrY],
+        25 => ['x' =>  902.67 + $offsetCorrX, 'y' =>  397.33 + $offsetCorrY],
+        26 => ['x' =>  914.46 + $offsetCorrX, 'y' =>  384.79 + $offsetCorrY],
+        27 => ['x' =>  925.68 + $offsetCorrX, 'y' =>  371.71 + $offsetCorrY],
+        28 => ['x' =>  936.89 + $offsetCorrX, 'y' =>  358.63 + $offsetCorrY],
+        29 => ['x' =>  944.90 + $offsetCorrX, 'y' =>  343.56 + $offsetCorrY],
+        30 => ['x' =>  951.69 + $offsetCorrX, 'y' =>  327.72 + $offsetCorrY],
+        31 => ['x' =>  957.79 + $offsetCorrX, 'y' =>  311.63 + $offsetCorrY],
+        32 => ['x' =>  963.24 + $offsetCorrX, 'y' =>  295.28 + $offsetCorrY],
+        33 => ['x' =>  968.69 + $offsetCorrX, 'y' =>  278.94 + $offsetCorrY],
+        34 => ['x' =>  974.13 + $offsetCorrX, 'y' =>  262.60 + $offsetCorrY],
+        35 => ['x' =>  979.58 + $offsetCorrX, 'y' =>  246.25 + $offsetCorrY],
+        36 => ['x' =>  985.04 + $offsetCorrX, 'y' =>  229.91 + $offsetCorrY],
+        37 => ['x' =>  991.43 + $offsetCorrX, 'y' =>  213.91 + $offsetCorrY],
+        38 => ['x' =>  998.41 + $offsetCorrX, 'y' =>  198.18 + $offsetCorrY],
+        39 => ['x' => 1006.26 + $offsetCorrX, 'y' =>  182.85 + $offsetCorrY],
+        40 => ['x' => 1015.00 + $offsetCorrX, 'y' =>  168.00 + $offsetCorrY], // Semana 40 (Cima)
+    ];
+
+    $imgRefW = 2048;
+    $imgRefH = 1152;
+
+    // Convert reference points to relative [0..1] coordinates
+    $relPoints = array_map(function($pt) use ($imgRefW, $imgRefH) {
+        return ['rx' => $pt['x'] / $imgRefW, 'ry' => $pt['y'] / $imgRefH];
+    }, array_values($refPoints));
+
+    // Calc total length of relative polyline
+    $segments = [];
+    $totalLen = 0;
+    for ($i = 0; $i < count($relPoints) - 1; $i++) {
+        $p1 = $relPoints[$i];
+        $p2 = $relPoints[$i+1];
+        $dx = $p2['rx'] - $p1['rx'];
+        $dy = $p2['ry'] - $p1['ry'];
+        $dist = sqrt($dx*$dx + $dy*$dy);
+        $segments[] = ['p1' => $p1, 'p2' => $p2, 'dist' => $dist];
+        $totalLen += $dist;
+    }
+
+    // SVG Target Box for `<image>` tag (20% zoom logic in viewBox)
+    $targetW = $vbW * 1.2;
+    $targetH = $totalH * 1.2;
+    $targetX = -$vbW * 0.10;
+    $targetY = -$totalH * 0.10;
+
+    // Simulate `preserveAspectRatio="xMidYMid slice"`
+    // source image age.jpg aspect ratio is 16:9 (same as 1600x900)
+    $imgRatio = $imgRefW / $imgRefH; 
+    $targetRatio = $targetW / $targetH;
+    
+    if ($targetRatio > $imgRatio) {
+        // Scaled by width
+        $scale = $targetW / $imgRefW;
+        $scaledW = $targetW;
+        $scaledH = $imgRefH * $scale;
+        $offsetX = 0;
+        $offsetY = ($targetH - $scaledH) / 2;
+    } else {
+        // Scaled by height
+        $scale = $targetH / $imgRefH;
+        $scaledW = $imgRefW * $scale;
+        $scaledH = $targetH;
+        $offsetX = ($targetW - $scaledW) / 2;
+        $offsetY = 0;
+    }
+
     $puntos = [];
-
-    // El camino ahora arranca casi en la base real de la montaña
-    $yStart = $totalH - 80;  // Base de la montaña (casi al fondo del SVG)
-    $yEnd   = 200;            // Cima
-    $rango  = $yStart - $yEnd;
-
     for ($i = 0; $i < $totalEtapas; $i++) {
         $etapa = $etapas[$i];
         $t = $totalEtapas > 1 ? $i / ($totalEtapas - 1) : 0.5;
-        $cy = (int)($yStart - $t * $rango);
-
-        // Curvas más pronunciadas: mayor frecuencia y mayor amplitud
-        $frecuencia = 3.5;  // Más curvas a lo largo del sendero
-        // Amplitud alta en la base, se reduce gradualmente hacia la cima
-        $amplitud = 320 * (1 - ($t * 0.55));
-
-        $offset = sin($t * M_PI * $frecuencia) * $amplitud;
-        $cx_pt = max(120, min($vbW - 120, $cx + $offset));
-
-        $is_peak = ($i === $totalEtapas - 1);
-        if ($is_peak) {
-            $cx_pt = $cx;
-            $cy = $yEnd - 30; // Forzar cima un poco más arriba y al centro
+        
+        $targetDist = $t * $totalLen;
+        $currDist = 0;
+        $rx = 0.5; $ry = 0.5; // fallback
+        
+        // Find segment
+        foreach ($segments as $idx => $seg) {
+            if ($currDist + $seg['dist'] >= $targetDist - 0.0001 || $idx === count($segments) - 1) {
+                $segT = $seg['dist'] > 0 ? ($targetDist - $currDist) / $seg['dist'] : 0;
+                $segT = max(0, min(1, $segT));
+                $rx = $seg['p1']['rx'] + ($seg['p2']['rx'] - $seg['p1']['rx']) * $segT;
+                $ry = $seg['p1']['ry'] + ($seg['p2']['ry'] - $seg['p1']['ry']) * $segT;
+                break;
+            }
+            $currDist += $seg['dist'];
         }
 
-        $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy, 'is_peak' => $is_peak]);
+        // Map to SVG user space
+        $mappedX = $offsetX + $rx * $scaledW;
+        $mappedY = $offsetY + $ry * $scaledH;
+        $cx_pt = $targetX + $mappedX;
+        $cy_pt = $targetY + $mappedY;
+
+        $is_peak = ($i === $totalEtapas - 1);
+        $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy_pt, 'is_peak' => $is_peak]);
     }
     return $puntos;
 }
@@ -294,7 +451,7 @@ require APPROOT . '/views/inc/header.php';
             <!-- Historial Asistencias (Dropdown) -->
             <div class="space-y-1">
                 <button id="asistenciaDropdownBtn"
-                        class="sidebar-item-link w-full flex items-center justify-between px-4 py-3 rounded-2xl text-primary bg-primary/5 transition-all group focus:outline-none">
+                    class="sidebar-item-link w-full flex items-center justify-between px-4 py-3 rounded-2xl text-primary bg-primary/5 transition-all group focus:outline-none">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined flex-shrink-0">history</span>
                         <span class="font-medium text-sm sidebar-text">Historial Asistencias</span>
@@ -490,91 +647,20 @@ require APPROOT . '/views/inc/header.php';
                 <path d="M <?= -$baseHalfW ?>,<?= $viewBoxH ?> L <?= $centroX - 300 ?>,700 L <?= $centroX + 150 ?>,500 L <?= $centroX + 600 ?>,800 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[1] ?>" opacity="0.5" />
                 <path d="M <?= $centroX - 400 ?>,<?= $viewBoxH ?> L <?= $centroX + 300 ?>,650 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[2] ?>" opacity="0.6" />
 
-                <!-- ======= MOUNTAIN IMAGE (10x zoom, natively scrolled) ======= -->
+                <!-- ======= MOUNTAIN IMAGE (20% zoom - 1.2x scale, centered) ======= -->
                 <image
                     id="mountainImg"
-                    href="<?= URLROOT ?>/public/assets/img/ago.png"
-                    x="<?= -$viewBoxW * 0.25 ?>"
-                    y="<?= -$totalHeight * 0.25 ?>"
-                    width="<?= $viewBoxW * 1.5 ?>"
-                    height="<?= $totalHeight * 1.5 ?>"
+                    href="<?= URLROOT ?>/public/assets/img/age.jpg"
+                    x="<?= -$viewBoxW * 0.10 ?>"
+                    y="<?= -$totalHeight * 0.10 ?>"
+                    width="<?= $viewBoxW * 1.2 ?>"
+                    height="<?= $totalHeight * 1.2 ?>"
                     preserveAspectRatio="xMidYMid slice" />
 
-                <!-- ======= HUD GROUP: trail + waypoints + clouds + arrows + title =======
-                     JS translates this entire group to the active section via transform -->
+                <!-- ======= HUD GROUP: waypoints ======= -->
                 <g id="hudGroup">
-
-                    <!-- === ERODED MOUNTAIN TRAIL === -->
-                    <filter id="pathShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.45" />
-                    </filter>
-
-                    <g filter="url(#pathShadow)">
-                        <!-- Borde exterior (sombra/tierra oscura) -->
-                        <path id="pathBase" fill="none" stroke="#291e12" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
-                        <!-- Camino de tierra principal -->
-                        <path id="pathDirt" fill="none" stroke="#8b7355" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
-                    </g>
-
                     <!-- Waypoints -->
                     <g id="waypointsGroup"></g>
-
-                    <!-- NUBES SOLO EN LA CIMA (zona alta del SVG) -->
-                    <g filter="url(#cloudBlur)" pointer-events="none" id="peakClouds">
-                        <!-- Fondo base grisáceo -->
-                        <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="1080" fill="#f1f5f9" />
-                        
-                        <!-- Capa de nubes densas y oscuras (atrás) -->
-                        <ellipse cx="<?= $centroX - 150 ?>" cy="220" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="140" fill="#cbd5e1" opacity="0.8" />
-                        <ellipse cx="<?= $centroX + 200 ?>" cy="230" rx="<?= (int)($viewBoxW * 1.3) ?>" ry="130" fill="#94a3b8" opacity="0.5" />
-                        
-                        <!-- Capa intermedia principal -->
-                        <ellipse cx="<?= $centroX ?>" cy="260" rx="<?= (int)($viewBoxW * 1.68) ?>" ry="108" fill="#e2e8f0" opacity="0.9" />
-                        <ellipse cx="<?= $centroX - 350 ?>" cy="285" rx="700" ry="120" fill="#f1f5f9" opacity="0.85" />
-                        <ellipse cx="<?= $centroX + 320 ?>" cy="290" rx="650" ry="114" fill="#e2e8f0" opacity="0.95" />
-                        
-                        <!-- Capa frontal más dispersa y translúcida -->
-                        <ellipse cx="<?= $centroX - 100 ?>" cy="330" rx="<?= (int)($viewBoxW * 1.2) ?>" ry="85" fill="#f8fafc" opacity="0.6" />
-                        <ellipse cx="<?= $centroX + 150 ?>" cy="340" rx="<?= (int)($viewBoxW * 0.9) ?>" ry="75" fill="#cbd5e1" opacity="0.4" />
-                        <ellipse cx="<?= $centroX ?>" cy="360" rx="<?= (int)($viewBoxW * 1.08) ?>" ry="90" fill="#e2e8f0" opacity="0.7" />
-                        
-                        <!-- Niebla baja -->
-                        <ellipse cx="<?= $centroX - 400 ?>" cy="380" rx="800" ry="60" fill="#f1f5f9" opacity="0.3" />
-                        <ellipse cx="<?= $centroX + 400 ?>" cy="385" rx="800" ry="60" fill="#cbd5e1" opacity="0.2" />
-                    </g>
-
-                    <!-- NUBES EN LA BASE (móviles muy pequeños) para tapar el final de la montaña -->
-                    <g filter="url(#cloudBlur)" pointer-events="none" id="baseClouds" class="md:hidden">
-                        <!-- Capas extra añadidas por encima de la base -->
-                        <ellipse cx="<?= $centroX - 300 ?>" cy="<?= $totalHeight - 280 ?>" rx="600" ry="120" fill="#f8fafc" opacity="0.6" />
-                        <ellipse cx="<?= $centroX + 250 ?>" cy="<?= $totalHeight - 260 ?>" rx="650" ry="110" fill="#f8fafc" opacity="0.5" />
-                        <ellipse cx="<?= $centroX - 700 ?>" cy="<?= $totalHeight - 220 ?>" rx="700" ry="140" fill="#f1f5f9" opacity="0.7" />
-                        <ellipse cx="<?= $centroX + 600 ?>" cy="<?= $totalHeight - 200 ?>" rx="750" ry="150" fill="#f1f5f9" opacity="0.75" />
-                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight - 190 ?>" rx="800" ry="160" fill="#f8fafc" opacity="0.8" />
-
-                        <!-- Capa trasera lejana -->
-                        <ellipse cx="<?= $centroX - 600 ?>" cy="<?= $totalHeight - 150 ?>" rx="900" ry="150" fill="#f8fafc" opacity="0.8" />
-                        <ellipse cx="<?= $centroX + 600 ?>" cy="<?= $totalHeight - 120 ?>" rx="950" ry="140" fill="#f8fafc" opacity="0.8" />
-                        
-                        <!-- Capa intermedia alta -->
-                        <ellipse cx="<?= $centroX - 200 ?>" cy="<?= $totalHeight - 80 ?>" rx="700" ry="200" fill="#f1f5f9" opacity="0.9" />
-                        <ellipse cx="<?= $centroX + 300 ?>" cy="<?= $totalHeight - 70 ?>" rx="750" ry="220" fill="#f1f5f9" opacity="0.9" />
-                        
-                        <!-- Capa principal central -->
-                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight ?>" rx="<?= (int)($viewBoxW * 1.5) ?>" ry="300" fill="#e2e8f0" opacity="0.95" />
-                        
-                        <!-- Capas laterales densas -->
-                        <ellipse cx="<?= $centroX - 500 ?>" cy="<?= $totalHeight + 20 ?>" rx="850" ry="280" fill="#e2e8f0" opacity="0.95" />
-                        <ellipse cx="<?= $centroX + 450 ?>" cy="<?= $totalHeight + 30 ?>" rx="800" ry="260" fill="#e2e8f0" opacity="0.95" />
-                        
-                        <!-- Nubes oscuras de base (transición hacia el fondo sólido) -->
-                        <ellipse cx="<?= $centroX - 800 ?>" cy="<?= $totalHeight + 80 ?>" rx="1000" ry="350" fill="#cbd5e1" opacity="0.9" />
-                        <ellipse cx="<?= $centroX + 700 ?>" cy="<?= $totalHeight + 100 ?>" rx="1100" ry="380" fill="#cbd5e1" opacity="0.95" />
-                        
-                        <!-- Base sólida final -->
-                        <ellipse cx="<?= $centroX ?>" cy="<?= $totalHeight + 150 ?>" rx="<?= (int)($viewBoxW * 1.8) ?>" ry="450" fill="#cbd5e1" opacity="1" />
-                    </g>
-
                 </g><!-- end hudGroup -->
             </svg>
         </div><!-- end mountainViewport -->
@@ -586,16 +672,16 @@ require APPROOT . '/views/inc/header.php';
         <!-- Mini pill shown only on xs (< 480px) -->
         <div id="thermometerMini" class="fixed bottom-4 right-4 z-40 hidden items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-2 rounded-full border border-outline-variant shadow-xl">
             <span class="material-symbols-outlined text-base" style="color:<?php
-                if ($porcentajeTermometro >= 75) echo '#22c55e';
-                elseif ($porcentajeTermometro >= 50) echo '#eab308';
-                elseif ($porcentajeTermometro >= 25) echo '#f97316';
-                else echo '#ef4444';
-            ?>;"><?php
-                if ($porcentajeTermometro >= 75) echo 'sentiment_very_satisfied';
-                elseif ($porcentajeTermometro >= 50) echo 'sentiment_neutral';
-                elseif ($porcentajeTermometro >= 25) echo 'sentiment_dissatisfied';
-                else echo 'sentiment_very_dissatisfied';
-            ?></span>
+                                                                            if ($porcentajeTermometro >= 75) echo '#22c55e';
+                                                                            elseif ($porcentajeTermometro >= 50) echo '#eab308';
+                                                                            elseif ($porcentajeTermometro >= 25) echo '#f97316';
+                                                                            else echo '#ef4444';
+                                                                            ?>;"><?php
+                    if ($porcentajeTermometro >= 75) echo 'sentiment_very_satisfied';
+                    elseif ($porcentajeTermometro >= 50) echo 'sentiment_neutral';
+                    elseif ($porcentajeTermometro >= 25) echo 'sentiment_dissatisfied';
+                    else echo 'sentiment_very_dissatisfied';
+                    ?></span>
             <span class="text-xs font-black text-primary"><?= $porcentajeTermometro ?>%</span>
         </div>
 
@@ -639,177 +725,249 @@ require APPROOT . '/views/inc/header.php';
         </div>
 
         <script>
-            // ====== MOUNTAIN RENDER ======
-            const pts = <?= json_encode($allPoints) ?>;
-            const vbW = <?= $viewBoxW ?>;
+            // ====== MOUNTAIN RENDER – WEEK MODE ======
+            const pts   = <?= json_encode($allPoints) ?>;
+            const vbW   = <?= $viewBoxW ?>;
             const totalH = <?= $totalHeight ?>;
+
+            // ── Zoom state ──
+            let zoomedPoint = null;
 
             function buildSVGPath(pts) {
                 if (pts.length === 0) return '';
                 let d = `M ${pts[0].cx},${pts[0].cy}`;
                 for (let i = 1; i < pts.length; i++) {
-                    const prev = pts[i - 1],
-                        cur = pts[i];
-                    const mx = (prev.cx + cur.cx) / 2;
-                    const my = (prev.cy + cur.cy) / 2;
+                    const prev = pts[i-1], cur = pts[i];
+                    const mx = (prev.cx + cur.cx) / 2, my = (prev.cy + cur.cy) / 2;
                     d += ` Q ${prev.cx},${prev.cy} ${mx},${my}`;
                 }
-                const last = pts[pts.length - 1];
+                const last = pts[pts.length-1];
                 d += ` Q ${last.cx},${last.cy} ${last.cx},${last.cy}`;
                 return d;
             }
 
             function renderAll() {
-                // Update path
-                const pathD = buildSVGPath(pts);
-                document.getElementById('pathBase').setAttribute('d', pathD);
-                document.getElementById('pathDirt').setAttribute('d', pathD);
+                const pBase = document.getElementById('pathBase');
+                const pDirt = document.getElementById('pathDirt');
+                if (pBase) pBase.setAttribute('d', buildSVGPath(pts));
+                if (pDirt) pDirt.setAttribute('d', buildSVGPath(pts));
 
-                // Update waypoints
                 const g = document.getElementById('waypointsGroup');
+                if (!g) return;
                 g.innerHTML = '';
 
-                let activeY = totalH; // default to bottom
+                let activeY = totalH;
 
-                pts.forEach(pt => {
-                    if (pt.estado === 'actual') activeY = pt.cy; // Guardar Y del punto activo
+                pts.forEach((pt, idx) => {
+                    if (pt.estado === 'actual') activeY = pt.cy;
 
                     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                    group.setAttribute('class', 'cursor-pointer');
-                    group.setAttribute('style', `transform-origin:${pt.cx}px ${pt.cy}px`);
+                    group.setAttribute('style', `transform-origin:${pt.cx}px ${pt.cy}px; cursor:pointer;`);
 
-                    // Renderización de los nodos (puntos) con diseño premium
-                    if (pt.is_peak) {
-                        const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c1.setAttribute('cx', pt.cx);
-                        c1.setAttribute('cy', pt.cy);
-                        c1.setAttribute('r', '22');
-                        c1.setAttribute('fill', pt.estado === 'completado' ? '#fcd34d' : '#ffffff');
-                        c1.setAttribute('stroke', '#fbbf24');
-                        c1.setAttribute('stroke-width', '4');
-                        c1.setAttribute('filter', 'url(#glow)');
-
-                        const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c2.setAttribute('cx', pt.cx);
-                        c2.setAttribute('cy', pt.cy);
-                        c2.setAttribute('r', '10');
-                        c2.setAttribute('fill', pt.estado === 'completado' ? '#ffffff' : '#fcd34d');
-
-                        group.appendChild(c1);
-                        group.appendChild(c2);
+                    // ── Color logic ──
+                    let fillColor, strokeColor, outerColor;
+                    if (pt.multiple) {
+                        // Blue = week with >2 activities
+                        fillColor  = '#3b82f6'; strokeColor = '#1d4ed8'; outerColor = '#93c5fd';
+                    } else if (pt.is_peak) {
+                        fillColor  = '#fcd34d'; strokeColor = '#f59e0b'; outerColor = '#fde68a';
                     } else {
-                        const colors = {
-                            completado: { fill: '#10b981', stroke: '#047857', outer: '#34d399' },
-                            actual: { fill: '#f59e0b', stroke: '#b45309', outer: '#fbbf24' },
-                            inasistencia: { fill: '#ef4444', stroke: '#991b1b', outer: '#f87171' },
-                            bloqueado: { fill: '#94a3b8', stroke: '#475569', outer: '#cbd5e1' }
+                        const colorMap = {
+                            completado:  { fill:'#10b981', stroke:'#047857', outer:'#34d399' },
+                            actual:      { fill:'#f59e0b', stroke:'#b45309', outer:'#fbbf24' },
+                            inasistencia:{ fill:'#ef4444', stroke:'#991b1b', outer:'#f87171' },
+                            mixto:       { fill:'#a855f7', stroke:'#7e22ce', outer:'#d8b4fe' },
+                            bloqueado:   { fill:'#94a3b8', stroke:'#475569', outer:'#cbd5e1' },
                         };
-                        const c = colors[pt.estado] || colors.bloqueado;
-
-                        // Interactive Group
-                        const pointGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                        pointGroup.setAttribute('class', 'cursor-pointer transition-transform hover:scale-110');
-                        pointGroup.style.transformOrigin = `${pt.cx}px ${pt.cy}px`;
-                        pointGroup.addEventListener('click', () => {
-                            abrirModalActividad(pt);
-                        });
-
-                        // Outer glowing ring
-                        const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        outer.setAttribute('cx', pt.cx);
-                        outer.setAttribute('cy', pt.cy);
-                        outer.setAttribute('r', '16');
-                        outer.setAttribute('fill', c.outer);
-                        outer.setAttribute('opacity', '0.6');
-                        if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
-
-                        // Main circle
-                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', pt.cx);
-                        circle.setAttribute('cy', pt.cy);
-                        circle.setAttribute('r', '10');
-                        circle.setAttribute('fill', c.fill);
-                        circle.setAttribute('stroke', c.stroke);
-                        circle.setAttribute('stroke-width', '3');
-
-                        pointGroup.appendChild(outer);
-                        pointGroup.appendChild(circle);
-
-                        // Animated heartbeat (latido lento) for current level
-                        if (pt.estado === 'actual') {
-                            const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                            pulse.setAttribute('cx', pt.cx);
-                            pulse.setAttribute('cy', pt.cy);
-                            pulse.setAttribute('r', '16');
-                            pulse.setAttribute('fill', 'none');
-                            pulse.setAttribute('stroke', '#fbbf24');
-                            pulse.setAttribute('stroke-width', '3');
-                            pulse.setAttribute('opacity', '0.8');
-
-                            // Animación del radio (Latido: bum-bum... bum-bum...)
-                            const animR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
-                            animR.setAttribute('attributeName', 'r');
-                            animR.setAttribute('values', '16; 20; 16; 26; 16; 16');
-                            animR.setAttribute('keyTimes', '0; 0.15; 0.3; 0.45; 0.7; 1');
-                            animR.setAttribute('dur', '2.5s');
-                            animR.setAttribute('repeatCount', 'indefinite');
-                            pulse.appendChild(animR);
-
-                            // Animación de la opacidad sincronizada
-                            const animOpacity = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
-                            animOpacity.setAttribute('attributeName', 'opacity');
-                            animOpacity.setAttribute('values', '0.8; 0.5; 0.8; 0; 0.8; 0.8');
-                            animOpacity.setAttribute('keyTimes', '0; 0.15; 0.3; 0.45; 0.7; 1');
-                            animOpacity.setAttribute('dur', '2.5s');
-                            animOpacity.setAttribute('repeatCount', 'indefinite');
-                            pulse.appendChild(animOpacity);
-                            
-                            pointGroup.appendChild(pulse);
-                        }
-                        
-                        group.appendChild(pointGroup);
+                        const c = colorMap[pt.estado] || colorMap.bloqueado;
+                        fillColor = c.fill; strokeColor = c.stroke; outerColor = c.outer;
                     }
 
-                    // Tooltip: background pill + text for readability on all screen sizes
-                    const labelFontSize = Math.max(18, Math.round(vbW / 70));
-                    const labelX = pt.cx + 22;
-                    const labelY = pt.cy + Math.round(labelFontSize * 0.38);
-                    const labelW = pt.nombre.length * labelFontSize * 0.55 + 20;
-                    const labelH = labelFontSize + 14;
+                    // Outer glow ring
+                    const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    outer.setAttribute('cx', pt.cx); outer.setAttribute('cy', pt.cy);
+                    outer.setAttribute('r', '7'); outer.setAttribute('fill', outerColor);
+                    outer.setAttribute('opacity', '0.55');
+                    if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
+                    group.appendChild(outer);
 
-                    const pill = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                    pill.setAttribute('x', labelX - 6);
-                    pill.setAttribute('y', labelY - Math.round(labelFontSize * 0.82));
-                    pill.setAttribute('width', labelW);
-                    pill.setAttribute('height', labelH);
-                    pill.setAttribute('rx', labelH / 2);
-                    pill.setAttribute('fill', 'rgba(0,0,0,0.55)');
-                    group.appendChild(pill);
+                    // Main dot
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', pt.cx); dot.setAttribute('cy', pt.cy);
+                    dot.setAttribute('r', pt.is_peak ? '10' : '4.2');
+                    dot.setAttribute('fill', fillColor);
+                    dot.setAttribute('stroke', strokeColor); dot.setAttribute('stroke-width', '1');
+                    group.appendChild(dot);
 
-                    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    txt.setAttribute('x', labelX);
-                    txt.setAttribute('y', labelY);
-                    txt.setAttribute('fill', '#ffffff');
-                    txt.setAttribute('font-size', labelFontSize);
-                    txt.setAttribute('font-weight', 'bold');
-                    txt.setAttribute('font-family', 'Manrope,sans-serif');
-                    txt.textContent = pt.nombre;
-                    group.appendChild(txt);
+                    // Heartbeat pulse for "actual" week
+                    if (pt.estado === 'actual' && !pt.multiple) {
+                        const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        pulse.setAttribute('cx', pt.cx); pulse.setAttribute('cy', pt.cy);
+                        pulse.setAttribute('r', '7'); pulse.setAttribute('fill', 'none');
+                        pulse.setAttribute('stroke', '#fbbf24'); pulse.setAttribute('stroke-width', '1');
+                        pulse.setAttribute('opacity', '0.8');
+                        const aR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                        aR.setAttribute('attributeName','r'); aR.setAttribute('values','7;11;7;14;7;7');
+                        aR.setAttribute('keyTimes','0;0.15;0.3;0.45;0.7;1');
+                        aR.setAttribute('dur','2.5s'); aR.setAttribute('repeatCount','indefinite');
+                        pulse.appendChild(aR);
+                        group.appendChild(pulse);
+                    }
+
+                    // No label text — tooltips shown on click via popup
+
+                    // Click: zoom + show day picker
+                    group.addEventListener('click', () => handleWeekClick(pt, group));
                     g.appendChild(group);
                 });
 
-                // Scroll to active position after rendering
+                // Scroll to active week
                 setTimeout(() => {
-                    const scrollContainer = document.getElementById('mainScrollContainer');
+                    const sc  = document.getElementById('mainScrollContainer');
                     const svg = document.getElementById('mountainSVG');
-                    if (!svg) return;
+                    if (!svg || !sc) return;
                     const ratio = svg.getBoundingClientRect().height / totalH;
-                    const scrollTarget = (activeY * ratio) - (scrollContainer.clientHeight * 0.55);
-                    scrollContainer.scrollTo({
-                        top: Math.max(0, scrollTarget),
-                        behavior: 'smooth'
-                    });
+                    sc.scrollTo({ top: Math.max(0, activeY * ratio - sc.clientHeight * 0.55), behavior: 'smooth' });
                 }, 100);
+            }
+
+            // ── SVG viewBox zoom helpers ──
+            const svgEl      = document.getElementById('mountainSVG');
+            const origVBW    = vbW;
+            const origVBH    = totalH;
+            let   vbAnimReq  = null;
+
+            function animateViewBox(fromVB, toVB, durationMs, onDone) {
+                if (vbAnimReq) cancelAnimationFrame(vbAnimReq);
+                const start = performance.now();
+                function ease(t) { return t < 0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+                function step(now) {
+                    const t = Math.min(1, (now - start) / durationMs);
+                    const e = ease(t);
+                    const vb = fromVB.map((v, i) => v + (toVB[i] - v) * e);
+                    svgEl.setAttribute('viewBox', vb.join(' '));
+                    if (t < 1) { vbAnimReq = requestAnimationFrame(step); }
+                    else if (onDone) onDone();
+                }
+                vbAnimReq = requestAnimationFrame(step);
+            }
+
+            function zoomToPoint(cx, cy, zoomFactor, durationMs, onDone) {
+                const curVB  = svgEl.getAttribute('viewBox').split(' ').map(Number);
+                const zW     = origVBW / zoomFactor;
+                const zH     = origVBH / zoomFactor;
+                const zX     = cx - zW / 2;
+                const zY     = cy - zH / 2;
+                animateViewBox(curVB, [zX, zY, zW, zH], durationMs, onDone);
+            }
+
+            function resetZoom(durationMs) {
+                const curVB = svgEl.getAttribute('viewBox').split(' ').map(Number);
+                animateViewBox(curVB, [0, 0, origVBW, origVBH], durationMs);
+            }
+
+            // ── Week click: zoom into point then show popup ──
+            function handleWeekClick(pt, groupEl) {
+                if (zoomedPoint === pt.semana) {
+                    zoomedPoint = null;
+                    closeDayPicker();
+                    resetZoom(500);
+                    return;
+                }
+                zoomedPoint = pt.semana;
+
+                // 1. Animate SVG viewBox zoom to clicked point
+                zoomToPoint(pt.cx, pt.cy, 3.5, 480, () => {
+                    // 2. After zoom, show popup; dot pulses
+                    groupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+                    groupEl.style.transform  = 'scale(2.2)';
+                    setTimeout(() => { groupEl.style.transform = 'scale(1.6)'; }, 300);
+
+                    if (pt.dias && pt.dias.length > 0) showDayPicker(pt);
+                    else showWeekInfo(pt);
+                });
+            }
+
+            function showDayPicker(pt) {
+                closeDayPicker();
+                const overlay = document.getElementById('dayPickerOverlay');
+                const container = document.getElementById('dayPickerCards');
+                const title = document.getElementById('dayPickerTitle');
+                if (!overlay) return;
+
+                title.textContent = pt.nombre + (pt.multiple ? ' — Múltiples Actividades' : '');
+                container.innerHTML = '';
+
+                pt.dias.forEach(dia => {
+                    const stateMap = {
+                        completado:   { color:'#10b981', icon:'check_circle',  label:'Asistió' },
+                        inasistencia: { color:'#ef4444', icon:'cancel',        label:'Faltó' },
+                        futuro:       { color:'#3b82f6', icon:'schedule',      label:'Próxima' },
+                        bloqueado:    { color:'#94a3b8', icon:'lock',          label:'Bloqueado' },
+                    };
+                    const s = stateMap[dia.estado] || stateMap.bloqueado;
+
+                    const card = document.createElement('div');
+                    card.className = 'day-card flex flex-col items-center p-3 rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95 bg-white shadow-md';
+                    card.style.borderColor = s.color;
+                    card.innerHTML = `
+                        <span class="text-xs font-black uppercase tracking-wide mb-1" style="color:${s.color}">${dia.dia_semana}</span>
+                        <span class="material-symbols-outlined text-2xl mb-1" style="color:${s.color}">${s.icon}</span>
+                        <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">${dia.nombre}</span>
+                        <span class="text-[9px] text-slate-400 mt-0.5">${dia.fecha}</span>
+                        <span class="text-[9px] font-bold mt-1 px-2 py-0.5 rounded-full text-white" style="background:${s.color}">${s.label}</span>`;
+                    card.addEventListener('click', () => {
+                        document.querySelectorAll('.day-card').forEach(c => c.classList.remove('ring-4','ring-offset-2'));
+                        card.classList.add('ring-4','ring-offset-2');
+                        card.style.setProperty('--tw-ring-color', s.color);
+                        showActivityDetail(dia);
+                    });
+                    container.appendChild(card);
+                });
+
+                overlay.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    overlay.children[0].classList.remove('opacity-0','translate-y-4');
+                });
+            }
+
+            function showWeekInfo(pt) {
+                const overlay = document.getElementById('dayPickerOverlay');
+                const container = document.getElementById('dayPickerCards');
+                const title = document.getElementById('dayPickerTitle');
+                if (!overlay) return;
+                title.textContent = pt.nombre + ' — Sin actividades programadas';
+                container.innerHTML = `<div class="col-span-5 text-center text-slate-400 py-4">
+                    <span class="material-symbols-outlined text-4xl block mb-2">event_busy</span>
+                    <p class="text-sm">No hay actividades esta semana</p></div>`;
+                overlay.classList.remove('hidden');
+                requestAnimationFrame(() => { overlay.children[0].classList.remove('opacity-0','translate-y-4'); });
+            }
+
+            function closeDayPicker() {
+                const overlay = document.getElementById('dayPickerOverlay');
+                if (!overlay) return;
+                overlay.children[0].classList.add('opacity-0','translate-y-4');
+                setTimeout(() => overlay.classList.add('hidden'), 280);
+            }
+
+            function showActivityDetail(dia) {
+                const stateMap = {
+                    completado:   { badge:'bg-emerald-100 text-emerald-700', icon:'check_circle',  label:'Asistió' },
+                    inasistencia: { badge:'bg-red-100 text-red-700',         icon:'cancel',        label:'Faltó' },
+                    futuro:       { badge:'bg-blue-100 text-blue-700',       icon:'schedule',      label:'Próxima' },
+                    bloqueado:    { badge:'bg-slate-100 text-slate-600',     icon:'lock',          label:'Bloqueado' },
+                };
+                const s = stateMap[dia.estado] || stateMap.bloqueado;
+                document.getElementById('actTitle').textContent  = dia.nombre;
+                document.getElementById('actDate').textContent   = `${dia.dia_semana} ${dia.fecha} ${dia.hora}`;
+                document.getElementById('actSede').textContent   = dia.sede || '—';
+                document.getElementById('actType').textContent   = dia.tipo || '—';
+                document.getElementById('actDesc').textContent   = dia.descripcion || 'Sin descripción.';
+                const st = document.getElementById('actStatus');
+                st.className = `px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${s.badge}`;
+                st.innerHTML = `<span class="material-symbols-outlined text-sm align-middle mr-1">${s.icon}</span>${s.label}`;
+                openModal('actividadModal');
             }
 
             // Sidebar Toggle Logic
@@ -818,128 +976,74 @@ require APPROOT . '/views/inc/header.php';
             const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
             const sidebar = document.getElementById('userSidebar');
 
-            if (collapseSidebarBtn) {
-                collapseSidebarBtn.addEventListener('click', () => {
-                    document.body.classList.toggle('sidebar-collapsed');
-                });
-            }
+            if (collapseSidebarBtn) collapseSidebarBtn.addEventListener('click', () => document.body.classList.toggle('sidebar-collapsed'));
+            if (menuBtn && sidebar) menuBtn.addEventListener('click', () => sidebar.classList.toggle('force-open'));
+            if (closeSidebarBtn && sidebar) closeSidebarBtn.addEventListener('click', () => sidebar.classList.remove('force-open'));
 
-            if (menuBtn && sidebar) {
-                menuBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('force-open');
-                });
-            }
-            if (closeSidebarBtn && sidebar) {
-                closeSidebarBtn.addEventListener('click', () => {
-                    sidebar.classList.remove('force-open');
-                });
-            }
-
-            // ── Historial Asistencias Dropdown ──
-            const dropBtn  = document.getElementById('asistenciaDropdownBtn');
-            const submenu  = document.getElementById('asistenciaSubmenu');
-            const chevron  = document.getElementById('asistenciaDropdownChevron');
-
-            // This page is a child — start opened
-            if (submenu) {
-                submenu.classList.remove('hidden');
-                submenu.offsetHeight; // reflow
-                submenu.classList.add('open');
-            }
-            if (chevron) chevron.style.transform = 'rotate(180deg)';
-
+            // Dropdown Historial
+            const dropBtn = document.getElementById('asistenciaDropdownBtn');
+            const submenu = document.getElementById('asistenciaSubmenu');
+            const chevron = document.getElementById('asistenciaDropdownChevron');
+            if (submenu) { submenu.classList.remove('hidden'); submenu.offsetHeight; submenu.classList.add('open'); }
+            if (chevron)  chevron.style.transform = 'rotate(180deg)';
             if (dropBtn && submenu) {
                 dropBtn.addEventListener('click', () => {
                     if (submenu.classList.contains('open')) {
                         submenu.classList.remove('open');
                         chevron && (chevron.style.transform = 'rotate(0deg)');
-                        dropBtn.classList.remove('text-primary', 'bg-primary/5');
+                        dropBtn.classList.remove('text-primary','bg-primary/5');
                     } else {
-                        submenu.classList.remove('hidden');
-                        submenu.offsetHeight;
+                        submenu.classList.remove('hidden'); submenu.offsetHeight;
                         submenu.classList.add('open');
                         chevron && (chevron.style.transform = 'rotate(180deg)');
-                        dropBtn.classList.add('text-primary', 'bg-primary/5');
+                        dropBtn.classList.add('text-primary','bg-primary/5');
                     }
                 });
             }
 
-            // ── Auto-abrir modal por hash de URL ──
-            // Permite que otros sidebars enlacen a camino#contactos o camino#opinion
             const hash = window.location.hash;
-            if (hash === '#contactos') { setTimeout(() => openModal('contactosModal'), 400); }
-            if (hash === '#opinion')   { setTimeout(() => openModal('opinionModal'),   400); }
+            if (hash === '#contactos') setTimeout(() => openModal('contactosModal'), 400);
+            if (hash === '#opinion')   setTimeout(() => openModal('opinionModal'),   400);
 
-            // Modal Logic
             function openModal(id) {
                 const modal = document.getElementById(id);
-                if (modal) {
-                    modal.classList.remove('hidden');
-                    setTimeout(() => {
-                        modal.children[0].classList.remove('opacity-0');
-                        modal.children[1].classList.remove('scale-95', 'opacity-0');
-                        modal.children[1].classList.add('scale-100', 'opacity-100');
-                    }, 10);
-                }
+                if (!modal) return;
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.children[0].classList.remove('opacity-0');
+                    modal.children[1].classList.remove('scale-95','opacity-0');
+                    modal.children[1].classList.add('scale-100','opacity-100');
+                }, 10);
             }
 
             function closeModal(id) {
                 const modal = document.getElementById(id);
-                if (modal) {
-                    modal.children[0].classList.add('opacity-0');
-                    modal.children[1].classList.add('scale-95', 'opacity-0');
-                    modal.children[1].classList.remove('scale-100', 'opacity-100');
-                    setTimeout(() => {
-                        modal.classList.add('hidden');
-                    }, 300);
-                }
+                if (!modal) return;
+                modal.children[0].classList.add('opacity-0');
+                modal.children[1].classList.add('scale-95','opacity-0');
+                modal.children[1].classList.remove('scale-100','opacity-100');
+                setTimeout(() => modal.classList.add('hidden'), 300);
             }
 
-            function abrirModalActividad(pt) {
-                // Seleccionar los elementos del modal
-                const modalTitle = document.getElementById('actTitle');
-                const modalDate = document.getElementById('actDate');
-                const modalDesc = document.getElementById('actDesc');
-                const modalStatus = document.getElementById('actStatus');
-                const modalType = document.getElementById('actType');
-                const modalSede = document.getElementById('actSede');
-
-                // Llenar datos
-                modalTitle.textContent = pt.nombre;
-                modalDate.textContent = pt.fecha;
-                modalDesc.textContent = pt.descripcion;
-                modalType.textContent = pt.tipo;
-                modalSede.textContent = pt.sede;
-
-                // Estilizar el badge de estado
-                modalStatus.className = 'px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider';
-                let icon = '';
-                
-                if (pt.estado === 'completado') {
-                    modalStatus.classList.add('bg-emerald-100', 'text-emerald-700');
-                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">check_circle</span> Completado';
-                } else if (pt.estado === 'inasistencia') {
-                    modalStatus.classList.add('bg-red-100', 'text-red-700');
-                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">cancel</span> Inasistencia';
-                } else if (pt.estado === 'actual') {
-                    modalStatus.classList.add('bg-amber-100', 'text-amber-700');
-                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">star</span> Próxima';
-                } else {
-                    modalStatus.classList.add('bg-slate-100', 'text-slate-700');
-                    icon = '<span class="material-symbols-outlined text-sm align-middle mr-1">lock</span> Bloqueado';
-                }
-                modalStatus.innerHTML = icon;
-
-                // Abrir el modal
-                openModal('actividadModal');
-            }
-
-            // Init
-            document.addEventListener('DOMContentLoaded', () => {
-                renderAll();
-            });
+            document.addEventListener('DOMContentLoaded', () => renderAll());
         </script>
 
+        <!-- ── Day Picker Overlay ── -->
+        <div id="dayPickerOverlay" class="fixed inset-0 z-[70] hidden flex items-end justify-center p-4 sm:items-center">
+            <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl transition-all duration-280 opacity-0 translate-y-4">
+                <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+                    <h3 id="dayPickerTitle" class="font-black text-slate-800 text-base"></h3>
+                    <button onclick="closeDayPicker()" class="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                        <span class="material-symbols-outlined text-slate-500 text-xl">close</span>
+                    </button>
+                </div>
+                <div id="dayPickerCards" class="grid grid-cols-3 sm:grid-cols-5 gap-3 p-5"></div>
+                <p class="text-center text-xs text-slate-400 pb-4">Toca un día para ver el detalle</p>
+            </div>
+        </div>
+
+        <!-- Floating Action Buttons -->
+        <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
         <!-- Floating Action Buttons -->
         <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
             <button onclick="openModal('contactosModal')" class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 0s;" title="Contactos">
@@ -954,7 +1058,7 @@ require APPROOT . '/views/inc/header.php';
         </div>
 
         <!-- Modals -->
-        
+
         <!-- Modal Detalles de Actividad -->
         <div id="actividadModal" class="fixed inset-0 z-[60] hidden">
             <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
@@ -970,10 +1074,10 @@ require APPROOT . '/views/inc/header.php';
                         Estado
                     </div>
                 </div>
-                
+
                 <div class="p-6">
                     <h2 id="actTitle" class="text-2xl font-black text-primary mb-2">Nombre de Actividad</h2>
-                    
+
                     <div class="flex items-center gap-4 text-sm text-on-surface-variant mb-4 pb-4 border-b border-outline-variant">
                         <div class="flex items-center gap-1">
                             <span class="material-symbols-outlined text-[18px]">event</span>
@@ -988,7 +1092,7 @@ require APPROOT . '/views/inc/header.php';
                             <span id="actType">Tipo</span>
                         </div>
                     </div>
-                    
+
                     <div>
                         <h4 class="text-sm font-bold text-on-surface mb-1">Resumen de la Actividad</h4>
                         <p id="actDesc" class="text-sm text-on-surface-variant leading-relaxed">

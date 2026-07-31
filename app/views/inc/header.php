@@ -213,7 +213,7 @@
             .max-w-7xl, .max-w-\[1280px\] { padding-left: 1rem; padding-right: 1rem; }
         }
 
-        body, .animated-bg, .graph-paper-bg, .bg-gray-50, .bg-background {
+        body, .animated-bg, .graph-paper-bg, .bg-gray-50, .bg-background, .bg-surface-container-lowest {
             font-family: "Lexend", sans-serif;
             transition: background-color 0.2s ease, color 0.2s ease;
             background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 25%, #e5eeff 50%, #dde1ff 75%, #eef1ff 100%);
@@ -269,7 +269,7 @@
         .dark {
             color-scheme: dark;
         }
-        .dark body, .dark .animated-bg, .dark .graph-paper-bg, .dark .bg-gray-50, .dark .bg-background {
+        .dark body, .dark .animated-bg, .dark .graph-paper-bg, .dark .bg-gray-50, .dark .bg-background, .dark .bg-surface-container-lowest, .dark main, .dark #mainScrollContainer {
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #0f172a 50%, #1e293b 75%, #0f172a 100%) !important;
             background-size: 400% 400% !important;
             animation: gradientShift 12s ease infinite !important;
@@ -368,7 +368,9 @@
         .dark .bg-gray-100,
         .dark .bg-surface-container,
         .dark .bg-surface-container-low,
-        .dark .bg-surface-container-high {
+        .dark .bg-surface-container-high,
+        .dark .bg-surface-container-highest,
+        .dark .bg-surface-container-lowest:not(body):not(main) {
             background-color: #1e293b !important;
         }
 
@@ -389,7 +391,7 @@
         .dark .text-emerald-800, .dark .text-emerald-700 { color: #d1fae5 !important; }
 
         /* 2. MODO SÚPER OSCURO (Negro Puro AMOLED + Letras Blancas) */
-        .superdark body, .superdark .animated-bg, .superdark .graph-paper-bg, .superdark .bg-gray-50, .superdark .bg-background {
+        .superdark body, .superdark .animated-bg, .superdark .graph-paper-bg, .superdark .bg-gray-50, .superdark .bg-background, .superdark .bg-surface-container-lowest, .superdark main, .superdark #mainScrollContainer {
             background: linear-gradient(135deg, #000000 0%, #080c14 30%, #000000 70%, #0d0614 100%) !important;
             background-size: 400% 400% !important;
             animation: gradientShift 12s ease infinite !important;
@@ -484,7 +486,9 @@
         .superdark .bg-gray-100,
         .superdark .bg-surface-container,
         .superdark .bg-surface-container-low,
-        .superdark .bg-surface-container-high {
+        .superdark .bg-surface-container-high,
+        .superdark .bg-surface-container-highest,
+        .superdark .bg-surface-container-lowest:not(body):not(main) {
             background-color: #0d0d0d !important;
         }
 
