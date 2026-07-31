@@ -5,7 +5,7 @@
     <?php require APPROOT . '/views/admin/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen w-full overflow-x-hidden">
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden" style="margin-left:16rem">
         <main class="flex-1 p-6">
             <div class="max-w-7xl mx-auto flex flex-col gap-6">
 

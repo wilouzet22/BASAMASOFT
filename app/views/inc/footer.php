@@ -1,5 +1,10 @@
-<footer class="bg-white border-t mt-12">
+<footer class="bg-white border-t mt-12 transition-colors duration-200">
     <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+        <?php
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            $isAdminOrDocente = (strpos($uri, '/admin') !== false || strpos($uri, '/docentes') !== false);
+        ?>
+        <?php if (!$isAdminOrDocente): ?>
         <div class="flex justify-center space-x-6 md:order-2">
             <a href="#" class="text-gray-400 hover:text-gray-500">
                 <span class="sr-only">Facebook</span>
@@ -14,11 +19,199 @@
                 </svg>
             </a>
         </div>
+        <?php endif; ?>
         <div class="mt-8 md:mt-0 md:order-1">
             <p class="text-center text-base text-gray-400">&copy; <?php echo date('Y'); ?> EduSaft. Todos los derechos reservados.</p>
         </div>
     </div>
 </footer>
+
+<!-- Selector Flotante de Temas (Esquina Inferior Derecha) -->
+<div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2.5">
+    <!-- Menú Desplegable de Temas -->
+    <div id="theme-options-menu" class="hidden flex-col items-end gap-2 transition-all duration-300 opacity-0 transform translate-y-3 pointer-events-none mb-1">
+        <!-- Opción: Modo Súper Oscuro -->
+        <button type="button" onclick="setTheme('superdark')"
+                class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-black text-white text-xs font-bold shadow-2xl border border-neutral-700 hover:scale-105 active:scale-95 transition-all cursor-pointer group">
+            <span class="w-3.5 h-3.5 rounded-full bg-black border border-white group-hover:scale-110 transition-transform"></span>
+            <span class="material-symbols-outlined text-base">contrast</span>
+            <span>Súper Oscuro</span>
+        </button>
+
+        <!-- Opción: Modo Oscuro (Slate/Azul) -->
+        <button type="button" onclick="setTheme('dark')"
+                class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-800 text-white text-xs font-bold shadow-2xl border border-slate-600 hover:scale-105 active:scale-95 transition-all cursor-pointer group">
+            <span class="w-3.5 h-3.5 rounded-full bg-slate-900 border border-sky-400 group-hover:scale-110 transition-transform"></span>
+            <span class="material-symbols-outlined text-base">dark_mode</span>
+            <span>Modo Oscuro</span>
+        </button>
+
+        <!-- Opción: Modo Claro -->
+        <button type="button" onclick="setTheme('light')"
+                class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white text-gray-900 text-xs font-bold shadow-2xl border border-gray-300 hover:scale-105 active:scale-95 transition-all cursor-pointer group">
+            <span class="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 group-hover:scale-110 transition-transform"></span>
+            <span class="material-symbols-outlined text-base text-amber-500">light_mode</span>
+            <span>Modo Claro</span>
+        </button>
+    </div>
+
+    <!-- Botón Principal Globo -->
+    <button id="theme-main-toggle" type="button" title="Cambiar Tema" aria-expanded="false"
+            class="p-3.5 bg-primary hover:bg-primary/90 text-white rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all duration-200 border-2 border-white/30 dark:bg-amber-400 dark:text-gray-900 dark:border-gray-800 flex items-center justify-center cursor-pointer">
+        <span class="material-symbols-outlined text-2xl">palette</span>
+    </button>
+</div>
+
+<script>
+    (function() {
+        function initThemeSelector() {
+            const menu = document.getElementById('theme-options-menu');
+            const mainBtn = document.getElementById('theme-main-toggle');
+
+            function toggleMenu() {
+                if (!menu) return;
+                const isHidden = menu.classList.contains('hidden');
+                if (isHidden) {
+                    menu.classList.remove('hidden');
+                    setTimeout(function() {
+                        menu.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+                        menu.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                    }, 10);
+                    mainBtn.setAttribute('aria-expanded', 'true');
+                } else {
+                    menu.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                    menu.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+                    setTimeout(function() {
+                        menu.classList.add('hidden');
+                    }, 300);
+                    mainBtn.setAttribute('aria-expanded', 'false');
+                }
+            }
+
+            if (mainBtn) {
+                mainBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleMenu();
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (menu && !menu.contains(e.target) && mainBtn && !mainBtn.contains(e.target)) {
+                    if (!menu.classList.contains('hidden')) {
+                        menu.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+                        setTimeout(function() {
+                            menu.classList.add('hidden');
+                        }, 300);
+                        mainBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+
+            window.setTheme = function(theme) {
+                if (theme === 'superdark') {
+                    document.documentElement.classList.add('dark', 'superdark');
+                    localStorage.setItem('theme', 'superdark');
+                } else if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('superdark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark', 'superdark');
+                    localStorage.setItem('theme', 'light');
+                }
+                toggleMenu();
+            };
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeSelector);
+        } else {
+            initThemeSelector();
+        }
+    })();
+</script>
+
 <script src="<?php echo URLROOT; ?>/assets/js/main.js"></script>
+
+<?php
+    $uri_nav = $_SERVER['REQUEST_URI'] ?? '';
+    $isAdmin    = strpos($uri_nav, '/admin') !== false;
+    $isDocente  = strpos($uri_nav, '/docentes') !== false;
+    $isFamilia  = strpos($uri_nav, '/padres') !== false;
+?>
+
+<!-- Bottom Navigation Bar (solo móvil) -->
+<nav id="mobile-bottom-nav" aria-label="Navegación móvil">
+    <?php if ($isAdmin): ?>
+        <a href="<?php echo URLROOT; ?>/admin/dashboard"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/dashboard') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/dashboard') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">dashboard</span>
+            <span>Panel</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/estudiantes"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/estudiantes') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/estudiantes') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">groups</span>
+            <span>Estudiantes</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/asistencias"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/asistencias') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/asistencias') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">how_to_reg</span>
+            <span>Asistencias</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/actividades"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/admin/actividades') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/actividades') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">event</span>
+            <span>Actividades</span>
+        </a>
+        <button type="button" onclick="toggleMobileSidebar()"
+                class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+            <span>Más</span>
+        </button>
+    <?php elseif ($isDocente): ?>
+        <a href="<?php echo URLROOT; ?>/docentes/dashboard"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/docentes/dashboard') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">dashboard</span>
+            <span>Panel</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/actividades"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/docentes/actividades') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">assignment</span>
+            <span>Actividades</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/asistencia"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/docentes/asistencia') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">event_available</span>
+            <span>Asistencia</span>
+        </a>
+        <button type="button" onclick="toggleDocentesMobileSidebar()"
+                class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+            <span>Más</span>
+        </button>
+    <?php elseif ($isFamilia): ?>
+        <a href="<?php echo URLROOT; ?>/padres/dashboard"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/dashboard') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">home</span>
+            <span>Inicio</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/padres/camino"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/camino') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">route</span>
+            <span>Camino</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/padres/puntos"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/puntos') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">stars</span>
+            <span>Puntos</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/auth/logout"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-red-500">
+            <span class="material-symbols-outlined text-2xl">logout</span>
+            <span>Salir</span>
+        </a>
+    <?php endif; ?>
+</nav>
 </body>
 </html>

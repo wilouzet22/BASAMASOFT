@@ -3,7 +3,7 @@
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen font-sans">
     <?php require APPROOT . '/views/admin/sidebar.php'; ?>
 
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen w-full overflow-x-hidden">
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden" style="margin-left:16rem">
         <main class="flex-1 p-6">
             <div class="max-w-7xl mx-auto flex flex-col gap-6">
 

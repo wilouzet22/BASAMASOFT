@@ -5,7 +5,7 @@
     <?php require APPROOT . '/views/admin/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen w-full overflow-x-hidden">
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden" style="margin-left:16rem">
         <main class="flex-1 p-6">
             <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
@@ -15,7 +15,7 @@
                 </div>
 
                 <!-- ===== PROFESORES ===== -->
-                <section>
+                <section id="profesores" class="scroll-mt-6">
                     <h2 class="text-xl font-bold text-primary mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined">school</span>
                         Profesores (<?php echo count($data['profesores']); ?>)
@@ -57,7 +57,7 @@
                 </section>
 
                 <!-- ===== FAMILIAS ===== -->
-                <section>
+                <section id="familias" class="scroll-mt-6">
                     <h2 class="text-xl font-bold text-secondary mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined">family_restroom</span>
                         Familias / Acudientes (<?php echo count($data['familias']); ?>)
@@ -99,7 +99,7 @@
                 </section>
 
                 <!-- ===== ESTUDIANTES ===== -->
-                <section>
+                <section id="estudiantes" class="scroll-mt-6">
                     <h2 class="text-xl font-bold text-tertiary mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined">groups</span>
                         Estudiantes (<?php echo count($data['estudiantes']); ?>)

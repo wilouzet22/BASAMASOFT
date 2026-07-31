@@ -5,11 +5,17 @@
     <?php require APPROOT . '/views/docentes/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen" style="margin-left:16rem">
         <!-- TopAppBar -->
         <header class="flex justify-between items-center h-16 px-6 w-full bg-white top-0 z-50 border-b border-outline-variant shadow-sm">
-            <div class="text-2xl font-extrabold tracking-tight text-primary font-headline-md md:hidden">Edusaft</div>
-            <div class="hidden md:block text-on-surface-variant font-label-md">Panel Docente</div>
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleDocentesCollapse()"
+                        class="hidden md:flex w-9 h-9 items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="text-xl font-extrabold tracking-tight text-primary md:hidden">Edusaft</div>
+                <div class="hidden md:block text-on-surface-variant text-sm">Panel Docente</div>
+            </div>
             <div class="flex items-center gap-4">
                 <span class="text-sm text-on-surface-variant hidden md:inline">
                     <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>
