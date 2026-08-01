@@ -138,20 +138,20 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     $offsetCorrX = 0; // desplazamiento horizontal global
     $offsetCorrY = 0; // desplazamiento vertical global
 
-$refPoints = [
-    1  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 1  – Inicio carretera (antes Semana 3)
-    2  => ['x' => 1524.00 + $offsetCorrX, 'y' => 3069.00 + $offsetCorrY], // Semana 2
-    3  => ['x' => 1861.00 + $offsetCorrX, 'y' => 3115.00 + $offsetCorrY], // Semana 3
-    4  => ['x' => 2203.00 + $offsetCorrX, 'y' => 3013.00 + $offsetCorrY], // Semana 4
-    5  => ['x' => 2550.00 + $offsetCorrX, 'y' => 2922.00 + $offsetCorrY], // Semana 5
-    6  => ['x' => 2748.00 + $offsetCorrX, 'y' => 2632.00 + $offsetCorrY], // Semana 6  – curva derecha
-    7  => ['x' => 2506.00 + $offsetCorrX, 'y' => 2415.00 + $offsetCorrY], // Semana 7
-    8  => ['x' => 2151.00 + $offsetCorrX, 'y' => 2334.00 + $offsetCorrY], // Semana 8  – lazo junto al claro
-    9  => ['x' => 2091.00 + $offsetCorrX, 'y' => 2064.00 + $offsetCorrY], // Semana 9
-    10 => ['x' => 2427.00 + $offsetCorrX, 'y' => 1948.00 + $offsetCorrY], // Semana 10
-    11 => ['x' => 2758.00 + $offsetCorrX, 'y' => 1816.00 + $offsetCorrY], // Semana 11
-    12 => ['x' => 2762.00 + $offsetCorrX, 'y' => 1502.00 + $offsetCorrY], // Semana 12 – segunda horquilla
-];
+    $refPoints = [
+        1  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 1  – Inicio carretera (antes Semana 3)
+        2  => ['x' => 1524.00 + $offsetCorrX, 'y' => 3069.00 + $offsetCorrY], // Semana 2
+        3  => ['x' => 1861.00 + $offsetCorrX, 'y' => 3115.00 + $offsetCorrY], // Semana 3
+        4  => ['x' => 2203.00 + $offsetCorrX, 'y' => 3013.00 + $offsetCorrY], // Semana 4
+        5  => ['x' => 2550.00 + $offsetCorrX, 'y' => 2922.00 + $offsetCorrY], // Semana 5
+        6  => ['x' => 2748.00 + $offsetCorrX, 'y' => 2632.00 + $offsetCorrY], // Semana 6  – curva derecha
+        7  => ['x' => 2506.00 + $offsetCorrX, 'y' => 2415.00 + $offsetCorrY], // Semana 7
+        8  => ['x' => 2151.00 + $offsetCorrX, 'y' => 2334.00 + $offsetCorrY], // Semana 8  – lazo junto al claro
+        9  => ['x' => 2091.00 + $offsetCorrX, 'y' => 2064.00 + $offsetCorrY], // Semana 9
+        10 => ['x' => 2427.00 + $offsetCorrX, 'y' => 1948.00 + $offsetCorrY], // Semana 10
+        11 => ['x' => 2758.00 + $offsetCorrX, 'y' => 1816.00 + $offsetCorrY], // Semana 11
+        12 => ['x' => 2762.00 + $offsetCorrX, 'y' => 1502.00 + $offsetCorrY], // Semana 12 – segunda horquilla
+    ];
 
     $imgRefW = 4600;
     $imgRefH = 3800;
@@ -891,10 +891,12 @@ require APPROOT . '/views/inc/header.php';
                     const svg = document.getElementById('mountainSVG');
                     if (!svg || !sc) return;
                     const ratio = svg.getBoundingClientRect().height / totalH;
+                    window.ignoreScroll = true;
                     sc.scrollTo({
                         top: Math.max(0, activeY * ratio - sc.clientHeight * 0.55),
                         behavior: 'smooth'
                     });
+                    setTimeout(() => window.ignoreScroll = false, 800);
                 }, 100);
             }
 
@@ -962,10 +964,14 @@ require APPROOT . '/views/inc/header.php';
             const mainScroller = document.getElementById('mainScrollContainer');
             if (mainScroller) {
                 mainScroller.addEventListener('scroll', () => {
+                    if (window.ignoreScroll) return; // Prevent auto-scroll from closing modal
+                    closeModal('actividadModal'); // Close activity detail modal if open
                     if (zoomedPoint !== null) {
                         resetCurrentZoom();
                     }
-                }, { passive: true });
+                }, {
+                    passive: true
+                });
             }
 
             // ── Week click: zoom into point then show popup ──
@@ -997,60 +1003,217 @@ require APPROOT . '/views/inc/header.php';
 
             function showDayPicker(pt) {
                 closeDayPicker();
-                const overlay = document.getElementById('dayPickerOverlay');
-                const container = document.getElementById('dayPickerCards');
-                const title = document.getElementById('dayPickerTitle');
-                if (!overlay) return;
+                const n = pt.dias.length;
 
-                title.textContent = pt.nombre + (pt.multiple ? ' — Múltiples Actividades' : '');
-                container.innerHTML = '';
+                // ── Build fan overlay ──
+                const overlay = document.createElement('div');
+                overlay.id = 'cardFanOverlay';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:75;display:flex;align-items:center;justify-content:center;pointer-events:none;';
 
-                pt.dias.forEach(dia => {
-                    const stateMap = {
-                        completado: {
-                            color: '#10b981',
-                            icon: 'check_circle',
-                            label: 'Asistió'
-                        },
-                        inasistencia: {
-                            color: '#ef4444',
-                            icon: 'cancel',
-                            label: 'Faltó'
-                        },
-                        futuro: {
-                            color: '#3b82f6',
-                            icon: 'schedule',
-                            label: 'Próxima'
-                        },
-                        bloqueado: {
-                            color: '#94a3b8',
-                            icon: 'lock',
-                            label: 'Bloqueado'
-                        },
-                    };
+                // Dismiss backdrop
+                const backdrop = document.createElement('div');
+                backdrop.style.cssText = 'position:absolute;inset:0;pointer-events:auto;background:rgba(0,0,0,0.35);backdrop-filter:blur(3px);';
+                backdrop.addEventListener('click', closeDayPicker);
+                overlay.appendChild(backdrop);
+
+                // Fan container — centrado en pantalla
+                const fan = document.createElement('div');
+                fan.id = 'cardFan';
+                fan.style.cssText = 'position:relative;width:420px;height:320px;pointer-events:none;';
+                overlay.appendChild(fan);
+
+                const stateMap = {
+                    completado:   { color:'#10b981', light:'#d1fae5', badge:'#065f46', icon:'thumb_up', label:'Asistió',   suit:'♠' },
+                    inasistencia: { color:'#ef4444', light:'#fee2e2', badge:'#991b1b', icon:'block',    label:'Faltó',     suit:'♥' },
+                    futuro:       { color:'#3b82f6', light:'#dbeafe', badge:'#1e40af', icon:'event',    label:'Próxima',   suit:'♦' },
+                    bloqueado:    { color:'#94a3b8', light:'#f1f5f9', badge:'#475569', icon:'lock',     label:'Bloqueado', suit:'♣' },
+                };
+
+                // Fan spread params
+                const totalSpread = Math.min(n * 16, 72); // degrees
+                const startAngle  = -totalSpread / 2;
+
+                pt.dias.forEach((dia, i) => {
                     const s = stateMap[dia.estado] || stateMap.bloqueado;
+                    
+                    // -- Logic for Icon and Border Color based on Tipo --
+                    const tipoStr = (dia.tipo || '').toLowerCase();
+                    let resolvedTipo = 'otro';
+                    if (tipoStr.includes('psicolog') || tipoStr.includes('psicología')) resolvedTipo = 'psicologia';
+                    else if (tipoStr.includes('citaci') || tipoStr.includes('acudiente') || tipoStr.includes('apoderado')) resolvedTipo = 'citacion';
+                    else if (tipoStr.includes('extra')) resolvedTipo = 'extraescolar';
+                    else if (tipoStr.includes('clase') || tipoStr.includes('evaluaci') || tipoStr.includes('taller') || tipoStr.includes('escolar')) resolvedTipo = 'escolar';
+
+                    const typeInfo = {
+                        psicologia: { color: '#38bdf8', icon: 'psychology' }, // Azul claro
+                        citacion: { color: '#64748b', icon: 'gavel' }, // Gris (gavel = martillo/justicia, similar a esposas)
+                        escolar: { color: '#1e3a8a', icon: 'menu_book' }, // Azul oscuro
+                        extraescolar: { color: '#f97316', icon: 'schedule' } // Naranja
+                    };
+
+                    let cardColor = s.color;
+                    let cardIcon = s.icon;
+
+                    const tInfo = typeInfo[resolvedTipo];
+                    if (tInfo) {
+                        cardIcon = tInfo.icon; // Prioritize type icon
+                        if (dia.estado !== 'inasistencia') {
+                            cardColor = tInfo.color; // Prioritize type color UNLESS it's a missed activity
+                        }
+                    }
+
+                    const ang = n > 1 ? startAngle + (totalSpread / (n - 1)) * i : 0;
+                    const tx  = (i - (n - 1) / 2) * 50; // wider horizontal spread
 
                     const card = document.createElement('div');
-                    card.className = 'day-card flex flex-col items-center p-3 rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95 bg-white shadow-md';
-                    card.style.borderColor = s.color;
+                    card.className = 'fan-card';
+                    card.style.cssText = `
+                        position:absolute;
+                        top:50%;
+                        left:50%;
+                        width:170px;
+                        height:260px;
+                        margin-top:10px;
+                        transform-origin:50% 100%;
+                        transform:translate(calc(-50% + ${tx}px), -50%) rotate(${ang}deg);
+                        transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, width 0.4s, height 0.4s, padding 0.4s;
+                        border-radius:18px;
+                        background:#ffffff;
+                        border:4px solid ${cardColor};
+                        box-shadow:0 10px 36px rgba(0,0,0,0.15);
+                        cursor:pointer;
+                        pointer-events:auto;
+                        display:flex;
+                        flex-direction:column;
+                        padding:14px 12px;
+                        user-select:none;
+                        z-index:${i};
+                    `;
+                    card.dataset.index = i;
+
                     card.innerHTML = `
-                        <span class="text-xs font-black uppercase tracking-wide mb-1" style="color:${s.color}">${dia.dia_semana}</span>
-                        <span class="material-symbols-outlined text-2xl mb-1" style="color:${s.color}">${s.icon}</span>
-                        <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">${dia.nombre}</span>
-                        <span class="text-[9px] text-slate-400 mt-0.5">${dia.fecha}</span>
-                        <span class="text-[9px] font-bold mt-1 px-2 py-0.5 rounded-full text-white" style="background:${s.color}">${s.label}</span>`;
-                    card.addEventListener('click', () => {
-                        document.querySelectorAll('.day-card').forEach(c => c.classList.remove('ring-4', 'ring-offset-2'));
-                        card.classList.add('ring-4', 'ring-offset-2');
-                        card.style.setProperty('--tw-ring-color', s.color);
-                        showActivityDetail(dia);
+                        <div style="font-size:28px;font-weight:900;color:${cardColor} !important;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.05);">${s.suit}</div>
+                        <div style="font-size:13px;font-weight:900;color:#0f172a !important;margin-top:8px;line-height:1.35;text-align:center;">${dia.nombre}</div>
+                        <div style="font-size:10px;font-weight:800;color:#64748b !important;margin-top:4px;text-align:center;">${dia.dia_semana} ${dia.fecha}</div>
+                        <div style="flex:1;"></div>
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                            <span class="material-symbols-outlined" style="font-size:42px;color:${cardColor} !important;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${cardIcon}</span>
+                            <span style="font-size:10px;font-weight:800;padding:4px 14px;border-radius:99px;background:${cardColor};color:#fff !important;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.15);">${s.label}</span>
+                        </div>
+                        <div style="font-size:28px;font-weight:900;color:${cardColor} !important;text-align:right;line-height:1;transform:rotate(180deg);margin-top:10px;">${s.suit}</div>
+                    `;
+
+                    // Hover: raise
+                    card.addEventListener('mouseenter', () => {
+                        if (card.classList.contains('selected')) return;
+                        card.style.transform = `translate(calc(-50% + ${tx}px), -60%) rotate(${ang}deg) scale(1.06)`;
+                        card.style.zIndex = 99;
+                        card.style.boxShadow = `0 20px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.6)`;
                     });
-                    container.appendChild(card);
+                    card.addEventListener('mouseleave', () => {
+                        if (!card.classList.contains('selected')) {
+                            card.style.transform = `translate(calc(-50% + ${tx}px), -50%) rotate(${ang}deg)`;
+                            card.style.zIndex = i;
+                            card.style.boxShadow = `0 10px 36px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6)`;
+                        }
+                    });
+
+                    // Click: extract from fan, expand with full detail
+                    card.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (card.classList.contains('expanded')) return;
+
+                        // 1. Collapse other cards into a perfectly centered stack behind
+                        let stackIdx = 0;
+                        document.querySelectorAll('.fan-card').forEach((c, ci) => {
+                            if (c === card) return;
+                            const t = (stackIdx - (n - 2) / 2) * 12; // centered relative to remaining cards
+                            c.style.transition = 'transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s, box-shadow 0.2s';
+                            c.style.transform = `translate(calc(-50% + ${t}px), -50%) rotate(0deg) scale(0.82)`;
+                            c.style.opacity = '0.4';
+                            c.style.zIndex = ci;
+                            c.style.pointerEvents = 'none';
+                            c.classList.remove('selected');
+                            stackIdx++;
+                        });
+
+                        // 2. Move card directly to center, straight, expand immediately
+                        card.classList.add('selected', 'expanded');
+
+                        // Replace content immediately before moving
+                        card.innerHTML = `
+                            <div style="height:140px;background:#ffffff;border-bottom:3px dashed ${cardColor}40;border-radius:20px 20px 0 0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                                <span style="font-size:90px;opacity:0.05;position:absolute;color:#000 !important;">${s.suit}</span>
+                                <span class="material-symbols-outlined" style="font-size:64px;color:${cardColor} !important;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.1));">${cardIcon}</span>
+                                <button id="cardBackBtn" style="position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                    <span class="material-symbols-outlined" style="color:#475569 !important;font-size:22px;">arrow_back</span>
+                                </button>
+                                <span style="position:absolute;bottom:12px;left:14px;background:${s.color};color:#fff !important;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,0.15);">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#fff !important;">${s.icon}</span>${s.label}
+                                </span>
+                                <span style="position:absolute;top:12px;right:14px;font-size:28px;font-weight:900;color:${cardColor} !important;opacity:0.7;">${s.suit}</span>
+                            </div>
+                            <div style="padding:22px 20px 26px;background:#ffffff;border-radius:0 0 20px 20px;overflow-y:auto;flex:1;">
+                                <h2 style="font-size:20px;font-weight:900;color:#0f172a !important;margin:0 0 8px;line-height:1.2;">${dia.nombre}</h2>
+                                <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;">
+                                    <div style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:800;color:#475569 !important;">
+                                        <span class="material-symbols-outlined" style="font-size:18px;color:${cardColor} !important;">event</span>
+                                        <span>${dia.dia_semana} ${dia.fecha}</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:800;color:#475569 !important;">
+                                        <span class="material-symbols-outlined" style="font-size:18px;color:${cardColor} !important;">schedule</span>
+                                        <span>${dia.hora || '—'}</span>
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+                                    <div style="background:#f8fafc;border-radius:14px;padding:12px 14px;border:1px solid #e2e8f0;">
+                                        <div style="font-size:10px;font-weight:900;color:${cardColor} !important;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Sede</div>
+                                        <div style="font-size:14px;font-weight:900;color:#1e293b !important;">${dia.sede || '—'}</div>
+                                    </div>
+                                    <div style="background:#f8fafc;border-radius:14px;padding:12px 14px;border:1px solid #e2e8f0;">
+                                        <div style="font-size:10px;font-weight:900;color:${cardColor} !important;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Tipo</div>
+                                        <div style="font-size:14px;font-weight:900;color:#1e293b !important;">${dia.tipo || '—'}</div>
+                                    </div>
+                                </div>
+                                <div style="background:#f1f5f9;border-radius:14px;padding:14px;border-left:4px solid ${cardColor};">
+                                    <div style="font-size:10px;font-weight:900;color:#64748b !important;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Descripción</div>
+                                    <p style="font-size:13px;color:#334155 !important;font-weight:600;line-height:1.6;margin:0;">${dia.descripcion || 'Sin descripción disponible.'}</p>
+                                </div>
+                            </div>
+                        `;
+
+                        // Animate card to center, straight, expanded
+                        card.style.transition = 'all 0.42s cubic-bezier(0.34,1.15,0.64,1)';
+                        card.style.transform = `translate(-50%, -50%) rotate(0deg) scale(1)`;
+                        card.style.width = 'min(340px, 90vw)';
+                        card.style.height = 'auto';
+                        card.style.maxHeight = '82vh';
+                        card.style.borderRadius = '24px';
+                        card.style.padding = '0';
+                        card.style.overflowY = 'auto';
+                        card.style.overflowX = 'hidden';
+                        card.style.zIndex = 200;
+                        card.style.boxShadow = `0 32px 80px rgba(0,0,0,0.5), 0 0 0 2.5px ${s.color}`;
+
+                        document.getElementById('cardBackBtn')?.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            card.classList.remove('expanded');
+                            closeDayPicker();
+                        });
+                    });
+
+                    fan.appendChild(card);
                 });
 
-                overlay.classList.remove('hidden');
+                document.body.appendChild(overlay);
+
+                // Animate in
+                fan.style.opacity = '0';
+                fan.style.transform = 'translateY(80px) scale(0.8)';
+                fan.style.transition = 'opacity 0.38s ease, transform 0.45s cubic-bezier(0.34,1.2,0.64,1)';
                 requestAnimationFrame(() => {
-                    overlay.children[0].classList.remove('opacity-0', 'translate-y-4');
+                    fan.style.opacity = '1';
+                    fan.style.transform = 'translateY(0) scale(1)';
                 });
             }
 
@@ -1070,10 +1233,14 @@ require APPROOT . '/views/inc/header.php';
             }
 
             function closeDayPicker() {
-                const overlay = document.getElementById('dayPickerOverlay');
+                const overlay = document.getElementById('cardFanOverlay');
                 if (!overlay) return;
-                overlay.children[0].classList.add('opacity-0', 'translate-y-4');
-                setTimeout(() => overlay.classList.add('hidden'), 280);
+                const fan = document.getElementById('cardFan');
+                if (fan) {
+                    fan.style.opacity = '0';
+                    fan.style.transform = 'translateY(60px) scale(0.85)';
+                }
+                setTimeout(() => overlay && overlay.remove(), 320);
             }
 
             function showActivityDetail(dia) {
@@ -1174,19 +1341,7 @@ require APPROOT . '/views/inc/header.php';
             document.addEventListener('DOMContentLoaded', () => renderAll());
         </script>
 
-        <!-- ── Day Picker Overlay ── -->
-        <div id="dayPickerOverlay" class="fixed inset-0 z-[70] hidden flex items-end justify-center p-4 sm:items-center">
-            <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl transition-all duration-280 opacity-0 translate-y-4">
-                <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
-                    <h3 id="dayPickerTitle" class="font-black text-slate-800 text-base"></h3>
-                    <button onclick="closeDayPicker()" class="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
-                        <span class="material-symbols-outlined text-slate-500 text-xl">close</span>
-                    </button>
-                </div>
-                <div id="dayPickerCards" class="grid grid-cols-3 sm:grid-cols-5 gap-3 p-5"></div>
-                <p class="text-center text-xs text-slate-400 pb-4">Toca un día para ver el detalle</p>
-            </div>
-        </div>
+        <!-- Day Picker (fan cards) – container injected dynamically by JS -->
 
         <!-- Floating Action Buttons -->
         <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
@@ -1206,7 +1361,7 @@ require APPROOT . '/views/inc/header.php';
             <!-- Modals -->
 
             <!-- Modal Detalles de Actividad -->
-            <div id="actividadModal" class="fixed inset-0 z-[60] hidden">
+            <div id="actividadModal" class="fixed inset-0 z-[80] hidden">
                 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
                 <div class="modal-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
                     <!-- Imagen cabecera representativa -->
