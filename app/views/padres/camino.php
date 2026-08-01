@@ -138,23 +138,20 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     $offsetCorrX = 0; // desplazamiento horizontal global
     $offsetCorrY = 0; // desplazamiento vertical global
 
-    $refPoints = [
-        1  => ['x' =>  575.00 + $offsetCorrX, 'y' => 3798.00 + $offsetCorrY], // Semana 1  – Inicio carretera (base)
-        2  => ['x' =>  926.00 + $offsetCorrX, 'y' => 3526.00 + $offsetCorrY], // Semana 2
-        3  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 3
-        4  => ['x' => 1595.00 + $offsetCorrX, 'y' => 3054.00 + $offsetCorrY], // Semana 4
-        5  => ['x' => 1991.00 + $offsetCorrX, 'y' => 3062.00 + $offsetCorrY], // Semana 5
-        6  => ['x' => 2407.00 + $offsetCorrX, 'y' => 2952.00 + $offsetCorrY], // Semana 6
-        7  => ['x' => 2721.00 + $offsetCorrX, 'y' => 2698.00 + $offsetCorrY], // Semana 7  – curva derecha (horquilla)
-        8  => ['x' => 2506.00 + $offsetCorrX, 'y' => 2415.00 + $offsetCorrY], // Semana 8
-        9  => ['x' => 2081.00 + $offsetCorrX, 'y' => 2315.00 + $offsetCorrY], // Semana 9  – lazo junto al claro
-        10 => ['x' => 2215.00 + $offsetCorrX, 'y' => 1998.00 + $offsetCorrY], // Semana 10
-        11 => ['x' => 2630.00 + $offsetCorrX, 'y' => 1881.00 + $offsetCorrY], // Semana 11
-        12 => ['x' => 2807.00 + $offsetCorrX, 'y' => 1561.00 + $offsetCorrY], // Semana 12 – segunda horquilla
-        13 => ['x' => 2458.00 + $offsetCorrX, 'y' => 1315.00 + $offsetCorrY], // Semana 13 – entra en sombra de cueva
-        14 => ['x' => 2320.00 + $offsetCorrX, 'y' => 1080.00 + $offsetCorrY], // Semana 14 – ESTIMADO (boca de cueva)
-        15 => ['x' => 2420.00 + $offsetCorrX, 'y' =>  780.00 + $offsetCorrY], // Semana 15 – ESTIMADO (interior cueva, destino)
-    ];
+$refPoints = [
+    1  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 1  – Inicio carretera (antes Semana 3)
+    2  => ['x' => 1524.00 + $offsetCorrX, 'y' => 3069.00 + $offsetCorrY], // Semana 2
+    3  => ['x' => 1861.00 + $offsetCorrX, 'y' => 3115.00 + $offsetCorrY], // Semana 3
+    4  => ['x' => 2203.00 + $offsetCorrX, 'y' => 3013.00 + $offsetCorrY], // Semana 4
+    5  => ['x' => 2550.00 + $offsetCorrX, 'y' => 2922.00 + $offsetCorrY], // Semana 5
+    6  => ['x' => 2748.00 + $offsetCorrX, 'y' => 2632.00 + $offsetCorrY], // Semana 6  – curva derecha
+    7  => ['x' => 2506.00 + $offsetCorrX, 'y' => 2415.00 + $offsetCorrY], // Semana 7
+    8  => ['x' => 2151.00 + $offsetCorrX, 'y' => 2334.00 + $offsetCorrY], // Semana 8  – lazo junto al claro
+    9  => ['x' => 2091.00 + $offsetCorrX, 'y' => 2064.00 + $offsetCorrY], // Semana 9
+    10 => ['x' => 2427.00 + $offsetCorrX, 'y' => 1948.00 + $offsetCorrY], // Semana 10
+    11 => ['x' => 2758.00 + $offsetCorrX, 'y' => 1816.00 + $offsetCorrY], // Semana 11
+    12 => ['x' => 2762.00 + $offsetCorrX, 'y' => 1502.00 + $offsetCorrY], // Semana 12 – segunda horquilla
+];
 
     $imgRefW = 4600;
     $imgRefH = 3800;
@@ -288,6 +285,20 @@ $extraStyles = '
         }
         #asistenciaSubmenu.open .submenu-item {
             animation: submenu-drop 0.32s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+
+        /* Animación para la flecha del último punto apuntando 25º a la izquierda con movimiento */
+        @keyframes peak-arrow-bounce {
+            0%, 100% {
+                transform: rotate(-25deg) translate(0px, 0px);
+            }
+            50% {
+                transform: rotate(-25deg) translate(0px, -15px);
+            }
+        }
+        .peak-arrow-animated {
+            animation: peak-arrow-bounce 1.4s ease-in-out infinite;
+            transform-origin: 0px 0px;
         }
 
         /* ── Responsive mountain layout ── */
@@ -788,25 +799,64 @@ require APPROOT . '/views/inc/header.php';
                         outerColor = c.outer;
                     }
 
-                    // Outer glow ring
-                    const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    outer.setAttribute('cx', pt.cx);
-                    outer.setAttribute('cy', pt.cy);
-                    outer.setAttribute('r', '22');
-                    outer.setAttribute('fill', outerColor);
-                    outer.setAttribute('opacity', '0.55');
-                    if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
-                    group.appendChild(outer);
+                    if (pt.is_peak) {
+                        // Halo de luz exterior para la flecha de la cima
+                        const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        outer.setAttribute('cx', pt.cx);
+                        outer.setAttribute('cy', pt.cy);
+                        outer.setAttribute('r', '32');
+                        outer.setAttribute('fill', outerColor);
+                        outer.setAttribute('opacity', '0.5');
+                        outer.setAttribute('filter', 'url(#glow)');
+                        group.appendChild(outer);
 
-                    // Main dot
-                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    dot.setAttribute('cx', pt.cx);
-                    dot.setAttribute('cy', pt.cy);
-                    dot.setAttribute('r', pt.is_peak ? '26' : '16');
-                    dot.setAttribute('fill', fillColor);
-                    dot.setAttribute('stroke', strokeColor);
-                    dot.setAttribute('stroke-width', '2.5');
-                    group.appendChild(dot);
+                        // Grupo contenedor posicionado en las coordenadas (pt.cx, pt.cy)
+                        const arrowGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        arrowGroup.setAttribute('transform', `translate(${pt.cx}, ${pt.cy})`);
+
+                        // Grupo interno animado con rotación de -25º y movimiento de vaivén
+                        const arrowInner = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        arrowInner.setAttribute('class', 'peak-arrow-animated');
+
+                        // Trazo principal de la flecha
+                        const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        arrowPath.setAttribute('d', 'M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z');
+                        arrowPath.setAttribute('fill', fillColor);
+                        arrowPath.setAttribute('stroke', strokeColor);
+                        arrowPath.setAttribute('stroke-width', '3');
+                        arrowPath.setAttribute('stroke-linejoin', 'round');
+
+                        // Detalle metálico/brillante interior
+                        const arrowDetail = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        arrowDetail.setAttribute('d', 'M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z');
+                        arrowDetail.setAttribute('fill', '#ffffff');
+                        arrowDetail.setAttribute('opacity', '0.7');
+
+                        arrowInner.appendChild(arrowPath);
+                        arrowInner.appendChild(arrowDetail);
+                        arrowGroup.appendChild(arrowInner);
+                        group.appendChild(arrowGroup);
+                    } else {
+                        // Outer glow ring para puntos normales
+                        const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        outer.setAttribute('cx', pt.cx);
+                        outer.setAttribute('cy', pt.cy);
+                        outer.setAttribute('r', '22');
+                        outer.setAttribute('fill', outerColor);
+                        outer.setAttribute('opacity', '0.55');
+                        if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
+                        group.appendChild(outer);
+
+                        // Main dot para puntos normales
+                        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        dot.setAttribute('cx', pt.cx);
+                        dot.setAttribute('cy', pt.cy);
+                        dot.setAttribute('r', '16');
+                        dot.setAttribute('fill', fillColor);
+                        dot.setAttribute('stroke', strokeColor);
+                        dot.setAttribute('stroke-width', '2.5');
+                        group.appendChild(dot);
+                    }
 
                     // Heartbeat pulse for "actual" week
                     if (pt.estado === 'actual' && !pt.multiple) {
@@ -831,7 +881,7 @@ require APPROOT . '/views/inc/header.php';
                     // No label text — tooltips shown on click via popup
 
                     // Click: zoom + show day picker
-                    group.addEventListener('click', () => handleWeekClick(pt, group));
+                    group.addEventListener('click', (e) => handleWeekClick(e, pt, group));
                     g.appendChild(group);
                 });
 
@@ -888,24 +938,57 @@ require APPROOT . '/views/inc/header.php';
                 animateViewBox(curVB, [0, 0, origVBW, origVBH], durationMs);
             }
 
-            // ── Week click: zoom into point then show popup ──
-            function handleWeekClick(pt, groupEl) {
-                if (zoomedPoint === pt.semana) {
+            // ── Zoom state ──
+            let zoomedGroupEl = null;
+
+            function resetCurrentZoom(durationMs = 500) {
+                if (zoomedPoint !== null) {
                     zoomedPoint = null;
+                    if (zoomedGroupEl) {
+                        zoomedGroupEl.style.transform = 'scale(1)';
+                        zoomedGroupEl = null;
+                    }
                     closeDayPicker();
-                    resetZoom(500);
+                    resetZoom(durationMs);
+                }
+            }
+
+            // ── SVG background click to reset zoom ──
+            svgEl.addEventListener('click', () => {
+                resetCurrentZoom();
+            });
+
+            // ── Scroll to reset zoom ──
+            const mainScroller = document.getElementById('mainScrollContainer');
+            if (mainScroller) {
+                mainScroller.addEventListener('scroll', () => {
+                    if (zoomedPoint !== null) {
+                        resetCurrentZoom();
+                    }
+                }, { passive: true });
+            }
+
+            // ── Week click: zoom into point then show popup ──
+            function handleWeekClick(e, pt, groupEl) {
+                e.stopPropagation(); // Prevent SVG background click
+                if (zoomedPoint === pt.semana) {
+                    resetCurrentZoom();
                     return;
                 }
+                resetCurrentZoom(0); // Reset previous point if any, immediately
                 zoomedPoint = pt.semana;
+                zoomedGroupEl = groupEl;
 
                 // 1. Animate SVG viewBox zoom to clicked point
                 zoomToPoint(pt.cx, pt.cy, 3.5, 480, () => {
                     // 2. After zoom, show popup; dot pulses
-                    groupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-                    groupEl.style.transform = 'scale(2.2)';
-                    setTimeout(() => {
-                        groupEl.style.transform = 'scale(1.6)';
-                    }, 300);
+                    if (zoomedGroupEl) {
+                        zoomedGroupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+                        zoomedGroupEl.style.transform = 'scale(2.2)';
+                        setTimeout(() => {
+                            if (zoomedGroupEl) zoomedGroupEl.style.transform = 'scale(1.6)';
+                        }, 300);
+                    }
 
                     if (pt.dias && pt.dias.length > 0) showDayPicker(pt);
                     else showWeekInfo(pt);
