@@ -14,10 +14,10 @@ foreach ($actividades as $act) {
     $actsByWeek[$semana][] = $act;
 }
 
-// ── Siempre generar exactamente 40 semanas fijas ──
+// ── Siempre generar exactamente 15 semanas fijas ──
 // La semana de referencia es la primera semana que tenga actividad,
 // o la semana actual si no hay actividades.
-$totalSemanas = 40;
+$totalSemanas = 15;
 $etapas = [];
 
 if (!empty($actsByWeek)) {
@@ -56,8 +56,10 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
             }
         }
         if ($futuras > 0 && $completadas === 0 && $inasistencias === 0) {
-            if (!$actual_assigned) { $estado = 'actual'; $actual_assigned = true; }
-            else $estado = 'bloqueado';
+            if (!$actual_assigned) {
+                $estado = 'actual';
+                $actual_assigned = true;
+            } else $estado = 'bloqueado';
         } elseif ($completadas > 0 && $inasistencias === 0) {
             $estado = 'completado';
         } elseif ($inasistencias > 0 && $completadas === 0) {
@@ -69,7 +71,7 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
 
     // Preparar sub-actividades (máx 5 días) para mostrar en popup
     $dias = [];
-    $dayNames = ['Lun','Mar','Mié','Jue','Vie'];
+    $dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
     foreach (array_slice($acts, 0, 5) as $act) {
         $fd = new DateTime($act->fecha_hora_inicio);
         $actEstado = 'bloqueado';
@@ -126,64 +128,39 @@ $totalHeight = 1400; // Altura lógica más corta para evitar estiramiento y zoo
 function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int $totalH): array
 {
     // ========================================================================
-    // COORDENADAS X,Y DE LAS 40 SEMANAS EN LA IMAGEN (Resolución 2048 x 1152)
+    // COORDENADAS X,Y DE LAS 15 SEMANAS EN LA IMAGEN (Resolución 4600 x 3800)
     // ========================================================================
     // Para editar la ubicación de un punto, simplemente cambia el valor de 'x' (horizontal) y 'y' (vertical).
-    // Nota: El punto 1 es la base y el punto 40 es la cima de la montaña.
+    // Nota: El punto 1 es la base (inicio del camino) y el punto 15 es la cueva (destino final).
     // ── OFFSET para centrar los puntos en el camino visible ──
     // Ajusta $offsetCorrX para mover todos los puntos horizontalmente (+= derecha, -= izquierda)
     // Ajusta $offsetCorrY para mover todos los puntos verticalmente   (+= abajo,  -= arriba)
     $offsetCorrX = 0; // desplazamiento horizontal global
-    $offsetCorrY =  0; // desplazamiento vertical global
+    $offsetCorrY = 0; // desplazamiento vertical global
 
     $refPoints = [
-        1  => ['x' => 1000.00 + $offsetCorrX, 'y' => 1145.00 + $offsetCorrY], // Semana 1 (Base)
-        2  => ['x' =>  960.00 + $offsetCorrX, 'y' => 1100.00 + $offsetCorrY],
-        3  => ['x' =>  905.00 + $offsetCorrX, 'y' => 1055.00 + $offsetCorrY],
-        4  => ['x' =>  930.00 + $offsetCorrX, 'y' => 1010.00 + $offsetCorrY],
-        5  => ['x' =>  995.00 + $offsetCorrX, 'y' =>  970.00 + $offsetCorrY],
-        6  => ['x' => 1030.00 + $offsetCorrX, 'y' =>  930.00 + $offsetCorrY],
-        7  => ['x' =>  990.00 + $offsetCorrX, 'y' =>  895.00 + $offsetCorrY],
-        8  => ['x' =>  945.00 + $offsetCorrX, 'y' =>  865.00 + $offsetCorrY],
-        9  => ['x' =>  .00 + $offsetCorrX, 'y' =>  838.00 + $offsetCorrY],
-        10 => ['x' =>  860.00 + $offsetCorrX, 'y' =>  810.00 + $offsetCorrY],
-        11 => ['x' =>  820.00 + $offsetCorrX, 'y' =>  785.00 + $offsetCorrY],
-        12 => ['x' =>  790.00 + $offsetCorrX, 'y' =>  750.00 + $offsetCorrY],
-        13 => ['x' =>  770.00 + $offsetCorrX, 'y' =>  710.00 + $offsetCorrY],
-        14 => ['x' =>  775.00 + $offsetCorrX, 'y' =>  670.00 + $offsetCorrY],
-        15 => ['x' =>  800.00 + $offsetCorrX, 'y' =>  635.00 + $offsetCorrY],
-        16 => ['x' =>  835.00 + $offsetCorrX, 'y' =>  605.00 + $offsetCorrY],
-        17 => ['x' =>  865.00 + $offsetCorrX, 'y' =>  575.00 + $offsetCorrY],
-        18 => ['x' =>  880.00 + $offsetCorrX, 'y' =>  540.00 + $offsetCorrY],
-        19 => ['x' =>  870.00 + $offsetCorrX, 'y' =>  500.00 + $offsetCorrY],
-        20 => ['x' =>  850.00 + $offsetCorrX, 'y' =>  465.00 + $offsetCorrY],
-        21 => ['x' =>  859.56 + $offsetCorrX, 'y' =>  450.67 + $offsetCorrY],
-        22 => ['x' =>  869.11 + $offsetCorrX, 'y' =>  436.33 + $offsetCorrY],
-        23 => ['x' =>  878.67 + $offsetCorrX, 'y' =>  422.00 + $offsetCorrY],
-        24 => ['x' =>  890.49 + $offsetCorrX, 'y' =>  409.51 + $offsetCorrY],
-        25 => ['x' =>  902.67 + $offsetCorrX, 'y' =>  397.33 + $offsetCorrY],
-        26 => ['x' =>  914.46 + $offsetCorrX, 'y' =>  384.79 + $offsetCorrY],
-        27 => ['x' =>  925.68 + $offsetCorrX, 'y' =>  371.71 + $offsetCorrY],
-        28 => ['x' =>  936.89 + $offsetCorrX, 'y' =>  358.63 + $offsetCorrY],
-        29 => ['x' =>  944.90 + $offsetCorrX, 'y' =>  343.56 + $offsetCorrY],
-        30 => ['x' =>  951.69 + $offsetCorrX, 'y' =>  327.72 + $offsetCorrY],
-        31 => ['x' =>  957.79 + $offsetCorrX, 'y' =>  311.63 + $offsetCorrY],
-        32 => ['x' =>  963.24 + $offsetCorrX, 'y' =>  295.28 + $offsetCorrY],
-        33 => ['x' =>  968.69 + $offsetCorrX, 'y' =>  278.94 + $offsetCorrY],
-        34 => ['x' =>  974.13 + $offsetCorrX, 'y' =>  262.60 + $offsetCorrY],
-        35 => ['x' =>  979.58 + $offsetCorrX, 'y' =>  246.25 + $offsetCorrY],
-        36 => ['x' =>  985.04 + $offsetCorrX, 'y' =>  229.91 + $offsetCorrY],
-        37 => ['x' =>  991.43 + $offsetCorrX, 'y' =>  213.91 + $offsetCorrY],
-        38 => ['x' =>  998.41 + $offsetCorrX, 'y' =>  198.18 + $offsetCorrY],
-        39 => ['x' => 1006.26 + $offsetCorrX, 'y' =>  182.85 + $offsetCorrY],
-        40 => ['x' => 1015.00 + $offsetCorrX, 'y' =>  168.00 + $offsetCorrY], // Semana 40 (Cima)
+        1  => ['x' =>  575.00 + $offsetCorrX, 'y' => 3798.00 + $offsetCorrY], // Semana 1  – Inicio carretera (base)
+        2  => ['x' =>  926.00 + $offsetCorrX, 'y' => 3526.00 + $offsetCorrY], // Semana 2
+        3  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 3
+        4  => ['x' => 1595.00 + $offsetCorrX, 'y' => 3054.00 + $offsetCorrY], // Semana 4
+        5  => ['x' => 1991.00 + $offsetCorrX, 'y' => 3062.00 + $offsetCorrY], // Semana 5
+        6  => ['x' => 2407.00 + $offsetCorrX, 'y' => 2952.00 + $offsetCorrY], // Semana 6
+        7  => ['x' => 2721.00 + $offsetCorrX, 'y' => 2698.00 + $offsetCorrY], // Semana 7  – curva derecha (horquilla)
+        8  => ['x' => 2506.00 + $offsetCorrX, 'y' => 2415.00 + $offsetCorrY], // Semana 8
+        9  => ['x' => 2081.00 + $offsetCorrX, 'y' => 2315.00 + $offsetCorrY], // Semana 9  – lazo junto al claro
+        10 => ['x' => 2215.00 + $offsetCorrX, 'y' => 1998.00 + $offsetCorrY], // Semana 10
+        11 => ['x' => 2630.00 + $offsetCorrX, 'y' => 1881.00 + $offsetCorrY], // Semana 11
+        12 => ['x' => 2807.00 + $offsetCorrX, 'y' => 1561.00 + $offsetCorrY], // Semana 12 – segunda horquilla
+        13 => ['x' => 2458.00 + $offsetCorrX, 'y' => 1315.00 + $offsetCorrY], // Semana 13 – entra en sombra de cueva
+        14 => ['x' => 2320.00 + $offsetCorrX, 'y' => 1080.00 + $offsetCorrY], // Semana 14 – ESTIMADO (boca de cueva)
+        15 => ['x' => 2420.00 + $offsetCorrX, 'y' =>  780.00 + $offsetCorrY], // Semana 15 – ESTIMADO (interior cueva, destino)
     ];
 
-    $imgRefW = 2048;
-    $imgRefH = 1152;
+    $imgRefW = 4600;
+    $imgRefH = 3800;
 
     // Convert reference points to relative [0..1] coordinates
-    $relPoints = array_map(function($pt) use ($imgRefW, $imgRefH) {
+    $relPoints = array_map(function ($pt) use ($imgRefW, $imgRefH) {
         return ['rx' => $pt['x'] / $imgRefW, 'ry' => $pt['y'] / $imgRefH];
     }, array_values($refPoints));
 
@@ -192,10 +169,10 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     $totalLen = 0;
     for ($i = 0; $i < count($relPoints) - 1; $i++) {
         $p1 = $relPoints[$i];
-        $p2 = $relPoints[$i+1];
+        $p2 = $relPoints[$i + 1];
         $dx = $p2['rx'] - $p1['rx'];
         $dy = $p2['ry'] - $p1['ry'];
-        $dist = sqrt($dx*$dx + $dy*$dy);
+        $dist = sqrt($dx * $dx + $dy * $dy);
         $segments[] = ['p1' => $p1, 'p2' => $p2, 'dist' => $dist];
         $totalLen += $dist;
     }
@@ -207,10 +184,10 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     $targetY = -$totalH * 0.10;
 
     // Simulate `preserveAspectRatio="xMidYMid slice"`
-    // source image age.jpg aspect ratio is 16:9 (same as 1600x900)
-    $imgRatio = $imgRefW / $imgRefH; 
+    // source image aro de genaro.jpeg aspect ratio is 4600:3800 (~1.21:1)
+    $imgRatio = $imgRefW / $imgRefH;
     $targetRatio = $targetW / $targetH;
-    
+
     if ($targetRatio > $imgRatio) {
         // Scaled by width
         $scale = $targetW / $imgRefW;
@@ -231,11 +208,12 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     for ($i = 0; $i < $totalEtapas; $i++) {
         $etapa = $etapas[$i];
         $t = $totalEtapas > 1 ? $i / ($totalEtapas - 1) : 0.5;
-        
+
         $targetDist = $t * $totalLen;
         $currDist = 0;
-        $rx = 0.5; $ry = 0.5; // fallback
-        
+        $rx = 0.5;
+        $ry = 0.5; // fallback
+
         // Find segment
         foreach ($segments as $idx => $seg) {
             if ($currDist + $seg['dist'] >= $targetDist - 0.0001 || $idx === count($segments) - 1) {
@@ -647,10 +625,9 @@ require APPROOT . '/views/inc/header.php';
                 <path d="M <?= -$baseHalfW ?>,<?= $viewBoxH ?> L <?= $centroX - 300 ?>,700 L <?= $centroX + 150 ?>,500 L <?= $centroX + 600 ?>,800 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[1] ?>" opacity="0.5" />
                 <path d="M <?= $centroX - 400 ?>,<?= $viewBoxH ?> L <?= $centroX + 300 ?>,650 L <?= $viewBoxW + $baseHalfW ?>,<?= $viewBoxH ?> Z" fill="<?= $distMnt[2] ?>" opacity="0.6" />
 
-                <!-- ======= MOUNTAIN IMAGE (20% zoom - 1.2x scale, centered) ======= -->
                 <image
                     id="mountainImg"
-                    href="<?= URLROOT ?>/public/assets/img/age.jpg"
+                    href="<?= URLROOT ?>/public/assets/img/aro de genaro.jpeg"
                     x="<?= -$viewBoxW * 0.10 ?>"
                     y="<?= -$totalHeight * 0.10 ?>"
                     width="<?= $viewBoxW * 1.2 ?>"
@@ -677,11 +654,11 @@ require APPROOT . '/views/inc/header.php';
                                                                             elseif ($porcentajeTermometro >= 25) echo '#f97316';
                                                                             else echo '#ef4444';
                                                                             ?>;"><?php
-                    if ($porcentajeTermometro >= 75) echo 'sentiment_very_satisfied';
-                    elseif ($porcentajeTermometro >= 50) echo 'sentiment_neutral';
-                    elseif ($porcentajeTermometro >= 25) echo 'sentiment_dissatisfied';
-                    else echo 'sentiment_very_dissatisfied';
-                    ?></span>
+                                                                                    if ($porcentajeTermometro >= 75) echo 'sentiment_very_satisfied';
+                                                                                    elseif ($porcentajeTermometro >= 50) echo 'sentiment_neutral';
+                                                                                    elseif ($porcentajeTermometro >= 25) echo 'sentiment_dissatisfied';
+                                                                                    else echo 'sentiment_very_dissatisfied';
+                                                                                    ?></span>
             <span class="text-xs font-black text-primary"><?= $porcentajeTermometro ?>%</span>
         </div>
 
@@ -726,8 +703,8 @@ require APPROOT . '/views/inc/header.php';
 
         <script>
             // ====== MOUNTAIN RENDER – WEEK MODE ======
-            const pts   = <?= json_encode($allPoints) ?>;
-            const vbW   = <?= $viewBoxW ?>;
+            const pts = <?= json_encode($allPoints) ?>;
+            const vbW = <?= $viewBoxW ?>;
             const totalH = <?= $totalHeight ?>;
 
             // ── Zoom state ──
@@ -737,11 +714,13 @@ require APPROOT . '/views/inc/header.php';
                 if (pts.length === 0) return '';
                 let d = `M ${pts[0].cx},${pts[0].cy}`;
                 for (let i = 1; i < pts.length; i++) {
-                    const prev = pts[i-1], cur = pts[i];
-                    const mx = (prev.cx + cur.cx) / 2, my = (prev.cy + cur.cy) / 2;
+                    const prev = pts[i - 1],
+                        cur = pts[i];
+                    const mx = (prev.cx + cur.cx) / 2,
+                        my = (prev.cy + cur.cy) / 2;
                     d += ` Q ${prev.cx},${prev.cy} ${mx},${my}`;
                 }
-                const last = pts[pts.length-1];
+                const last = pts[pts.length - 1];
                 d += ` Q ${last.cx},${last.cy} ${last.cx},${last.cy}`;
                 return d;
             }
@@ -768,48 +747,83 @@ require APPROOT . '/views/inc/header.php';
                     let fillColor, strokeColor, outerColor;
                     if (pt.multiple) {
                         // Blue = week with >2 activities
-                        fillColor  = '#3b82f6'; strokeColor = '#1d4ed8'; outerColor = '#93c5fd';
+                        fillColor = '#3b82f6';
+                        strokeColor = '#1d4ed8';
+                        outerColor = '#93c5fd';
                     } else if (pt.is_peak) {
-                        fillColor  = '#fcd34d'; strokeColor = '#f59e0b'; outerColor = '#fde68a';
+                        fillColor = '#fcd34d';
+                        strokeColor = '#f59e0b';
+                        outerColor = '#fde68a';
                     } else {
                         const colorMap = {
-                            completado:  { fill:'#10b981', stroke:'#047857', outer:'#34d399' },
-                            actual:      { fill:'#f59e0b', stroke:'#b45309', outer:'#fbbf24' },
-                            inasistencia:{ fill:'#ef4444', stroke:'#991b1b', outer:'#f87171' },
-                            mixto:       { fill:'#a855f7', stroke:'#7e22ce', outer:'#d8b4fe' },
-                            bloqueado:   { fill:'#94a3b8', stroke:'#475569', outer:'#cbd5e1' },
+                            completado: {
+                                fill: '#10b981',
+                                stroke: '#047857',
+                                outer: '#34d399'
+                            },
+                            actual: {
+                                fill: '#f59e0b',
+                                stroke: '#b45309',
+                                outer: '#fbbf24'
+                            },
+                            inasistencia: {
+                                fill: '#ef4444',
+                                stroke: '#991b1b',
+                                outer: '#f87171'
+                            },
+                            mixto: {
+                                fill: '#a855f7',
+                                stroke: '#7e22ce',
+                                outer: '#d8b4fe'
+                            },
+                            bloqueado: {
+                                fill: '#94a3b8',
+                                stroke: '#475569',
+                                outer: '#cbd5e1'
+                            },
                         };
                         const c = colorMap[pt.estado] || colorMap.bloqueado;
-                        fillColor = c.fill; strokeColor = c.stroke; outerColor = c.outer;
+                        fillColor = c.fill;
+                        strokeColor = c.stroke;
+                        outerColor = c.outer;
                     }
 
                     // Outer glow ring
                     const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    outer.setAttribute('cx', pt.cx); outer.setAttribute('cy', pt.cy);
-                    outer.setAttribute('r', '7'); outer.setAttribute('fill', outerColor);
+                    outer.setAttribute('cx', pt.cx);
+                    outer.setAttribute('cy', pt.cy);
+                    outer.setAttribute('r', '22');
+                    outer.setAttribute('fill', outerColor);
                     outer.setAttribute('opacity', '0.55');
                     if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
                     group.appendChild(outer);
 
                     // Main dot
                     const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    dot.setAttribute('cx', pt.cx); dot.setAttribute('cy', pt.cy);
-                    dot.setAttribute('r', pt.is_peak ? '10' : '4.2');
+                    dot.setAttribute('cx', pt.cx);
+                    dot.setAttribute('cy', pt.cy);
+                    dot.setAttribute('r', pt.is_peak ? '26' : '16');
                     dot.setAttribute('fill', fillColor);
-                    dot.setAttribute('stroke', strokeColor); dot.setAttribute('stroke-width', '1');
+                    dot.setAttribute('stroke', strokeColor);
+                    dot.setAttribute('stroke-width', '2.5');
                     group.appendChild(dot);
 
                     // Heartbeat pulse for "actual" week
                     if (pt.estado === 'actual' && !pt.multiple) {
                         const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        pulse.setAttribute('cx', pt.cx); pulse.setAttribute('cy', pt.cy);
-                        pulse.setAttribute('r', '7'); pulse.setAttribute('fill', 'none');
-                        pulse.setAttribute('stroke', '#fbbf24'); pulse.setAttribute('stroke-width', '1');
+                        pulse.setAttribute('cx', pt.cx);
+                        pulse.setAttribute('cy', pt.cy);
+                        pulse.setAttribute('r', '12');
+                        pulse.setAttribute('fill', 'none');
+                        pulse.setAttribute('stroke', '#fbbf24');
+                        pulse.setAttribute('stroke-width', '2');
                         pulse.setAttribute('opacity', '0.8');
                         const aR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
-                        aR.setAttribute('attributeName','r'); aR.setAttribute('values','7;11;7;14;7;7');
-                        aR.setAttribute('keyTimes','0;0.15;0.3;0.45;0.7;1');
-                        aR.setAttribute('dur','2.5s'); aR.setAttribute('repeatCount','indefinite');
+                        aR.setAttribute('attributeName', 'r');
+                        aR.setAttribute('values', '12;18;12;24;12;12');
+                        aR.setAttribute('keyTimes', '0;0.15;0.3;0.45;0.7;1');
+                        aR.setAttribute('dur', '2.5s');
+                        aR.setAttribute('repeatCount', 'indefinite');
                         pulse.appendChild(aR);
                         group.appendChild(pulse);
                     }
@@ -823,41 +837,49 @@ require APPROOT . '/views/inc/header.php';
 
                 // Scroll to active week
                 setTimeout(() => {
-                    const sc  = document.getElementById('mainScrollContainer');
+                    const sc = document.getElementById('mainScrollContainer');
                     const svg = document.getElementById('mountainSVG');
                     if (!svg || !sc) return;
                     const ratio = svg.getBoundingClientRect().height / totalH;
-                    sc.scrollTo({ top: Math.max(0, activeY * ratio - sc.clientHeight * 0.55), behavior: 'smooth' });
+                    sc.scrollTo({
+                        top: Math.max(0, activeY * ratio - sc.clientHeight * 0.55),
+                        behavior: 'smooth'
+                    });
                 }, 100);
             }
 
             // ── SVG viewBox zoom helpers ──
-            const svgEl      = document.getElementById('mountainSVG');
-            const origVBW    = vbW;
-            const origVBH    = totalH;
-            let   vbAnimReq  = null;
+            const svgEl = document.getElementById('mountainSVG');
+            const origVBW = vbW;
+            const origVBH = totalH;
+            let vbAnimReq = null;
 
             function animateViewBox(fromVB, toVB, durationMs, onDone) {
                 if (vbAnimReq) cancelAnimationFrame(vbAnimReq);
                 const start = performance.now();
-                function ease(t) { return t < 0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+
+                function ease(t) {
+                    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                }
+
                 function step(now) {
                     const t = Math.min(1, (now - start) / durationMs);
                     const e = ease(t);
                     const vb = fromVB.map((v, i) => v + (toVB[i] - v) * e);
                     svgEl.setAttribute('viewBox', vb.join(' '));
-                    if (t < 1) { vbAnimReq = requestAnimationFrame(step); }
-                    else if (onDone) onDone();
+                    if (t < 1) {
+                        vbAnimReq = requestAnimationFrame(step);
+                    } else if (onDone) onDone();
                 }
                 vbAnimReq = requestAnimationFrame(step);
             }
 
             function zoomToPoint(cx, cy, zoomFactor, durationMs, onDone) {
-                const curVB  = svgEl.getAttribute('viewBox').split(' ').map(Number);
-                const zW     = origVBW / zoomFactor;
-                const zH     = origVBH / zoomFactor;
-                const zX     = cx - zW / 2;
-                const zY     = cy - zH / 2;
+                const curVB = svgEl.getAttribute('viewBox').split(' ').map(Number);
+                const zW = origVBW / zoomFactor;
+                const zH = origVBH / zoomFactor;
+                const zX = cx - zW / 2;
+                const zY = cy - zH / 2;
                 animateViewBox(curVB, [zX, zY, zW, zH], durationMs, onDone);
             }
 
@@ -880,8 +902,10 @@ require APPROOT . '/views/inc/header.php';
                 zoomToPoint(pt.cx, pt.cy, 3.5, 480, () => {
                     // 2. After zoom, show popup; dot pulses
                     groupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-                    groupEl.style.transform  = 'scale(2.2)';
-                    setTimeout(() => { groupEl.style.transform = 'scale(1.6)'; }, 300);
+                    groupEl.style.transform = 'scale(2.2)';
+                    setTimeout(() => {
+                        groupEl.style.transform = 'scale(1.6)';
+                    }, 300);
 
                     if (pt.dias && pt.dias.length > 0) showDayPicker(pt);
                     else showWeekInfo(pt);
@@ -900,10 +924,26 @@ require APPROOT . '/views/inc/header.php';
 
                 pt.dias.forEach(dia => {
                     const stateMap = {
-                        completado:   { color:'#10b981', icon:'check_circle',  label:'Asistió' },
-                        inasistencia: { color:'#ef4444', icon:'cancel',        label:'Faltó' },
-                        futuro:       { color:'#3b82f6', icon:'schedule',      label:'Próxima' },
-                        bloqueado:    { color:'#94a3b8', icon:'lock',          label:'Bloqueado' },
+                        completado: {
+                            color: '#10b981',
+                            icon: 'check_circle',
+                            label: 'Asistió'
+                        },
+                        inasistencia: {
+                            color: '#ef4444',
+                            icon: 'cancel',
+                            label: 'Faltó'
+                        },
+                        futuro: {
+                            color: '#3b82f6',
+                            icon: 'schedule',
+                            label: 'Próxima'
+                        },
+                        bloqueado: {
+                            color: '#94a3b8',
+                            icon: 'lock',
+                            label: 'Bloqueado'
+                        },
                     };
                     const s = stateMap[dia.estado] || stateMap.bloqueado;
 
@@ -917,8 +957,8 @@ require APPROOT . '/views/inc/header.php';
                         <span class="text-[9px] text-slate-400 mt-0.5">${dia.fecha}</span>
                         <span class="text-[9px] font-bold mt-1 px-2 py-0.5 rounded-full text-white" style="background:${s.color}">${s.label}</span>`;
                     card.addEventListener('click', () => {
-                        document.querySelectorAll('.day-card').forEach(c => c.classList.remove('ring-4','ring-offset-2'));
-                        card.classList.add('ring-4','ring-offset-2');
+                        document.querySelectorAll('.day-card').forEach(c => c.classList.remove('ring-4', 'ring-offset-2'));
+                        card.classList.add('ring-4', 'ring-offset-2');
                         card.style.setProperty('--tw-ring-color', s.color);
                         showActivityDetail(dia);
                     });
@@ -927,7 +967,7 @@ require APPROOT . '/views/inc/header.php';
 
                 overlay.classList.remove('hidden');
                 requestAnimationFrame(() => {
-                    overlay.children[0].classList.remove('opacity-0','translate-y-4');
+                    overlay.children[0].classList.remove('opacity-0', 'translate-y-4');
                 });
             }
 
@@ -941,29 +981,47 @@ require APPROOT . '/views/inc/header.php';
                     <span class="material-symbols-outlined text-4xl block mb-2">event_busy</span>
                     <p class="text-sm">No hay actividades esta semana</p></div>`;
                 overlay.classList.remove('hidden');
-                requestAnimationFrame(() => { overlay.children[0].classList.remove('opacity-0','translate-y-4'); });
+                requestAnimationFrame(() => {
+                    overlay.children[0].classList.remove('opacity-0', 'translate-y-4');
+                });
             }
 
             function closeDayPicker() {
                 const overlay = document.getElementById('dayPickerOverlay');
                 if (!overlay) return;
-                overlay.children[0].classList.add('opacity-0','translate-y-4');
+                overlay.children[0].classList.add('opacity-0', 'translate-y-4');
                 setTimeout(() => overlay.classList.add('hidden'), 280);
             }
 
             function showActivityDetail(dia) {
                 const stateMap = {
-                    completado:   { badge:'bg-emerald-100 text-emerald-700', icon:'check_circle',  label:'Asistió' },
-                    inasistencia: { badge:'bg-red-100 text-red-700',         icon:'cancel',        label:'Faltó' },
-                    futuro:       { badge:'bg-blue-100 text-blue-700',       icon:'schedule',      label:'Próxima' },
-                    bloqueado:    { badge:'bg-slate-100 text-slate-600',     icon:'lock',          label:'Bloqueado' },
+                    completado: {
+                        badge: 'bg-emerald-100 text-emerald-700',
+                        icon: 'check_circle',
+                        label: 'Asistió'
+                    },
+                    inasistencia: {
+                        badge: 'bg-red-100 text-red-700',
+                        icon: 'cancel',
+                        label: 'Faltó'
+                    },
+                    futuro: {
+                        badge: 'bg-blue-100 text-blue-700',
+                        icon: 'schedule',
+                        label: 'Próxima'
+                    },
+                    bloqueado: {
+                        badge: 'bg-slate-100 text-slate-600',
+                        icon: 'lock',
+                        label: 'Bloqueado'
+                    },
                 };
                 const s = stateMap[dia.estado] || stateMap.bloqueado;
-                document.getElementById('actTitle').textContent  = dia.nombre;
-                document.getElementById('actDate').textContent   = `${dia.dia_semana} ${dia.fecha} ${dia.hora}`;
-                document.getElementById('actSede').textContent   = dia.sede || '—';
-                document.getElementById('actType').textContent   = dia.tipo || '—';
-                document.getElementById('actDesc').textContent   = dia.descripcion || 'Sin descripción.';
+                document.getElementById('actTitle').textContent = dia.nombre;
+                document.getElementById('actDate').textContent = `${dia.dia_semana} ${dia.fecha} ${dia.hora}`;
+                document.getElementById('actSede').textContent = dia.sede || '—';
+                document.getElementById('actType').textContent = dia.tipo || '—';
+                document.getElementById('actDesc').textContent = dia.descripcion || 'Sin descripción.';
                 const st = document.getElementById('actStatus');
                 st.className = `px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${s.badge}`;
                 st.innerHTML = `<span class="material-symbols-outlined text-sm align-middle mr-1">${s.icon}</span>${s.label}`;
@@ -984,26 +1042,31 @@ require APPROOT . '/views/inc/header.php';
             const dropBtn = document.getElementById('asistenciaDropdownBtn');
             const submenu = document.getElementById('asistenciaSubmenu');
             const chevron = document.getElementById('asistenciaDropdownChevron');
-            if (submenu) { submenu.classList.remove('hidden'); submenu.offsetHeight; submenu.classList.add('open'); }
-            if (chevron)  chevron.style.transform = 'rotate(180deg)';
+            if (submenu) {
+                submenu.classList.remove('hidden');
+                submenu.offsetHeight;
+                submenu.classList.add('open');
+            }
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
             if (dropBtn && submenu) {
                 dropBtn.addEventListener('click', () => {
                     if (submenu.classList.contains('open')) {
                         submenu.classList.remove('open');
                         chevron && (chevron.style.transform = 'rotate(0deg)');
-                        dropBtn.classList.remove('text-primary','bg-primary/5');
+                        dropBtn.classList.remove('text-primary', 'bg-primary/5');
                     } else {
-                        submenu.classList.remove('hidden'); submenu.offsetHeight;
+                        submenu.classList.remove('hidden');
+                        submenu.offsetHeight;
                         submenu.classList.add('open');
                         chevron && (chevron.style.transform = 'rotate(180deg)');
-                        dropBtn.classList.add('text-primary','bg-primary/5');
+                        dropBtn.classList.add('text-primary', 'bg-primary/5');
                     }
                 });
             }
 
             const hash = window.location.hash;
             if (hash === '#contactos') setTimeout(() => openModal('contactosModal'), 400);
-            if (hash === '#opinion')   setTimeout(() => openModal('opinionModal'),   400);
+            if (hash === '#opinion') setTimeout(() => openModal('opinionModal'), 400);
 
             function openModal(id) {
                 const modal = document.getElementById(id);
@@ -1011,8 +1074,8 @@ require APPROOT . '/views/inc/header.php';
                 modal.classList.remove('hidden');
                 setTimeout(() => {
                     modal.children[0].classList.remove('opacity-0');
-                    modal.children[1].classList.remove('scale-95','opacity-0');
-                    modal.children[1].classList.add('scale-100','opacity-100');
+                    modal.children[1].classList.remove('scale-95', 'opacity-0');
+                    modal.children[1].classList.add('scale-100', 'opacity-100');
                 }, 10);
             }
 
@@ -1020,8 +1083,8 @@ require APPROOT . '/views/inc/header.php';
                 const modal = document.getElementById(id);
                 if (!modal) return;
                 modal.children[0].classList.add('opacity-0');
-                modal.children[1].classList.add('scale-95','opacity-0');
-                modal.children[1].classList.remove('scale-100','opacity-100');
+                modal.children[1].classList.add('scale-95', 'opacity-0');
+                modal.children[1].classList.remove('scale-100', 'opacity-100');
                 setTimeout(() => modal.classList.add('hidden'), 300);
             }
 
@@ -1044,113 +1107,113 @@ require APPROOT . '/views/inc/header.php';
 
         <!-- Floating Action Buttons -->
         <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
-        <!-- Floating Action Buttons -->
-        <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
-            <button onclick="openModal('contactosModal')" class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 0s;" title="Contactos">
-                <span class="material-symbols-outlined">group</span>
-            </button>
-            <button onclick="openModal('opinionModal')" class="w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 1s;" title="Opinión">
-                <span class="material-symbols-outlined">chat_bubble</span>
-            </button>
-            <button onclick="alert('Compartir próximamente')" class="w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 2s;" title="Compartir">
-                <span class="material-symbols-outlined">share</span>
-            </button>
-        </div>
-
-        <!-- Modals -->
-
-        <!-- Modal Detalles de Actividad -->
-        <div id="actividadModal" class="fixed inset-0 z-[60] hidden">
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
-            <div class="modal-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
-                <!-- Imagen cabecera representativa -->
-                <div class="h-40 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center">
-                    <span class="material-symbols-outlined text-white text-6xl opacity-20 absolute">landscape</span>
-                    <button onclick="closeModal('actividadModal')" class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors">
-                        <span class="material-symbols-outlined text-sm">close</span>
-                    </button>
-                    <!-- Status Badge sobre la imagen -->
-                    <div id="actStatus" class="absolute bottom-4 left-6 bg-white shadow px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider">
-                        Estado
-                    </div>
-                </div>
-
-                <div class="p-6">
-                    <h2 id="actTitle" class="text-2xl font-black text-primary mb-2">Nombre de Actividad</h2>
-
-                    <div class="flex items-center gap-4 text-sm text-on-surface-variant mb-4 pb-4 border-b border-outline-variant">
-                        <div class="flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[18px]">event</span>
-                            <span id="actDate">Fecha</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[18px]">location_on</span>
-                            <span id="actSede">Sede</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[18px]">category</span>
-                            <span id="actType">Tipo</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="text-sm font-bold text-on-surface mb-1">Resumen de la Actividad</h4>
-                        <p id="actDesc" class="text-sm text-on-surface-variant leading-relaxed">
-                            Descripción detallada de la actividad aquí.
-                        </p>
-                    </div>
-                </div>
-                <div class="bg-surface-container p-4 flex justify-end">
-                    <button onclick="closeModal('actividadModal')" class="px-6 py-2 bg-primary text-on-primary font-bold rounded-full hover:bg-primary-hover transition-colors shadow-sm">Entendido</button>
-                </div>
+            <!-- Floating Action Buttons -->
+            <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
+                <button onclick="openModal('contactosModal')" class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 0s;" title="Contactos">
+                    <span class="material-symbols-outlined">group</span>
+                </button>
+                <button onclick="openModal('opinionModal')" class="w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 1s;" title="Opinión">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                </button>
+                <button onclick="alert('Compartir próximamente')" class="w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 2s;" title="Compartir">
+                    <span class="material-symbols-outlined">share</span>
+                </button>
             </div>
-        </div>
 
-        <!-- Contactos Modal -->
-        <div id="contactosModal" class="fixed inset-0 z-[60] hidden">
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-primary flex items-center gap-2"><span class="material-symbols-outlined">group</span> Contactos</h3>
-                    <button onclick="closeModal('contactosModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                        <div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed"><span class="material-symbols-outlined">person</span></div>
+            <!-- Modals -->
+
+            <!-- Modal Detalles de Actividad -->
+            <div id="actividadModal" class="fixed inset-0 z-[60] hidden">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
+                <div class="modal-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
+                    <!-- Imagen cabecera representativa -->
+                    <div class="h-40 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-6xl opacity-20 absolute">landscape</span>
+                        <button onclick="closeModal('actividadModal')" class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                        <!-- Status Badge sobre la imagen -->
+                        <div id="actStatus" class="absolute bottom-4 left-6 bg-white shadow px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider">
+                            Estado
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <h2 id="actTitle" class="text-2xl font-black text-primary mb-2">Nombre de Actividad</h2>
+
+                        <div class="flex items-center gap-4 text-sm text-on-surface-variant mb-4 pb-4 border-b border-outline-variant">
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[18px]">event</span>
+                                <span id="actDate">Fecha</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[18px]">location_on</span>
+                                <span id="actSede">Sede</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[18px]">category</span>
+                                <span id="actType">Tipo</span>
+                            </div>
+                        </div>
+
                         <div>
-                            <span class="text-label-md font-bold block">Guía Maestro</span>
-                            <span class="text-xs text-on-surface-variant">guia@edusaft.edu</span>
+                            <h4 class="text-sm font-bold text-on-surface mb-1">Resumen de la Actividad</h4>
+                            <p id="actDesc" class="text-sm text-on-surface-variant leading-relaxed">
+                                Descripción detallada de la actividad aquí.
+                            </p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                        <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed"><span class="material-symbols-outlined">group</span></div>
-                        <div>
-                            <span class="text-label-md font-bold block">Compañeros (Grupo A)</span>
-                            <span class="text-xs text-on-surface-variant">12 estudiantes</span>
-                        </div>
+                    <div class="bg-surface-container p-4 flex justify-end">
+                        <button onclick="closeModal('actividadModal')" class="px-6 py-2 bg-primary text-on-primary font-bold rounded-full hover:bg-primary-hover transition-colors shadow-sm">Entendido</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Opinión Modal -->
-        <div id="opinionModal" class="fixed inset-0 z-[60] hidden">
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('opinionModal')"></div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-secondary flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> Danos tu Opinión</h3>
-                    <button onclick="closeModal('opinionModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
-                </div>
-                <p class="text-sm italic text-on-surface-variant mb-4">"El camino es tan importante como la cima."</p>
-                <form class="space-y-4" onsubmit="event.preventDefault(); alert('Opinión enviada. ¡Gracias!'); closeModal('opinionModal');">
-                    <div>
-                        <label class="block text-sm font-bold mb-1">¿Cómo podemos mejorar?</label>
-                        <textarea rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
+            <!-- Contactos Modal -->
+            <div id="contactosModal" class="fixed inset-0 z-[60] hidden">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-primary flex items-center gap-2"><span class="material-symbols-outlined">group</span> Contactos</h3>
+                        <button onclick="closeModal('contactosModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
                     </div>
-                    <button type="submit" class="w-full bg-secondary text-on-secondary font-bold rounded-xl py-3 shadow-md hover:opacity-90 transition-opacity">Enviar Opinión</button>
-                </form>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+                            <div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed"><span class="material-symbols-outlined">person</span></div>
+                            <div>
+                                <span class="text-label-md font-bold block">Guía Maestro</span>
+                                <span class="text-xs text-on-surface-variant">guia@edusaft.edu</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+                            <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed"><span class="material-symbols-outlined">group</span></div>
+                            <div>
+                                <span class="text-label-md font-bold block">Compañeros (Grupo A)</span>
+                                <span class="text-xs text-on-surface-variant">12 estudiantes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Opinión Modal -->
+            <div id="opinionModal" class="fixed inset-0 z-[60] hidden">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('opinionModal')"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-secondary flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> Danos tu Opinión</h3>
+                        <button onclick="closeModal('opinionModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <p class="text-sm italic text-on-surface-variant mb-4">"El camino es tan importante como la cima."</p>
+                    <form class="space-y-4" onsubmit="event.preventDefault(); alert('Opinión enviada. ¡Gracias!'); closeModal('opinionModal');">
+                        <div>
+                            <label class="block text-sm font-bold mb-1">¿Cómo podemos mejorar?</label>
+                            <textarea rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-secondary text-on-secondary font-bold rounded-xl py-3 shadow-md hover:opacity-90 transition-opacity">Enviar Opinión</button>
+                    </form>
+                </div>
+            </div>
 
     </main>
 </div><!-- end flex -->
