@@ -52,69 +52,8 @@ require APPROOT . '/views/inc/header.php';
 </header>
 
 <div class="flex">
-    <!-- Premium Sidebar -->
-    <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-transform duration-300 -translate-x-full lg:translate-x-0">
-        <div class="p-8 sidebar-header transition-all duration-300">
-            <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
-                <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
-                    <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-16 w-16 object-contain" alt="Logo">
-                </div>
-                <span class="text-2xl font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
-            </div>
-            <p class="text-xs text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
-        </div>
-
-        <div class="flex-grow px-4 space-y-2">
-            <a href="<?php echo URLROOT; ?>/padres/dashboard"
-                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all group">
-                <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                <span class="font-medium">Panel Principal</span>
-            </a>
-
-            <!-- Historial Asistencias (Dropdown Menu) -->
-            <div class="space-y-1">
-                <button id="asistenciaDropdownBtn"
-                    class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group focus:outline-none">
-                    <div class="flex items-center gap-4">
-                        <span class="material-symbols-outlined transition-transform group-hover:scale-110">history</span>
-                        <span class="font-medium">Historial Asistencias</span>
-                    </div>
-                    <span id="asistenciaDropdownChevron" class="material-symbols-outlined text-sm transition-transform duration-300">expand_more</span>
-                </button>
-
-                <div id="asistenciaSubmenu" class="hidden space-y-1 overflow-hidden transition-all duration-300 max-h-0">
-                    <a href="<?php echo URLROOT; ?>/padres/camino"
-                        class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:0ms">
-                        <span class="material-symbols-outlined transition-transform group-hover:scale-110">mountain_flag</span>
-                        <span class="font-medium">Camino de Montaña</span>
-                    </a>
-                    <a href="<?php echo URLROOT; ?>/padres/puntos"
-                        class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:80ms">
-                        <span class="material-symbols-outlined transition-transform group-hover:scale-110">workspace_premium</span>
-                        <span class="font-medium">Mis Puntos</span>
-                    </a>
-                    <a href="<?php echo URLROOT; ?>/padres/camino#contactos"
-                        class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:160ms">
-                        <span class="material-symbols-outlined transition-transform group-hover:scale-110">group</span>
-                        <span class="font-medium">Contáctanos</span>
-                    </a>
-                    <a href="<?php echo URLROOT; ?>/padres/camino#opinion"
-                        class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:240ms">
-                        <span class="material-symbols-outlined transition-transform group-hover:scale-110">chat_bubble</span>
-                        <span class="font-medium">Opinión</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-4 mt-auto space-y-2">
-            <a href="<?php echo URLROOT; ?>/auth/logout"
-                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-error hover:bg-error/10 transition-all">
-                <span class="material-symbols-outlined">logout</span>
-                <span class="font-medium">Cerrar Sesión</span>
-            </a>
-        </div>
-    </nav>
+    <!-- Sidebar reusable -->
+    <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- Main Content Area -->
     <main class="flex-1 md:ml-72 min-h-screen bg-surface-container-lowest flex flex-col">
@@ -344,51 +283,7 @@ require APPROOT . '/views/inc/header.php';
         opacity: 1;
     }
 </style>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        /* ── Sidebar toggle (mobile / desktop) ── */
-        const sidebar = document.getElementById('userSidebar');
-        const mobileBtn = document.getElementById('mobile-menu-toggle');
-        const desktopBtn = document.getElementById('desktop-menu-toggle');
 
-        mobileBtn && mobileBtn.addEventListener('click', () => sidebar.classList.toggle('force-open'));
-        desktopBtn && desktopBtn.addEventListener('click', () => sidebar.classList.toggle('force-close'));
-
-        /* ── Historial Asistencias dropdown ── */
-        const dropBtn = document.getElementById('asistenciaDropdownBtn');
-        const submenu = document.getElementById('asistenciaSubmenu');
-        const chevron = document.getElementById('asistenciaDropdownChevron');
-
-        // Auto-open if current page is a child route
-        const path = window.location.pathname;
-        const isChild = path.includes('/padres/camino') || path.includes('/padres/puntos');
-        if (isChild) {
-            openDropdown();
-        }
-
-        dropBtn && dropBtn.addEventListener('click', () => {
-            submenu.classList.contains('open') ? closeDropdown() : openDropdown();
-        });
-
-        function openDropdown() {
-            submenu.classList.remove('hidden');
-            // force reflow so transition fires
-            submenu.offsetHeight;
-            submenu.classList.add('open');
-            chevron.style.transform = 'rotate(180deg)';
-            dropBtn.classList.add('text-primary', 'bg-primary/5');
-        }
-
-        function closeDropdown() {
-            submenu.classList.remove('open');
-            chevron.style.transform = 'rotate(0deg)';
-            dropBtn.classList.remove('text-primary', 'bg-primary/5');
-            submenu.addEventListener('transitionend', () => submenu.classList.add('hidden'), {
-                once: true
-            });
-        }
-    });
-</script>
 </body>
 
 </html>

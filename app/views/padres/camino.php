@@ -319,10 +319,8 @@ $extraStyles = '
         /* SVG always fills its container width; height driven by viewBox ratio */
         #mountainSVG {
             width: 100%;
-            height: auto;
+            height: calc(100dvh - 65px); /* Ajusta al alto de la pantalla en móvil */
             display: block;
-            /* Minimum visual height so the mountain is not too flat on wide screens */
-            min-height: 60vw;
         }
         @media (min-width: 768px) {
             #mountainSVG { min-height: 40vw; }
@@ -421,95 +419,8 @@ require APPROOT . '/views/inc/header.php';
 </header>
 
 <div class="flex">
-    <!-- Sidebar -->
-    <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-50 transition-all duration-300 -translate-x-full lg:translate-x-0 overflow-hidden">
-        <button id="closeSidebarBtn" class="lg:hidden absolute top-6 right-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95" title="Cerrar menú">close</button>
-
-        <!-- Botones de control desktop: Colapsar u Ocultar -->
-        <div class="hidden lg:flex absolute top-3 left-3 right-3 justify-between items-center z-10">
-            <button id="collapseSidebarBtn" class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 cursor-pointer" title="Colapsar a iconos">
-                <span class="material-symbols-outlined transition-transform duration-300">menu_open</span>
-            </button>
-            <button id="hideSidebarBtn" class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 cursor-pointer" title="Ocultar menú completamente">
-                <span class="material-symbols-outlined">visibility_off</span>
-            </button>
-        </div>
-        <div class="p-8 pb-4 sidebar-header transition-all duration-300">
-            <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
-                <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
-                    <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-16 w-16 object-contain" alt="Logo">
-                </div>
-                <span class="text-2xl font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
-            </div>
-            <p class="text-xs text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
-        </div>
-
-        <div class="px-6 mb-4 sidebar-search-container transition-all duration-300">
-            <div class="relative w-full">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-sm">search</span>
-                <input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-xs font-medium focus:ring-2 focus:ring-primary transition-all" placeholder="Buscar" type="text" />
-            </div>
-        </div>
-
-        <div class="flex-grow px-4 space-y-1 overflow-y-auto">
-            <a class="sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/dashboard">
-                <span class="material-symbols-outlined flex-shrink-0">dashboard</span>
-                <span class="font-medium text-sm sidebar-text">Panel Principal</span>
-            </a>
-
-            <!-- Historial Asistencias (Dropdown) -->
-            <div class="space-y-1">
-                <button id="asistenciaDropdownBtn"
-                    class="sidebar-item-link w-full flex items-center justify-between px-4 py-3 rounded-2xl text-primary bg-primary/5 transition-all group focus:outline-none">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined flex-shrink-0">history</span>
-                        <span class="font-medium text-sm sidebar-text">Historial Asistencias</span>
-                    </div>
-                    <span id="asistenciaDropdownChevron" class="material-symbols-outlined text-sm sidebar-text transition-transform duration-300" style="transform:rotate(180deg)">expand_more</span>
-                </button>
-
-                <div id="asistenciaSubmenu" class="space-y-1 open">
-                    <a class="submenu-item sidebar-item-link bg-primary text-on-primary shadow-sm rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/camino" style="animation-delay:0ms">
-                        <span class="material-symbols-outlined flex-shrink-0" style="font-variation-settings:'FILL' 1;">mountain_flag</span>
-                        <span class="font-medium text-sm sidebar-text">Camino de Montaña</span>
-                    </a>
-                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/puntos" style="animation-delay:80ms">
-                        <span class="material-symbols-outlined flex-shrink-0">workspace_premium</span>
-                        <span class="font-medium text-sm sidebar-text">Mis Puntos</span>
-                    </a>
-                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/cueva" style="animation-delay:120ms">
-                        <span class="material-symbols-outlined flex-shrink-0">cave</span>
-                        <span class="font-medium text-sm sidebar-text">Camino de Cueva</span>
-                    </a>
-                    <button class="submenu-item sidebar-item-link w-full text-left text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all cursor-pointer" onclick="openModal('contactosModal')" style="animation-delay:160ms">
-                        <span class="material-symbols-outlined flex-shrink-0">group</span>
-                        <span class="font-medium text-sm sidebar-text">Contáctanos</span>
-                    </button>
-                    <button class="submenu-item sidebar-item-link w-full text-left text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all cursor-pointer" onclick="openModal('opinionModal')" style="animation-delay:240ms">
-                        <span class="material-symbols-outlined flex-shrink-0">chat_bubble</span>
-                        <span class="font-medium text-sm sidebar-text">Opinión</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-4 mt-auto border-t border-outline-variant/30 flex items-center justify-center lg:justify-between transition-all duration-300">
-            <div class="flex items-center gap-3 w-full sidebar-item-link">
-                <img alt="User Profile" class="w-10 h-10 rounded-full object-cover border border-outline-variant flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4-sZziL98gyg-93o6NhBHrP9O1Mjg_PrtJ-VzMuxDcwNbPGr5nxHChNA__Afx1axDdlsUMxN0xhHaIfyQ4BJfSa1VKn5BjHv8Hso4JGk4t_9P9ByngNDbUCc2P7c1f4pRZM6NBUD-aFvlmReMobzBGytlvFkVx0doS8C7fu7znh8lOkuwi3f_zoHfXtkbgbMl8I_rcZhDiqgDqlXFzj8xwpAy8gYUn9ysa3z36Snvz1Y8nZVPo8VBtjuCETR-kIr1O9lPZ0BJzoC3" />
-                <div class="flex flex-col sidebar-profile-info">
-                    <span class="text-sm font-bold text-on-surface">Usuario</span>
-                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="text-xs text-error hover:underline">Cerrar sesión</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Botón flotante para restaurar sidebar cuando está oculto -->
-    <button id="showSidebarFloatingBtn"
-        class="fixed top-4 left-4 z-50 hidden items-center justify-center p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-full shadow-lg border border-outline-variant text-on-surface hover:scale-105 active:scale-95 transition-all cursor-pointer"
-        title="Mostrar menú de navegación">
-        <span class="material-symbols-outlined">side_navigation</span>
-    </button>
+    <!-- Sidebar reusable -->
+    <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <main id="mainScrollContainer" class="flex-1 lg:ml-72 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
 
@@ -549,7 +460,7 @@ require APPROOT . '/views/inc/header.php';
             ?>
 
             <!-- SVG Container -->
-            <svg id="mountainSVG" class="w-full h-auto" preserveAspectRatio="xMidYMid meet"
+            <svg id="mountainSVG" class="w-full" preserveAspectRatio="xMidYMid slice"
                 viewBox="0 0 <?= $viewBoxW ?> <?= $totalHeight + 150 ?>"
                 style="overflow: visible;"
                 data-vbw="<?= $viewBoxW ?>" data-totalh="<?= $totalHeight ?>"
@@ -670,7 +581,7 @@ require APPROOT . '/views/inc/header.php';
 
                 <image
                     id="mountainImg"
-                    href="<?= URLROOT ?>/public/assets/img/aro de genaro.jpeg"
+                    href="<?= URLROOT ?>/public/assets/img/montañaña.jpeg"
                     x="0"
                     y="0"
                     width="<?= $viewBoxW ?>"
@@ -680,11 +591,17 @@ require APPROOT . '/views/inc/header.php';
                 <!-- Nubes falsas integradas en el SVG (se mueven con el zoom) -->
                 <?php
                 if ($isNight) {
-                    $cloud1 = '#334155'; $cloud2 = '#1e293b'; $cloud3 = '#0f172a';
+                    $cloud1 = '#334155';
+                    $cloud2 = '#1e293b';
+                    $cloud3 = '#0f172a';
                 } elseif ($isTwilight) {
-                    $cloud1 = '#4c1d95'; $cloud2 = '#312e81'; $cloud3 = '#1e1b4b';
+                    $cloud1 = '#4c1d95';
+                    $cloud2 = '#312e81';
+                    $cloud3 = '#1e1b4b';
                 } else {
-                    $cloud1 = '#ffffff'; $cloud2 = '#f8fafc'; $cloud3 = '#f1f5f9';
+                    $cloud1 = '#ffffff';
+                    $cloud2 = '#f8fafc';
+                    $cloud3 = '#f1f5f9';
                 }
                 ?>
                 <svg y="<?= $totalHeight - 200 ?>" width="<?= $viewBoxW ?>" height="350" viewBox="0 0 1440 250" preserveAspectRatio="none" style="pointer-events: none;">
@@ -1056,6 +973,75 @@ require APPROOT . '/views/inc/header.php';
                 closeDayPicker();
                 const n = pt.dias.length;
 
+                // ── Responsive sizing ──
+                const vw = window.innerWidth;
+                let fanW, fanH, cardW, cardH, cardPad, txStep, fontSize, fontSm, fontXs, iconSize, badgeSz, badgePad, cardRadius, cardBorder;
+                if (vw < 480) {
+                    // Móvil pequeño
+                    fanW = 260;
+                    fanH = 200;
+                    cardW = 105;
+                    cardH = 160;
+                    cardPad = '10px 8px';
+                    txStep = 30;
+                    fontSize = '11px';
+                    fontSm = '9px';
+                    fontXs = '8px';
+                    iconSize = '28px';
+                    badgeSz = '8px';
+                    badgePad = '3px 10px';
+                    cardRadius = '12px';
+                    cardBorder = '3px';
+                } else if (vw < 768) {
+                    // Móvil estándar
+                    fanW = 340;
+                    fanH = 260;
+                    cardW = 140;
+                    cardH = 210;
+                    cardPad = '12px 10px';
+                    txStep = 42;
+                    fontSize = '13px';
+                    fontSm = '11px';
+                    fontXs = '9px';
+                    iconSize = '36px';
+                    badgeSz = '9px';
+                    badgePad = '3px 12px';
+                    cardRadius = '16px';
+                    cardBorder = '3px';
+                } else if (vw < 1280) {
+                    // Tablet / laptop pequeño
+                    fanW = 500;
+                    fanH = 380;
+                    cardW = 200;
+                    cardH = 305;
+                    cardPad = '16px 14px';
+                    txStep = 60;
+                    fontSize = '15px';
+                    fontSm = '12px';
+                    fontXs = '10px';
+                    iconSize = '50px';
+                    badgeSz = '11px';
+                    badgePad = '4px 16px';
+                    cardRadius = '20px';
+                    cardBorder = '4px';
+                } else {
+                    // Desktop
+                    fanW = 630;
+                    fanH = 480;
+                    cardW = 255;
+                    cardH = 390;
+                    cardPad = '20px 18px';
+                    txStep = 75;
+                    fontSize = '19px';
+                    fontSm = '14px';
+                    fontXs = '11px';
+                    iconSize = '63px';
+                    badgeSz = '14px';
+                    badgePad = '6px 20px';
+                    cardRadius = '24px';
+                    cardBorder = '5px';
+                }
+
                 // ── Build fan overlay ──
                 const overlay = document.createElement('div');
                 overlay.id = 'cardFanOverlay';
@@ -1070,7 +1056,7 @@ require APPROOT . '/views/inc/header.php';
                 // Fan container — centrado en pantalla
                 const fan = document.createElement('div');
                 fan.id = 'cardFan';
-                fan.style.cssText = 'position:relative;width:420px;height:320px;pointer-events:none;';
+                fan.style.cssText = `position:relative;width:${fanW}px;height:${fanH}px;pointer-events:none;`;
                 overlay.appendChild(fan);
 
                 const stateMap = {
@@ -1154,7 +1140,7 @@ require APPROOT . '/views/inc/header.php';
                     }
 
                     const ang = n > 1 ? startAngle + (totalSpread / (n - 1)) * i : 0;
-                    const tx = (i - (n - 1) / 2) * 50; // wider horizontal spread
+                    const tx = (i - (n - 1) / 2) * txStep; // wider horizontal spread
 
                     const card = document.createElement('div');
                     card.className = 'fan-card';
@@ -1162,42 +1148,42 @@ require APPROOT . '/views/inc/header.php';
                         position:absolute;
                         top:50%;
                         left:50%;
-                        width:170px;
-                        height:260px;
-                        margin-top:10px;
+                        width:${cardW}px;
+                        height:${cardH}px;
+                        margin-top:${Math.round(cardH * 0.04)}px;
                         transform-origin:50% 100%;
                         transform:translate(calc(-50% + ${tx}px), -50%) rotate(${ang}deg);
                         transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, width 0.4s, height 0.4s, padding 0.4s;
-                        border-radius:18px;
+                        border-radius:${cardRadius};
                         background:#ffffff;
-                        border:4px solid ${cardColor};
+                        border:${cardBorder} solid ${cardColor};
                         box-shadow:0 10px 36px rgba(0,0,0,0.15);
                         cursor:pointer;
                         pointer-events:auto;
                         display:flex;
                         flex-direction:column;
-                        padding:14px 12px;
+                        padding:${cardPad};
                         user-select:none;
                         z-index:${i};
                     `;
                     card.dataset.index = i;
 
                     card.innerHTML = `
-                        <div style="font-size:28px;font-weight:900;color:${cardColor} !important;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.05);">${s.suit}</div>
-                        <div style="font-size:13px;font-weight:900;color:#0f172a !important;margin-top:8px;line-height:1.35;text-align:center;">${dia.nombre}</div>
-                        <div style="font-size:10px;font-weight:800;color:#64748b !important;margin-top:4px;text-align:center;">${dia.dia_semana} ${dia.fecha}</div>
+                        <div style="font-size:${iconSize};font-weight:900;color:${cardColor} !important;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.05);">${s.suit}</div>
+                        <div style="font-size:${fontSize};font-weight:900;color:#0f172a !important;margin-top:8px;line-height:1.35;text-align:center;">${dia.nombre}</div>
+                        <div style="font-size:${fontSm};font-weight:800;color:#64748b !important;margin-top:4px;text-align:center;">${dia.dia_semana} ${dia.fecha}</div>
                         <div style="flex:1;"></div>
                         <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-                            <span class="material-symbols-outlined" style="font-size:42px;color:${cardColor} !important;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${cardIcon}</span>
-                            <span style="font-size:10px;font-weight:800;padding:4px 14px;border-radius:99px;background:${cardColor};color:#fff !important;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.15);">${s.label}</span>
+                            <span class="material-symbols-outlined" style="font-size:${iconSize};color:${cardColor} !important;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${cardIcon}</span>
+                            <span style="font-size:${badgeSz};font-weight:800;padding:${badgePad};border-radius:99px;background:${cardColor};color:#fff !important;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.15);">${s.label}</span>
                         </div>
-                        <div style="font-size:28px;font-weight:900;color:${cardColor} !important;text-align:right;line-height:1;transform:rotate(180deg);margin-top:10px;">${s.suit}</div>
+                        <div style="font-size:${iconSize};font-weight:900;color:${cardColor} !important;text-align:right;line-height:1;transform:rotate(180deg);margin-top:8px;">${s.suit}</div>
                     `;
 
                     // Hover: raise
                     card.addEventListener('mouseenter', () => {
                         if (card.classList.contains('selected')) return;
-                        card.style.transform = `translate(calc(-50% + ${tx}px), -60%) rotate(${ang}deg) scale(1.06)`;
+                        card.style.transform = `translate(calc(-50% + ${tx}px), -62%) rotate(${ang}deg) scale(1.06)`;
                         card.style.zIndex = 99;
                         card.style.boxShadow = `0 20px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.6)`;
                     });
@@ -1369,59 +1355,6 @@ require APPROOT . '/views/inc/header.php';
                 openModal('actividadModal');
             }
 
-            // Sidebar Toggle & Collapse/Hide Logic
-            const menuBtn = document.getElementById('menuToggleBtn');
-            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-            const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
-            const hideSidebarBtn = document.getElementById('hideSidebarBtn');
-            const showSidebarFloatingBtn = document.getElementById('showSidebarFloatingBtn');
-            const sidebar = document.getElementById('userSidebar');
-
-            if (collapseSidebarBtn) {
-                collapseSidebarBtn.addEventListener('click', () => {
-                    document.body.classList.remove('sidebar-hidden');
-                    document.body.classList.toggle('sidebar-collapsed');
-                });
-            }
-            if (hideSidebarBtn) {
-                hideSidebarBtn.addEventListener('click', () => {
-                    document.body.classList.remove('sidebar-collapsed');
-                    document.body.classList.add('sidebar-hidden');
-                });
-            }
-            if (showSidebarFloatingBtn) {
-                showSidebarFloatingBtn.addEventListener('click', () => {
-                    document.body.classList.remove('sidebar-hidden');
-                });
-            }
-            if (menuBtn && sidebar) menuBtn.addEventListener('click', () => sidebar.classList.toggle('force-open'));
-            if (closeSidebarBtn && sidebar) closeSidebarBtn.addEventListener('click', () => sidebar.classList.remove('force-open'));
-
-            // Dropdown Historial
-            const dropBtn = document.getElementById('asistenciaDropdownBtn');
-            const submenu = document.getElementById('asistenciaSubmenu');
-            const chevron = document.getElementById('asistenciaDropdownChevron');
-            if (submenu) {
-                submenu.classList.remove('hidden');
-                submenu.offsetHeight;
-                submenu.classList.add('open');
-            }
-            if (chevron) chevron.style.transform = 'rotate(180deg)';
-            if (dropBtn && submenu) {
-                dropBtn.addEventListener('click', () => {
-                    if (submenu.classList.contains('open')) {
-                        submenu.classList.remove('open');
-                        chevron && (chevron.style.transform = 'rotate(0deg)');
-                        dropBtn.classList.remove('text-primary', 'bg-primary/5');
-                    } else {
-                        submenu.classList.remove('hidden');
-                        submenu.offsetHeight;
-                        submenu.classList.add('open');
-                        chevron && (chevron.style.transform = 'rotate(180deg)');
-                        dropBtn.classList.add('text-primary', 'bg-primary/5');
-                    }
-                });
-            }
 
             const hash = window.location.hash;
             if (hash === '#contactos') setTimeout(() => openModal('contactosModal'), 400);

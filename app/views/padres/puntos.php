@@ -67,79 +67,8 @@ require APPROOT . '/views/inc/header.php';
 
 <div class="flex">
     <!-- ====== SIDEBAR ====== -->
-    <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-all duration-300 -translate-x-full lg:translate-x-0">
-
-        <!-- Collapse Button -->
-        <button id="collapseSidebarBtn" class="absolute top-4 left-4 z-50 p-1.5 rounded-xl bg-surface-container-low hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all duration-200 shadow-sm" title="Colapsar menú">
-            <span class="material-symbols-outlined transition-transform duration-300">menu_open</span>
-        </button>
-
-        <div class="p-8 pb-4 sidebar-header transition-all duration-300">
-            <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
-                <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
-                    <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-16 w-16 object-contain" alt="Logo">
-                </div>
-                <span class="text-2xl font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
-            </div>
-            <p class="text-xs text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
-        </div>
-
-        <div class="px-6 mb-4 sidebar-search-container transition-all duration-300">
-            <div class="relative w-full">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-sm">search</span>
-                <input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-xs font-medium focus:ring-2 focus:ring-primary transition-all" placeholder="Buscar" type="text" />
-            </div>
-        </div>
-
-        <div class="flex-grow px-4 space-y-1 overflow-y-auto">
-            <a class="sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/dashboard">
-                <span class="material-symbols-outlined flex-shrink-0">dashboard</span>
-                <span class="font-medium text-sm sidebar-text">Panel Principal</span>
-            </a>
-
-            <!-- Historial Asistencias (Dropdown) -->
-            <div class="space-y-1">
-                <button id="asistenciaDropdownBtn"
-                    class="sidebar-item-link w-full flex items-center justify-between px-4 py-3 rounded-2xl text-primary bg-primary/5 transition-all group focus:outline-none">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined flex-shrink-0">history</span>
-                        <span class="font-medium text-sm sidebar-text">Historial Asistencias</span>
-                    </div>
-                    <span id="asistenciaDropdownChevron" class="material-symbols-outlined text-sm sidebar-text transition-transform duration-300" style="transform:rotate(180deg)">expand_more</span>
-                </button>
-
-                <div id="asistenciaSubmenu" class="space-y-1 open">
-                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/camino" style="animation-delay:0ms">
-                        <span class="material-symbols-outlined flex-shrink-0">mountain_flag</span>
-                        <span class="font-medium text-sm sidebar-text">Camino de Montaña</span>
-                    </a>
-                    <a class="submenu-item sidebar-item-link bg-primary text-on-primary shadow-sm rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/puntos" style="animation-delay:80ms">
-                        <span class="material-symbols-outlined flex-shrink-0" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
-                        <span class="font-medium text-sm sidebar-text">Mis Puntos</span>
-                    </a>
-                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/camino#contactos" style="animation-delay:160ms">
-                        <span class="material-symbols-outlined flex-shrink-0">group</span>
-                        <span class="font-medium text-sm sidebar-text">Contáctanos</span>
-                    </a>
-                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/camino#opinion" style="animation-delay:240ms">
-                        <span class="material-symbols-outlined flex-shrink-0">chat_bubble</span>
-                        <span class="font-medium text-sm sidebar-text">Opinión</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile -->
-        <div class="p-4 border-t border-outline-variant flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <span class="material-symbols-outlined text-primary">person</span>
-            </div>
-            <div class="sidebar-profile-info overflow-hidden">
-                <p class="text-sm font-bold text-on-surface truncate"><?php echo htmlspecialchars($_SESSION['nombre'] ?? 'Familia'); ?></p>
-                <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir?');" class="text-xs text-error hover:underline">Cerrar sesión</a>
-            </div>
-        </div>
-    </nav>
+    <!-- Sidebar reusable -->
+    <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- ====== MAIN CONTENT ====== -->
     <main id="mainContent" class="flex-1 lg:ml-72 transition-all duration-300 min-h-screen">
@@ -464,48 +393,6 @@ require APPROOT . '/views/inc/header.php';
         }, 200);
     });
 
-    // ====== Sidebar collapse ======
-    const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
-    const menuBtn = document.getElementById('menuToggleBtn');
-    const sidebar = document.getElementById('userSidebar');
-
-    if (collapseSidebarBtn) {
-        collapseSidebarBtn.addEventListener('click', () => {
-            document.body.classList.toggle('sidebar-collapsed');
-        });
-    }
-    if (menuBtn && sidebar) {
-        menuBtn.addEventListener('click', () => sidebar.classList.toggle('force-open'));
-    }
-
-    // ── Historial Asistencias Dropdown ──
-    const dropBtn = document.getElementById('asistenciaDropdownBtn');
-    const submenu = document.getElementById('asistenciaSubmenu');
-    const chevron = document.getElementById('asistenciaDropdownChevron');
-
-    // This page is a child — start opened
-    if (submenu) {
-        submenu.classList.remove('hidden');
-        submenu.offsetHeight;
-        submenu.classList.add('open');
-    }
-    if (chevron) chevron.style.transform = 'rotate(180deg)';
-
-    if (dropBtn && submenu) {
-        dropBtn.addEventListener('click', () => {
-            if (submenu.classList.contains('open')) {
-                submenu.classList.remove('open');
-                chevron && (chevron.style.transform = 'rotate(0deg)');
-                dropBtn.classList.remove('text-primary', 'bg-primary/5');
-            } else {
-                submenu.classList.remove('hidden');
-                submenu.offsetHeight;
-                submenu.classList.add('open');
-                chevron && (chevron.style.transform = 'rotate(180deg)');
-                dropBtn.classList.add('text-primary', 'bg-primary/5');
-            }
-        });
-    }
 </script>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>
