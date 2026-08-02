@@ -17,7 +17,7 @@ foreach ($actividades as $act) {
 // ── Siempre generar exactamente 15 semanas fijas ──
 // La semana de referencia es la primera semana que tenga actividad,
 // o la semana actual si no hay actividades.
-$totalSemanas = 15;
+$totalSemanas = 17;
 $etapas = [];
 
 if (!empty($actsByWeek)) {
@@ -139,7 +139,9 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     $offsetCorrY = 0; // desplazamiento vertical global
 
     $refPoints = [
-        1  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 1  – Inicio carretera (antes Semana 3)
+        -1 => ['x' => 1100.00 + $offsetCorrX, 'y' => 3520.00 + $offsetCorrY], // Desplazado aún más a la derecha
+        0  => ['x' => 1120.00 + $offsetCorrX, 'y' => 3360.00 + $offsetCorrY], // Desplazado aún más a la derecha
+        1  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 3 (antes Semana 1)
         2  => ['x' => 1524.00 + $offsetCorrX, 'y' => 3069.00 + $offsetCorrY], // Semana 2
         3  => ['x' => 1861.00 + $offsetCorrX, 'y' => 3115.00 + $offsetCorrY], // Semana 3
         4  => ['x' => 2203.00 + $offsetCorrX, 'y' => 3013.00 + $offsetCorrY], // Semana 4
@@ -548,7 +550,8 @@ require APPROOT . '/views/inc/header.php';
 
             <!-- SVG Container -->
             <svg id="mountainSVG" class="w-full h-auto" preserveAspectRatio="xMidYMid meet"
-                viewBox="0 0 <?= $viewBoxW ?> <?= $totalHeight ?>"
+                viewBox="0 0 <?= $viewBoxW ?> <?= $totalHeight + 150 ?>"
+                style="overflow: visible;"
                 data-vbw="<?= $viewBoxW ?>" data-totalh="<?= $totalHeight ?>"
                 data-centrox="<?= $centroX ?>" data-basehalf="<?= $baseHalfW ?>">
                 <defs>
@@ -674,6 +677,22 @@ require APPROOT . '/views/inc/header.php';
                     height="<?= $totalHeight ?>"
                     preserveAspectRatio="xMidYMid slice" />
 
+                <!-- Nubes falsas integradas en el SVG (se mueven con el zoom) -->
+                <?php
+                if ($isNight) {
+                    $cloud1 = '#334155'; $cloud2 = '#1e293b'; $cloud3 = '#0f172a';
+                } elseif ($isTwilight) {
+                    $cloud1 = '#4c1d95'; $cloud2 = '#312e81'; $cloud3 = '#1e1b4b';
+                } else {
+                    $cloud1 = '#ffffff'; $cloud2 = '#f8fafc'; $cloud3 = '#f1f5f9';
+                }
+                ?>
+                <svg y="<?= $totalHeight - 200 ?>" width="<?= $viewBoxW ?>" height="350" viewBox="0 0 1440 250" preserveAspectRatio="none" style="pointer-events: none;">
+                    <path fill="<?= $cloud1 ?>" opacity="0.6" d="M0,90 C300,210 600,-30 900,90 C1200,210 1350,30 1440,90 L1440,300 L0,300 Z" />
+                    <path fill="<?= $cloud2 ?>" opacity="0.8" d="M0,130 C400,10 700,250 1000,130 C1200,50 1300,190 1440,130 L1440,300 L0,300 Z" />
+                    <path fill="<?= $cloud3 ?>" d="M0,180 C450,280 850,80 1200,180 C1300,200 1370,160 1440,180 L1440,300 L0,300 Z" />
+                </svg>
+
                 <!-- ======= HUD GROUP: waypoints ======= -->
                 <g id="hudGroup">
                     <!-- Waypoints -->
@@ -682,8 +701,7 @@ require APPROOT . '/views/inc/header.php';
             </svg>
         </div><!-- end mountainViewport -->
 
-        <!-- Filler para tapar el espacio en blanco hasta el footer en móviles -->
-        <div class="w-full flex-1 bg-slate-300 md:hidden block min-h-[100px]"></div>
+
 
         <!-- ====== THERMOMETER (responsive — hidden on xs, fixed on sm+) ====== -->
         <!-- Mini pill shown only on xs (< 480px) -->
@@ -1018,8 +1036,8 @@ require APPROOT . '/views/inc/header.php';
                 zoomedPoint = pt.semana;
                 zoomedGroupEl = groupEl;
 
-                // 1. Animate SVG viewBox zoom to clicked point (reducido 30%: 3.5 -> 2.45)
-                zoomToPoint(pt.cx, pt.cy, 2.45, 480, () => {
+                // 1. Animate SVG viewBox zoom to clicked point (incrementado 30%: 2.45 -> 3.2)
+                zoomToPoint(pt.cx, pt.cy, 3.2, 480, () => {
                     // 2. After zoom, show popup; dot pulses
                     if (zoomedGroupEl) {
                         zoomedGroupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
