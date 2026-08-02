@@ -147,9 +147,9 @@ $refPoints = [
     6  => ['x' => 320.00 + $offsetCorrX, 'y' => 640.00 + $offsetCorrY],
     7  => ['x' => 500.00 + $offsetCorrX, 'y' => 606.00 + $offsetCorrY], // curva más amplia a la derecha
     8  => ['x' => 550.00 + $offsetCorrX, 'y' => 560.00 + $offsetCorrY],
-    9  => ['x' => 307.00 + $offsetCorrX, 'y' => 491.00 + $offsetCorrY],
-    10 => ['x' => 400.00 + $offsetCorrX, 'y' => 442.00 + $offsetCorrY],
-    11 => ['x' => 412.00 + $offsetCorrX, 'y' => 390.00 + $offsetCorrY],
+    9  => ['x' => 307.00 + $offsetCorrX, 'y' => 500.00 + $offsetCorrY],
+    10 => ['x' => 450.00 + $offsetCorrX, 'y' => 442.00 + $offsetCorrY],
+    11 => ['x' => 430.00 + $offsetCorrX, 'y' => 465.00 + $offsetCorrY],
     12 => ['x' => 469.00 + $offsetCorrX, 'y' =>  380.00 + $offsetCorrY], // entrada a la cueva — EXTRAPOLADO
 ];
 
