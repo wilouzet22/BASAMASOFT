@@ -174,11 +174,11 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
         $totalLen += $dist;
     }
 
-    // SVG Target Box for `<image>` tag (20% zoom logic in viewBox)
-    $targetW = $vbW * 1.2;
-    $targetH = $totalH * 1.2;
-    $targetX = -$vbW * 0.10;
-    $targetY = -$totalH * 0.10;
+    // SVG Target Box for `<image>` tag (vista alejada 50%)
+    $targetW = $vbW * 1.0;
+    $targetH = $totalH * 1.0;
+    $targetX = 0;
+    $targetY = 0;
 
     // Simulate `preserveAspectRatio="xMidYMid slice"`
     // source image aro de genaro.jpeg aspect ratio is 4600:3800 (~1.21:1)
@@ -363,6 +363,17 @@ $extraStyles = '
             body.sidebar-collapsed .sidebar-logo-container { flex-direction: column; gap: 0.25rem; }
             body.sidebar-collapsed .sidebar-item-link { padding-left: 0; padding-right: 0; justify-content: center; }
             body.sidebar-collapsed #collapseSidebarBtn span { transform: rotate(180deg); }
+
+            /* Sidebar desaparecible (completamente oculto) */
+            body.sidebar-hidden #userSidebar {
+                transform: translateX(-100%) !important;
+            }
+            body.sidebar-hidden #mainScrollContainer {
+                margin-left: 0 !important;
+            }
+            body.sidebar-hidden #showSidebarFloatingBtn {
+                display: flex !important;
+            }
         }
 
         /* Dropdown submenu animation */
@@ -411,9 +422,16 @@ require APPROOT . '/views/inc/header.php';
     <!-- Sidebar -->
     <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-50 transition-all duration-300 -translate-x-full lg:translate-x-0 overflow-hidden">
         <button id="closeSidebarBtn" class="lg:hidden absolute top-6 right-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95" title="Cerrar menú">close</button>
-        <button id="collapseSidebarBtn" class="hidden lg:block absolute top-4 left-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 z-10" title="Colapsar menú">
-            <span class="material-symbols-outlined transition-transform duration-300">menu_open</span>
-        </button>
+
+        <!-- Botones de control desktop: Colapsar u Ocultar -->
+        <div class="hidden lg:flex absolute top-3 left-3 right-3 justify-between items-center z-10">
+            <button id="collapseSidebarBtn" class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 cursor-pointer" title="Colapsar a iconos">
+                <span class="material-symbols-outlined transition-transform duration-300">menu_open</span>
+            </button>
+            <button id="hideSidebarBtn" class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 cursor-pointer" title="Ocultar menú completamente">
+                <span class="material-symbols-outlined">visibility_off</span>
+            </button>
+        </div>
         <div class="p-8 pb-4 sidebar-header transition-all duration-300">
             <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
                 <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
@@ -457,6 +475,10 @@ require APPROOT . '/views/inc/header.php';
                         <span class="material-symbols-outlined flex-shrink-0">workspace_premium</span>
                         <span class="font-medium text-sm sidebar-text">Mis Puntos</span>
                     </a>
+                    <a class="submenu-item sidebar-item-link text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" href="<?php echo URLROOT; ?>/padres/cueva" style="animation-delay:120ms">
+                        <span class="material-symbols-outlined flex-shrink-0">cave</span>
+                        <span class="font-medium text-sm sidebar-text">Camino de Cueva</span>
+                    </a>
                     <button class="submenu-item sidebar-item-link w-full text-left text-on-surface-variant hover:bg-primary/5 hover:text-primary rounded-2xl px-4 py-3 flex items-center gap-3 transition-all cursor-pointer" onclick="openModal('contactosModal')" style="animation-delay:160ms">
                         <span class="material-symbols-outlined flex-shrink-0">group</span>
                         <span class="font-medium text-sm sidebar-text">Contáctanos</span>
@@ -479,6 +501,13 @@ require APPROOT . '/views/inc/header.php';
             </div>
         </div>
     </nav>
+
+    <!-- Botón flotante para restaurar sidebar cuando está oculto -->
+    <button id="showSidebarFloatingBtn"
+        class="fixed top-4 left-4 z-50 hidden items-center justify-center p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-full shadow-lg border border-outline-variant text-on-surface hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        title="Mostrar menú de navegación">
+        <span class="material-symbols-outlined">side_navigation</span>
+    </button>
 
     <main id="mainScrollContainer" class="flex-1 lg:ml-72 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
 
@@ -611,7 +640,7 @@ require APPROOT . '/views/inc/header.php';
                 </defs>
 
                 <!-- Background sky gradient -->
-                <rect x="-2000" y="-1000" width="<?= $viewBoxW + 4000 ?>" height="<?= $viewBoxH + 2000 ?>" fill="url(#skyGrad)" opacity="1" />
+                <rect x="0" y="0" width="<?= $viewBoxW ?>" height="<?= $viewBoxH ?>" fill="url(#skyGrad)" opacity="1" />
 
                 <!-- Stars -->
                 <?php if ($showStars): ?>
@@ -639,10 +668,10 @@ require APPROOT . '/views/inc/header.php';
                 <image
                     id="mountainImg"
                     href="<?= URLROOT ?>/public/assets/img/aro de genaro.jpeg"
-                    x="<?= -$viewBoxW * 0.10 ?>"
-                    y="<?= -$totalHeight * 0.10 ?>"
-                    width="<?= $viewBoxW * 1.2 ?>"
-                    height="<?= $totalHeight * 1.2 ?>"
+                    x="0"
+                    y="0"
+                    width="<?= $viewBoxW ?>"
+                    height="<?= $totalHeight ?>"
                     preserveAspectRatio="xMidYMid slice" />
 
                 <!-- ======= HUD GROUP: waypoints ======= -->
@@ -977,6 +1006,10 @@ require APPROOT . '/views/inc/header.php';
             // ── Week click: zoom into point then show popup ──
             function handleWeekClick(e, pt, groupEl) {
                 e.stopPropagation(); // Prevent SVG background click
+                if (pt.is_peak) {
+                    window.location.href = '<?= URLROOT ?>/padres/cueva';
+                    return;
+                }
                 if (zoomedPoint === pt.semana) {
                     resetCurrentZoom();
                     return;
@@ -985,14 +1018,14 @@ require APPROOT . '/views/inc/header.php';
                 zoomedPoint = pt.semana;
                 zoomedGroupEl = groupEl;
 
-                // 1. Animate SVG viewBox zoom to clicked point
-                zoomToPoint(pt.cx, pt.cy, 3.5, 480, () => {
+                // 1. Animate SVG viewBox zoom to clicked point (reducido 30%: 3.5 -> 2.45)
+                zoomToPoint(pt.cx, pt.cy, 2.45, 480, () => {
                     // 2. After zoom, show popup; dot pulses
                     if (zoomedGroupEl) {
                         zoomedGroupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-                        zoomedGroupEl.style.transform = 'scale(2.2)';
+                        zoomedGroupEl.style.transform = 'scale(1.5)';
                         setTimeout(() => {
-                            if (zoomedGroupEl) zoomedGroupEl.style.transform = 'scale(1.6)';
+                            if (zoomedGroupEl) zoomedGroupEl.style.transform = 'scale(1.25)';
                         }, 300);
                     }
 
@@ -1023,19 +1056,47 @@ require APPROOT . '/views/inc/header.php';
                 overlay.appendChild(fan);
 
                 const stateMap = {
-                    completado:   { color:'#10b981', light:'#d1fae5', badge:'#065f46', icon:'thumb_up', label:'Asistió',   suit:'♠' },
-                    inasistencia: { color:'#ef4444', light:'#fee2e2', badge:'#991b1b', icon:'block',    label:'Faltó',     suit:'♥' },
-                    futuro:       { color:'#3b82f6', light:'#dbeafe', badge:'#1e40af', icon:'event',    label:'Próxima',   suit:'♦' },
-                    bloqueado:    { color:'#94a3b8', light:'#f1f5f9', badge:'#475569', icon:'lock',     label:'Bloqueado', suit:'♣' },
+                    completado: {
+                        color: '#10b981',
+                        light: '#d1fae5',
+                        badge: '#065f46',
+                        icon: 'thumb_up',
+                        label: 'Asistió',
+                        suit: '♠'
+                    },
+                    inasistencia: {
+                        color: '#ef4444',
+                        light: '#fee2e2',
+                        badge: '#991b1b',
+                        icon: 'block',
+                        label: 'Faltó',
+                        suit: '♥'
+                    },
+                    futuro: {
+                        color: '#3b82f6',
+                        light: '#dbeafe',
+                        badge: '#1e40af',
+                        icon: 'event',
+                        label: 'Próxima',
+                        suit: '♦'
+                    },
+                    bloqueado: {
+                        color: '#94a3b8',
+                        light: '#f1f5f9',
+                        badge: '#475569',
+                        icon: 'lock',
+                        label: 'Bloqueado',
+                        suit: '♣'
+                    },
                 };
 
                 // Fan spread params
                 const totalSpread = Math.min(n * 16, 72); // degrees
-                const startAngle  = -totalSpread / 2;
+                const startAngle = -totalSpread / 2;
 
                 pt.dias.forEach((dia, i) => {
                     const s = stateMap[dia.estado] || stateMap.bloqueado;
-                    
+
                     // -- Logic for Icon and Border Color based on Tipo --
                     const tipoStr = (dia.tipo || '').toLowerCase();
                     let resolvedTipo = 'otro';
@@ -1045,10 +1106,22 @@ require APPROOT . '/views/inc/header.php';
                     else if (tipoStr.includes('clase') || tipoStr.includes('evaluaci') || tipoStr.includes('taller') || tipoStr.includes('escolar')) resolvedTipo = 'escolar';
 
                     const typeInfo = {
-                        psicologia: { color: '#38bdf8', icon: 'psychology' }, // Azul claro
-                        citacion: { color: '#64748b', icon: 'gavel' }, // Gris (gavel = martillo/justicia, similar a esposas)
-                        escolar: { color: '#1e3a8a', icon: 'menu_book' }, // Azul oscuro
-                        extraescolar: { color: '#f97316', icon: 'schedule' } // Naranja
+                        psicologia: {
+                            color: '#38bdf8',
+                            icon: 'psychology'
+                        }, // Azul claro
+                        citacion: {
+                            color: '#64748b',
+                            icon: 'gavel'
+                        }, // Gris (gavel = martillo/justicia, similar a esposas)
+                        escolar: {
+                            color: '#1e3a8a',
+                            icon: 'menu_book'
+                        }, // Azul oscuro
+                        extraescolar: {
+                            color: '#f97316',
+                            icon: 'schedule'
+                        } // Naranja
                     };
 
                     let cardColor = s.color;
@@ -1063,7 +1136,7 @@ require APPROOT . '/views/inc/header.php';
                     }
 
                     const ang = n > 1 ? startAngle + (totalSpread / (n - 1)) * i : 0;
-                    const tx  = (i - (n - 1) / 2) * 50; // wider horizontal spread
+                    const tx = (i - (n - 1) / 2) * 50; // wider horizontal spread
 
                     const card = document.createElement('div');
                     card.className = 'fan-card';
@@ -1278,13 +1351,31 @@ require APPROOT . '/views/inc/header.php';
                 openModal('actividadModal');
             }
 
-            // Sidebar Toggle Logic
+            // Sidebar Toggle & Collapse/Hide Logic
             const menuBtn = document.getElementById('menuToggleBtn');
             const closeSidebarBtn = document.getElementById('closeSidebarBtn');
             const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+            const hideSidebarBtn = document.getElementById('hideSidebarBtn');
+            const showSidebarFloatingBtn = document.getElementById('showSidebarFloatingBtn');
             const sidebar = document.getElementById('userSidebar');
 
-            if (collapseSidebarBtn) collapseSidebarBtn.addEventListener('click', () => document.body.classList.toggle('sidebar-collapsed'));
+            if (collapseSidebarBtn) {
+                collapseSidebarBtn.addEventListener('click', () => {
+                    document.body.classList.remove('sidebar-hidden');
+                    document.body.classList.toggle('sidebar-collapsed');
+                });
+            }
+            if (hideSidebarBtn) {
+                hideSidebarBtn.addEventListener('click', () => {
+                    document.body.classList.remove('sidebar-collapsed');
+                    document.body.classList.add('sidebar-hidden');
+                });
+            }
+            if (showSidebarFloatingBtn) {
+                showSidebarFloatingBtn.addEventListener('click', () => {
+                    document.body.classList.remove('sidebar-hidden');
+                });
+            }
             if (menuBtn && sidebar) menuBtn.addEventListener('click', () => sidebar.classList.toggle('force-open'));
             if (closeSidebarBtn && sidebar) closeSidebarBtn.addEventListener('click', () => sidebar.classList.remove('force-open'));
 

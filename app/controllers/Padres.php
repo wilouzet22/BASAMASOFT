@@ -124,4 +124,15 @@ class Padres extends Controller {
 
         $this->view('padres/puntos', $data);
     }
+
+    /**
+     * Vista de la cueva — destino final del camino.
+     */
+    public function cueva() {
+        $data = [
+            'title' => 'La Cueva',
+        ];
+
+        $this->view('padres/cueva', $data);
+    }
 }
