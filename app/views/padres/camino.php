@@ -14,10 +14,10 @@ foreach ($actividades as $act) {
     $actsByWeek[$semana][] = $act;
 }
 
-// ── Siempre generar exactamente 15 semanas fijas ──
+// ── Siempre generar exactamente 12 semanas fijas (coincide con los 12 nodos del camino) ──
 // La semana de referencia es la primera semana que tenga actividad,
 // o la semana actual si no hay actividades.
-$totalSemanas = 17;
+$totalSemanas = 12;
 $etapas = [];
 
 if (!empty($actsByWeek)) {
@@ -135,28 +135,26 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     // ── OFFSET para centrar los puntos en el camino visible ──
     // Ajusta $offsetCorrX para mover todos los puntos horizontalmente (+= derecha, -= izquierda)
     // Ajusta $offsetCorrY para mover todos los puntos verticalmente   (+= abajo,  -= arriba)
-    $offsetCorrX = 0; // desplazamiento horizontal global
+    $offsetCorrX = -40; // desplazamiento horizontal global
     $offsetCorrY = 0; // desplazamiento vertical global
 
-    $refPoints = [
-        -1 => ['x' => 1100.00 + $offsetCorrX, 'y' => 3520.00 + $offsetCorrY], // Desplazado aún más a la derecha
-        0  => ['x' => 1120.00 + $offsetCorrX, 'y' => 3360.00 + $offsetCorrY], // Desplazado aún más a la derecha
-        1  => ['x' => 1217.00 + $offsetCorrX, 'y' => 3223.00 + $offsetCorrY], // Semana 3 (antes Semana 1)
-        2  => ['x' => 1524.00 + $offsetCorrX, 'y' => 3069.00 + $offsetCorrY], // Semana 2
-        3  => ['x' => 1861.00 + $offsetCorrX, 'y' => 3115.00 + $offsetCorrY], // Semana 3
-        4  => ['x' => 2203.00 + $offsetCorrX, 'y' => 3013.00 + $offsetCorrY], // Semana 4
-        5  => ['x' => 2550.00 + $offsetCorrX, 'y' => 2922.00 + $offsetCorrY], // Semana 5
-        6  => ['x' => 2748.00 + $offsetCorrX, 'y' => 2632.00 + $offsetCorrY], // Semana 6  – curva derecha
-        7  => ['x' => 2506.00 + $offsetCorrX, 'y' => 2415.00 + $offsetCorrY], // Semana 7
-        8  => ['x' => 2151.00 + $offsetCorrX, 'y' => 2334.00 + $offsetCorrY], // Semana 8  – lazo junto al claro
-        9  => ['x' => 2091.00 + $offsetCorrX, 'y' => 2064.00 + $offsetCorrY], // Semana 9
-        10 => ['x' => 2427.00 + $offsetCorrX, 'y' => 1948.00 + $offsetCorrY], // Semana 10
-        11 => ['x' => 2758.00 + $offsetCorrX, 'y' => 1816.00 + $offsetCorrY], // Semana 11
-        12 => ['x' => 2762.00 + $offsetCorrX, 'y' => 1502.00 + $offsetCorrY], // Semana 12 – segunda horquilla
-    ];
+$refPoints = [
+    1  => ['x' => 500.00 + $offsetCorrX, 'y' => 830.00 + $offsetCorrY], // Inicio — EXTRAPOLADO (tu línea no llegaba al borde)
+    2  => ['x' => 411.00 + $offsetCorrX, 'y' => 790.00 + $offsetCorrY],
+    3  => ['x' => 200.00 + $offsetCorrX, 'y' => 720.00 + $offsetCorrY],
+    4  => ['x' => 245.00 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY],
+    5  => ['x' => 230.00 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY],
+    6  => ['x' => 320.00 + $offsetCorrX, 'y' => 640.00 + $offsetCorrY],
+    7  => ['x' => 500.00 + $offsetCorrX, 'y' => 606.00 + $offsetCorrY], // curva más amplia a la derecha
+    8  => ['x' => 550.00 + $offsetCorrX, 'y' => 560.00 + $offsetCorrY],
+    9  => ['x' => 307.00 + $offsetCorrX, 'y' => 491.00 + $offsetCorrY],
+    10 => ['x' => 400.00 + $offsetCorrX, 'y' => 442.00 + $offsetCorrY],
+    11 => ['x' => 412.00 + $offsetCorrX, 'y' => 390.00 + $offsetCorrY],
+    12 => ['x' => 469.00 + $offsetCorrX, 'y' =>  380.00 + $offsetCorrY], // entrada a la cueva — EXTRAPOLADO
+];
 
-    $imgRefW = 4600;
-    $imgRefH = 3800;
+    $imgRefW = 723;
+    $imgRefH = 1024;
 
     // Convert reference points to relative [0..1] coordinates
     $relPoints = array_map(function ($pt) use ($imgRefW, $imgRefH) {
