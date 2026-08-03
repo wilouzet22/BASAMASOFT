@@ -87,24 +87,24 @@ for ($s = 1; $s <= 39; $s++) {
     ];
 }
 
-// Coordenadas exactas del camino del pico de la montaña
+// Coordenadas del camino — espacio de referencia 2739x2391 (tamaño real de pico_montaña_final.jpg)
 $picoPoints = [
-    1  => ['x' => 300,  'y' => 550],
-    2  => ['x' => 294,  'y' => 446],
-    3  => ['x' => 365,  'y' => 415],
-    4  => ['x' => 435,  'y' => 374],
-    5  => ['x' => 510,  'y' => 340],
-    6  => ['x' => 591,  'y' => 340],
-    7  => ['x' => 674,  'y' => 335],
-    8  => ['x' => 759,  'y' => 330],
-    9  => ['x' => 842,  'y' => 340],
-    10 => ['x' => 921,  'y' => 342],
-    11 => ['x' => 1003, 'y' => 370],
-    12 => ['x' => 1087, 'y' => 368],
-    13 => ['x' => 1175, 'y' => 363],
-    14 => ['x' => 1235, 'y' => 336],
-    15 => ['x' => 1297, 'y' => 323],
-    16 => ['x' => 1346, 'y' => 300],
+    1  => ['x' => 430,  'y' => 2100],
+    2  => ['x' => 560,  'y' => 1980],
+    3  => ['x' => 720,  'y' => 1870],
+    4  => ['x' => 900,  'y' => 1760],
+    5  => ['x' => 1080, 'y' => 1650],
+    6  => ['x' => 1260, 'y' => 1560],
+    7  => ['x' => 1450, 'y' => 1480],
+    8  => ['x' => 1640, 'y' => 1400],
+    9  => ['x' => 1820, 'y' => 1320],
+    10 => ['x' => 1980, 'y' => 1230],
+    11 => ['x' => 2100, 'y' => 1120],
+    12 => ['x' => 2180, 'y' => 1000],
+    13 => ['x' => 2230, 'y' => 880],
+    14 => ['x' => 2270, 'y' => 760],
+    15 => ['x' => 2300, 'y' => 640],
+    16 => ['x' => 2320, 'y' => 520],
 ];
 
 // Tomamos de la 24 a la 39 (índices 23 a 38)
@@ -304,105 +304,105 @@ require APPROOT . '/views/inc/header.php';
         <!-- Contenedor único SVG que incluye imagen de fondo y waypoints. Panneado vía JS -->
         <div id="panoContainer" class="absolute pointer-events-none" style="z-index:10; top:0; left:0;">
             <svg id="picoWaypointsSVG"
-                 viewBox="0 0 1632 964"
-                 preserveAspectRatio="none"
-                 style="width:100%; height:100%; pointer-events:none;">
-                
+                viewBox="0 0 2739 2391"
+                preserveAspectRatio="xMidYMid slice"
+                style="width:100%; height:100%; pointer-events:none;">
+
                 <!-- Imagen de fondo incrustada -->
-                <image href="<?= URLROOT ?>/public/assets/img/pico_montaña_final.jpg" 
-                       x="0" y="0" width="1632" height="964" 
-                       preserveAspectRatio="xMidYMid slice" />
+                <image href="<?= URLROOT ?>/public/assets/img/pico_montaña_final.jpg"
+                    x="0" y="0" width="2739" height="2391"
+                    preserveAspectRatio="xMidYMid slice" />
                 <defs>
                     <filter id="picoGlow" x="-30%" y="-30%" width="160%" height="160%">
                         <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
                     </filter>
                 </defs>
 
-                 <?php
-                 // Mapa de colores igual que camino.php
-                 $colorMap = [
-                     'completado'  => ['fill' => '#10b981', 'stroke' => '#047857', 'outer' => '#34d399'],
-                     'actual'      => ['fill' => '#f59e0b', 'stroke' => '#b45309', 'outer' => '#fbbf24'],
-                     'futuro'      => ['fill' => '#3b82f6', 'stroke' => '#1d4ed8', 'outer' => '#93c5fd'],
-                     'inasistencia'=> ['fill' => '#ef4444', 'stroke' => '#991b1b', 'outer' => '#f87171'],
-                     'mixto'       => ['fill' => '#f97316', 'stroke' => '#c2410c', 'outer' => '#fed7aa'],
-                     'bloqueado'   => ['fill' => '#94a3b8', 'stroke' => '#475569', 'outer' => '#cbd5e1'],
-                 ];
+                <?php
+                // Mapa de colores igual que camino.php
+                $colorMap = [
+                    'completado'  => ['fill' => '#10b981', 'stroke' => '#047857', 'outer' => '#34d399'],
+                    'actual'      => ['fill' => '#f59e0b', 'stroke' => '#b45309', 'outer' => '#fbbf24'],
+                    'futuro'      => ['fill' => '#3b82f6', 'stroke' => '#1d4ed8', 'outer' => '#93c5fd'],
+                    'inasistencia' => ['fill' => '#ef4444', 'stroke' => '#991b1b', 'outer' => '#f87171'],
+                    'mixto'       => ['fill' => '#f97316', 'stroke' => '#c2410c', 'outer' => '#fed7aa'],
+                    'bloqueado'   => ['fill' => '#94a3b8', 'stroke' => '#475569', 'outer' => '#cbd5e1'],
+                ];
 
-                 $totalPuntos = count($picoPoints);
-                 foreach ($picoPoints as $semana => $pt):
-                     $etapaInfo = $etapasPico[$semana - 1] ?? null;
-                     $estadoActual = $etapaInfo ? $etapaInfo['estado'] : 'bloqueado';
+                $totalPuntos = count($picoPoints);
+                foreach ($picoPoints as $semana => $pt):
+                    $etapaInfo = $etapasPico[$semana - 1] ?? null;
+                    $estadoActual = $etapaInfo ? $etapaInfo['estado'] : 'bloqueado';
 
-                     // Use attendance-based color only (no blue override for multiple)
-                     $c = $colorMap[$estadoActual] ?? $colorMap['bloqueado'];
+                    // Use attendance-based color only (no blue override for multiple)
+                    $c = $colorMap[$estadoActual] ?? $colorMap['bloqueado'];
 
-                     $cx = $pt['x'];
-                     $cy = $pt['y'];
-                     $esUltimoPunto = ($semana === $totalPuntos); // Punto destino final
-                     $esPrimerPunto = ($semana === 1); // Punto de inicio (retorno)
-                     if ($esUltimoPunto) {
-                         $c = ['fill' => '#fcd34d', 'stroke' => '#f59e0b', 'outer' => '#fde68a'];
-                     }
-                 ?>
-                 <!-- Semana <?= $semana ?> -->
-                 <g style="transform-origin:<?= $cx ?>px <?= $cy ?>px; cursor:pointer; pointer-events:all;"
-                    class="pico-wp" data-semana="<?= $semana ?>">
-                     <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
-                     <!-- Heartbeat pulse -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="8" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.8">
-                         <animate attributeName="r" values="8;13;8;18;8;8" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
-                     </circle>
-                     <?php endif; ?>
+                    $cx = $pt['x'];
+                    $cy = $pt['y'];
+                    $esUltimoPunto = ($semana === $totalPuntos); // Punto destino final
+                    $esPrimerPunto = ($semana === 1); // Punto de inicio (retorno)
+                    if ($esUltimoPunto) {
+                        $c = ['fill' => '#fcd34d', 'stroke' => '#f59e0b', 'outer' => '#fde68a'];
+                    }
+                ?>
+                    <!-- Semana <?= $semana ?> -->
+                    <g style="transform-origin:<?= $cx ?>px <?= $cy ?>px; cursor:pointer; pointer-events:all;"
+                        class="pico-wp" data-semana="<?= $semana ?>">
+                        <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
+                            <!-- Heartbeat pulse -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="8" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.8">
+                                <animate attributeName="r" values="8;13;8;18;8;8" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
+                            </circle>
+                        <?php endif; ?>
 
-                     <?php if ($esUltimoPunto): ?>
-                     <!-- Anillo glow exterior -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
-                         fill="<?= $c['outer'] ?>" opacity="0.5"
-                         filter="url(#picoGlow)" />
-                     <!-- Flecha animada idéntica a camino.php -->
-                     <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
-                         <g class="peak-arrow-animated">
-                             <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
-                                 fill="<?= $c['fill'] ?>"
-                                 stroke="<?= $c['stroke'] ?>"
-                                 stroke-width="3"
-                                 stroke-linejoin="round" />
-                             <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
-                                 fill="#ffffff"
-                                 opacity="0.7" />
-                         </g>
-                     </g>
-                     <?php elseif ($esPrimerPunto): ?>
-                     <!-- Flecha de retorno animada -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
-                         fill="<?= $c['outer'] ?>" opacity="0.5"
-                         filter="url(#picoGlow)" />
-                     <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
-                         <g class="return-arrow-animated">
-                             <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
-                                 fill="<?= $c['fill'] ?>"
-                                 stroke="<?= $c['stroke'] ?>"
-                                 stroke-width="3"
-                                 stroke-linejoin="round" />
-                             <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
-                                 fill="#ffffff"
-                                 opacity="0.7" />
-                         </g>
-                     </g>
-                     <?php else: ?>
-                     <!-- Anillo glow exterior (idéntico a camino.php) -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="22"
-                         fill="<?= $c['outer'] ?>" opacity="0.55"
-                         filter="url(#picoGlow)" />
-                     <!-- Círculo principal -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="16"
-                         fill="<?= $c['fill'] ?>"
-                         stroke="<?= $c['stroke'] ?>"
-                         stroke-width="2.5" />
-                     <?php endif; ?>
-                 </g>
-                 <?php endforeach; ?>
+                        <?php if ($esUltimoPunto): ?>
+                            <!-- Anillo glow exterior -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
+                                fill="<?= $c['outer'] ?>" opacity="0.5"
+                                filter="url(#picoGlow)" />
+                            <!-- Flecha animada idéntica a camino.php -->
+                            <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
+                                <g class="peak-arrow-animated">
+                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
+                                        fill="<?= $c['fill'] ?>"
+                                        stroke="<?= $c['stroke'] ?>"
+                                        stroke-width="3"
+                                        stroke-linejoin="round" />
+                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
+                                        fill="#ffffff"
+                                        opacity="0.7" />
+                                </g>
+                            </g>
+                        <?php elseif ($esPrimerPunto): ?>
+                            <!-- Flecha de retorno animada -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
+                                fill="<?= $c['outer'] ?>" opacity="0.5"
+                                filter="url(#picoGlow)" />
+                            <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
+                                <g class="return-arrow-animated">
+                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
+                                        fill="<?= $c['fill'] ?>"
+                                        stroke="<?= $c['stroke'] ?>"
+                                        stroke-width="3"
+                                        stroke-linejoin="round" />
+                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
+                                        fill="#ffffff"
+                                        opacity="0.7" />
+                                </g>
+                            </g>
+                        <?php else: ?>
+                            <!-- Anillo glow exterior (idéntico a camino.php) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="22"
+                                fill="<?= $c['outer'] ?>" opacity="0.55"
+                                filter="url(#picoGlow)" />
+                            <!-- Círculo principal -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="16"
+                                fill="<?= $c['fill'] ?>"
+                                stroke="<?= $c['stroke'] ?>"
+                                stroke-width="2.5" />
+                        <?php endif; ?>
+                    </g>
+                <?php endforeach; ?>
 
             </svg>
         </div>
@@ -432,13 +432,13 @@ require APPROOT . '/views/inc/header.php';
 
     function syncPano() {
         if (!panoContainer || !mainContent) return;
-        
+
         const w = mainContent.clientWidth;
         const h = mainContent.clientHeight;
         if (w === 0 || h === 0) return;
-        
-        const imgW = 1632;
-        const imgH = 964;
+
+        const imgW = 2739;
+        const imgH = 2391;
 
         // Calcular object-fit: cover exacto
         const scale = Math.max(w / imgW, h / imgH);
@@ -458,7 +458,7 @@ require APPROOT . '/views/inc/header.php';
             pct = parseFloat(panoSlider.value);
             panoSlider.style.setProperty('--pano-fill', pct + '%');
         }
-        
+
         // maxScroll es cuánto espacio sobra horizontalmente que podemos scrollear
         const maxScroll = scaledW - w;
         const left = -(maxScroll * (pct / 100));
@@ -468,8 +468,8 @@ require APPROOT . '/views/inc/header.php';
     function centerAtPoint(cx) {
         if (!panoContainer || !mainContent) return;
         const w = mainContent.clientWidth;
-        const imgW = 1632;
-        const imgH = 964;
+        const imgW = 2739;
+        const imgH = 2391;
         const h = mainContent.clientHeight;
         const scale = Math.max(w / imgW, h / imgH);
         const scaledW = imgW * scale;
@@ -489,7 +489,7 @@ require APPROOT . '/views/inc/header.php';
 
     if (panoSlider) {
         panoSlider.addEventListener('input', syncPano);
-        
+
         // Touch panning
         let touchStartX = null;
         let startVal = null;
@@ -497,8 +497,10 @@ require APPROOT . '/views/inc/header.php';
             if (e.target.closest('#panoSliderBar') || e.target.closest('#cardFanOverlay')) return;
             touchStartX = e.touches[0].clientX;
             startVal = parseFloat(panoSlider.value);
-        }, { passive: true });
-        
+        }, {
+            passive: true
+        });
+
         document.addEventListener('touchmove', e => {
             if (touchStartX === null) return;
             const dx = e.touches[0].clientX - touchStartX;
@@ -507,16 +509,25 @@ require APPROOT . '/views/inc/header.php';
             const newVal = Math.min(100, Math.max(0, startVal + deltaPct));
             panoSlider.value = newVal;
             syncPano();
-        }, { passive: true });
-        
-        document.addEventListener('touchend', () => { touchStartX = null; }, { passive: true });
+        }, {
+            passive: true
+        });
+
+        document.addEventListener('touchend', () => {
+            touchStartX = null;
+        }, {
+            passive: true
+        });
 
         // Fade suave del slider
         let hideTimer;
+
         function showBar() {
             panoBar.style.opacity = '1';
             clearTimeout(hideTimer);
-            hideTimer = setTimeout(() => { panoBar.style.opacity = '0.55'; }, 2500);
+            hideTimer = setTimeout(() => {
+                panoBar.style.opacity = '0.55';
+            }, 2500);
         }
         panoSlider.addEventListener('input', showBar);
         panoBar.addEventListener('mouseenter', () => clearTimeout(hideTimer));
@@ -536,7 +547,7 @@ require APPROOT . '/views/inc/header.php';
     function handleWeekClick(e, pt, groupEl) {
         e.stopPropagation();
         if (!pt.dias || pt.dias.length === 0) {
-            return; // No zoom/pan if there are no actividades
+            return;
         }
         if (zoomedPoint === pt.semana) {
             resetCurrentZoom();
@@ -546,29 +557,10 @@ require APPROOT . '/views/inc/header.php';
         zoomedPoint = pt.semana;
         zoomedGroupEl = groupEl;
 
-        // Centrar punto
-        centerAtPoint(pt.cx);
-
-        if (zoomedGroupEl) {
-            zoomedGroupEl.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-            zoomedGroupEl.style.transform = 'scale(1.5)';
-            setTimeout(() => {
-                if (zoomedGroupEl) zoomedGroupEl.style.transform = 'scale(1.25)';
-            }, 300);
-        }
-
-        if (pt.dias && pt.dias.length > 0) {
-            showDayPicker(pt);
-        } else {
-            showWeekInfo(pt);
-        }
+        showDayPicker(pt);
     }
 
     function resetCurrentZoom() {
-        if (zoomedGroupEl) {
-            zoomedGroupEl.style.transition = 'transform 0.3s ease';
-            zoomedGroupEl.style.transform = 'scale(1)';
-        }
         zoomedPoint = null;
         zoomedGroupEl = null;
     }
@@ -596,24 +588,68 @@ require APPROOT . '/views/inc/header.php';
         closeDayPicker();
         const n = pt.dias.length;
         const vw = window.innerWidth;
-        
+
         let fanW, fanH, cardW, cardH, cardPad, txStep, fontSize, fontSm, fontXs, iconSize, badgeSz, badgePad, cardRadius, cardBorder;
         if (vw < 480) {
-            fanW = 260; fanH = 200; cardW = 105; cardH = 160; cardPad = '10px 8px'; txStep = 30;
-            fontSize = '11px'; fontSm = '9px'; fontXs = '8px'; iconSize = '28px'; badgeSz = '8px'; badgePad = '3px 10px';
-            cardRadius = '12px'; cardBorder = '3px';
+            fanW = 260;
+            fanH = 200;
+            cardW = 105;
+            cardH = 160;
+            cardPad = '10px 8px';
+            txStep = 30;
+            fontSize = '11px';
+            fontSm = '9px';
+            fontXs = '8px';
+            iconSize = '28px';
+            badgeSz = '8px';
+            badgePad = '3px 10px';
+            cardRadius = '12px';
+            cardBorder = '3px';
         } else if (vw < 768) {
-            fanW = 340; fanH = 260; cardW = 140; cardH = 210; cardPad = '12px 10px'; txStep = 42;
-            fontSize = '13px'; fontSm = '11px'; fontXs = '9px'; iconSize = '36px'; badgeSz = '9px'; badgePad = '3px 12px';
-            cardRadius = '16px'; cardBorder = '3px';
+            fanW = 340;
+            fanH = 260;
+            cardW = 140;
+            cardH = 210;
+            cardPad = '12px 10px';
+            txStep = 42;
+            fontSize = '13px';
+            fontSm = '11px';
+            fontXs = '9px';
+            iconSize = '36px';
+            badgeSz = '9px';
+            badgePad = '3px 12px';
+            cardRadius = '16px';
+            cardBorder = '3px';
         } else if (vw < 1280) {
-            fanW = 500; fanH = 380; cardW = 200; cardH = 305; cardPad = '16px 14px'; txStep = 60;
-            fontSize = '15px'; fontSm = '12px'; fontXs = '10px'; iconSize = '50px'; badgeSz = '11px'; badgePad = '4px 16px';
-            cardRadius = '20px'; cardBorder = '4px';
+            fanW = 500;
+            fanH = 380;
+            cardW = 200;
+            cardH = 305;
+            cardPad = '16px 14px';
+            txStep = 60;
+            fontSize = '15px';
+            fontSm = '12px';
+            fontXs = '10px';
+            iconSize = '50px';
+            badgeSz = '11px';
+            badgePad = '4px 16px';
+            cardRadius = '20px';
+            cardBorder = '4px';
         } else {
-            fanW = 630; fanH = 480; cardW = 255; cardH = 390; cardPad = '20px 18px'; txStep = 75;
-            fontSize = '19px'; fontSm = '14px'; fontXs = '11px'; iconSize = '63px'; badgeSz = '14px'; badgePad = '6px 20px';
-            cardRadius = '24px'; cardBorder = '5px';
+            fanW = 630;
+            fanH = 480;
+            cardW = 255;
+            cardH = 390;
+            cardPad = '20px 18px';
+            txStep = 75;
+            fontSize = '19px';
+            fontSm = '14px';
+            fontXs = '11px';
+            iconSize = '63px';
+            badgeSz = '14px';
+            badgePad = '6px 20px';
+            cardRadius = '24px';
+            cardBorder = '5px';
         }
 
         const overlay = document.createElement('div');
@@ -631,10 +667,38 @@ require APPROOT . '/views/inc/header.php';
         overlay.appendChild(fan);
 
         const stateMap = {
-            completado: { color: '#10b981', light: '#d1fae5', badge: '#065f46', icon: 'thumb_up', label: 'Asistió', suit: '♠' },
-            inasistencia: { color: '#ef4444', light: '#fee2e2', badge: '#991b1b', icon: 'block', label: 'Faltó', suit: '♥' },
-            futuro: { color: '#3b82f6', light: '#dbeafe', badge: '#1e40af', icon: 'event', label: 'Próxima', suit: '♦' },
-            bloqueado: { color: '#94a3b8', light: '#f1f5f9', badge: '#475569', icon: 'lock', label: 'Bloqueado', suit: '♣' }
+            completado: {
+                color: '#10b981',
+                light: '#d1fae5',
+                badge: '#065f46',
+                icon: 'thumb_up',
+                label: 'Asistió',
+                suit: '♠'
+            },
+            inasistencia: {
+                color: '#ef4444',
+                light: '#fee2e2',
+                badge: '#991b1b',
+                icon: 'block',
+                label: 'Faltó',
+                suit: '♥'
+            },
+            futuro: {
+                color: '#3b82f6',
+                light: '#dbeafe',
+                badge: '#1e40af',
+                icon: 'event',
+                label: 'Próxima',
+                suit: '♦'
+            },
+            bloqueado: {
+                color: '#94a3b8',
+                light: '#f1f5f9',
+                badge: '#475569',
+                icon: 'lock',
+                label: 'Bloqueado',
+                suit: '♣'
+            }
         };
 
         const totalSpread = Math.min(n * 16, 72);
@@ -650,10 +714,22 @@ require APPROOT . '/views/inc/header.php';
             else if (tipoStr.includes('clase') || tipoStr.includes('evaluaci') || tipoStr.includes('taller') || tipoStr.includes('escolar')) resolvedTipo = 'escolar';
 
             const typeInfo = {
-                psicologia: { color: '#38bdf8', icon: 'psychology' },
-                citacion: { color: '#64748b', icon: 'gavel' },
-                escolar: { color: '#1e3a8a', icon: 'menu_book' },
-                extraescolar: { color: '#f97316', icon: 'schedule' }
+                psicologia: {
+                    color: '#38bdf8',
+                    icon: 'psychology'
+                },
+                citacion: {
+                    color: '#64748b',
+                    icon: 'gavel'
+                },
+                escolar: {
+                    color: '#1e3a8a',
+                    icon: 'menu_book'
+                },
+                extraescolar: {
+                    color: '#f97316',
+                    icon: 'schedule'
+                }
             };
 
             let cardColor = s.color;
