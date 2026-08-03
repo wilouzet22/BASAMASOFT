@@ -24,7 +24,6 @@ for ($s = 1; $s <= 39; $s++) {
 
     // Determinar estado de la semana
     if ($count === 0) {
-        // Sin actividades → bloqueado (gris)
         $estado = 'bloqueado';
     } else {
         $completadas   = 0;
@@ -88,9 +87,8 @@ for ($s = 1; $s <= 39; $s++) {
     ];
 }
 
-// Coordenadas exactas del camino de la cueva (imagen 1632x964)
-
-$cuevaPoints = [
+// Coordenadas exactas del camino del pico de la montaña
+$picoPoints = [
     1  => ['x' => 300,  'y' => 550],
     2  => ['x' => 294,  'y' => 446],
     3  => ['x' => 365,  'y' => 415],
@@ -109,10 +107,10 @@ $cuevaPoints = [
     16 => ['x' => 1346, 'y' => 300],
 ];
 
-// Para cueva, tomamos de la 24 a la 39 (índices 23 a 38)
-$etapasCueva = array_slice($etapasProg, 23, 16);
-foreach ($etapasCueva as $i => &$etapa) {
-    $ptCoord = $cuevaPoints[$i + 1] ?? ['x' => 0, 'y' => 0];
+// Tomamos de la 24 a la 39 (índices 23 a 38)
+$etapasPico = array_slice($etapasProg, 23, 16);
+foreach ($etapasPico as $i => &$etapa) {
+    $ptCoord = $picoPoints[$i + 1] ?? ['x' => 0, 'y' => 0];
     $etapa['cx'] = $ptCoord['x'];
     $etapa['cy'] = $ptCoord['y'];
 }
@@ -166,7 +164,7 @@ $extraStyles = '
         }
 
         /* ── Anular height:auto global de img para la imagen de fondo y permitir Zoom compensatorio ── */
-        img#cuevaImg {
+        img#picoImg {
             height: 100% !important;
             max-width: none !important;
             width: 100% !important;
@@ -174,15 +172,15 @@ $extraStyles = '
             transform-origin: center center;
         }
 
-        /* ── SVG overlay: sigue el zoom de cuevaImg para quedar "incrustado" ── */
-        #cuevaWaypointsContainer {
+        /* ── SVG overlay: sigue el zoom de picoImg para quedar "incrustado" ── */
+        #picoWaypointsContainer {
             transition: transform 0.4s cubic-bezier(0.4,0,0.2,1) !important;
             transform-origin: center center;
         }
-        body.sidebar-collapsed #cuevaWaypointsContainer {
+        body.sidebar-collapsed #picoWaypointsContainer {
             transform: scale(1.18) !important;
         }
-        body.sidebar-hidden #cuevaWaypointsContainer {
+        body.sidebar-hidden #picoWaypointsContainer {
             transform: scale(1.28) !important;
         }
 
@@ -289,7 +287,7 @@ require APPROOT . '/views/inc/header.php';
 <!-- Mobile Header -->
 <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
     <div class="flex items-center gap-3">
-        <span class="font-bold text-primary text-lg">Camino de Cueva</span>
+        <span class="font-bold text-primary text-lg">Pico de la Montaña</span>
     </div>
     <button id="menuToggleBtn" class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
         <span class="material-symbols-outlined">menu</span>
@@ -300,22 +298,22 @@ require APPROOT . '/views/inc/header.php';
     <!-- Sidebar reusable -->
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
-    <!-- Main content — fondo cueva unificado en SVG -->
+    <!-- Main content — fondo pico unificado en SVG -->
     <main id="mainContent" class="flex-1 lg:ml-72 min-h-screen relative transition-all duration-300 bg-[#0d141f] overflow-hidden">
 
         <!-- Contenedor único SVG que incluye imagen de fondo y waypoints. Panneado vía JS -->
         <div id="panoContainer" class="absolute pointer-events-none" style="z-index:10; top:0; left:0;">
-            <svg id="cuevaWaypointsSVG"
+            <svg id="picoWaypointsSVG"
                  viewBox="0 0 1632 964"
                  preserveAspectRatio="none"
                  style="width:100%; height:100%; pointer-events:none;">
                 
-                <!-- Imagen de fondo incrustada (1632x964) -->
-                <image href="<?= URLROOT ?>/public/assets/img/caverna.png" 
+                <!-- Imagen de fondo incrustada -->
+                <image href="<?= URLROOT ?>/public/assets/img/pico_montaña_final.jpg" 
                        x="0" y="0" width="1632" height="964" 
                        preserveAspectRatio="xMidYMid slice" />
                 <defs>
-                    <filter id="cuevaGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <filter id="picoGlow" x="-30%" y="-30%" width="160%" height="160%">
                         <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
                     </filter>
                 </defs>
@@ -331,9 +329,9 @@ require APPROOT . '/views/inc/header.php';
                      'bloqueado'   => ['fill' => '#94a3b8', 'stroke' => '#475569', 'outer' => '#cbd5e1'],
                  ];
 
-                 $totalPuntos = count($cuevaPoints);
-                 foreach ($cuevaPoints as $semana => $pt):
-                     $etapaInfo = $etapasCueva[$semana - 1] ?? null;
+                 $totalPuntos = count($picoPoints);
+                 foreach ($picoPoints as $semana => $pt):
+                     $etapaInfo = $etapasPico[$semana - 1] ?? null;
                      $estadoActual = $etapaInfo ? $etapaInfo['estado'] : 'bloqueado';
 
                      // Use attendance-based color only (no blue override for multiple)
@@ -349,7 +347,7 @@ require APPROOT . '/views/inc/header.php';
                  ?>
                  <!-- Semana <?= $semana ?> -->
                  <g style="transform-origin:<?= $cx ?>px <?= $cy ?>px; cursor:pointer; pointer-events:all;"
-                    class="cueva-wp" data-semana="<?= $semana ?>">
+                    class="pico-wp" data-semana="<?= $semana ?>">
                      <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
                      <!-- Heartbeat pulse -->
                      <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="8" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.8">
@@ -361,7 +359,7 @@ require APPROOT . '/views/inc/header.php';
                      <!-- Anillo glow exterior -->
                      <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
                          fill="<?= $c['outer'] ?>" opacity="0.5"
-                         filter="url(#cuevaGlow)" />
+                         filter="url(#picoGlow)" />
                      <!-- Flecha animada idéntica a camino.php -->
                      <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
                          <g class="peak-arrow-animated">
@@ -379,7 +377,7 @@ require APPROOT . '/views/inc/header.php';
                      <!-- Flecha de retorno animada -->
                      <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
                          fill="<?= $c['outer'] ?>" opacity="0.5"
-                         filter="url(#cuevaGlow)" />
+                         filter="url(#picoGlow)" />
                      <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
                          <g class="return-arrow-animated">
                              <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
@@ -396,7 +394,7 @@ require APPROOT . '/views/inc/header.php';
                      <!-- Anillo glow exterior (idéntico a camino.php) -->
                      <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="22"
                          fill="<?= $c['outer'] ?>" opacity="0.55"
-                         filter="url(#cuevaGlow)" />
+                         filter="url(#picoGlow)" />
                      <!-- Círculo principal -->
                      <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="16"
                          fill="<?= $c['fill'] ?>"
@@ -430,7 +428,7 @@ require APPROOT . '/views/inc/header.php';
 
     let zoomedPoint = null;
     let zoomedGroupEl = null;
-    const etapasCueva = <?= json_encode($etapasCueva) ?>;
+    const etapasPico = <?= json_encode($etapasPico) ?>;
 
     function syncPano() {
         if (!panoContainer || !mainContent) return;
@@ -538,7 +536,7 @@ require APPROOT . '/views/inc/header.php';
     function handleWeekClick(e, pt, groupEl) {
         e.stopPropagation();
         if (!pt.dias || pt.dias.length === 0) {
-            return; // No zoom/pan if there are no activities
+            return; // No zoom/pan if there are no actividades
         }
         if (zoomedPoint === pt.semana) {
             resetCurrentZoom();
@@ -800,18 +798,14 @@ require APPROOT . '/views/inc/header.php';
     }
 
     // Inicializar listeners de los puntos
-    document.querySelectorAll('.cueva-wp').forEach(el => {
+    document.querySelectorAll('.pico-wp').forEach(el => {
         el.addEventListener('click', (e) => {
             const sem = parseInt(el.getAttribute('data-semana'));
             if (sem === 1) {
                 window.location.href = '<?= URLROOT ?>/padres/camino';
                 return;
             }
-            const pt = etapasCueva[sem - 1];
-            if (pt && pt.is_peak) {
-                window.location.href = '<?= URLROOT ?>/padres/pico_montana';
-                return;
-            }
+            const pt = etapasPico[sem - 1];
             if (pt) {
                 handleWeekClick(e, pt, el);
             }

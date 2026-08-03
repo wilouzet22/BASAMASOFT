@@ -129,10 +129,54 @@ class Padres extends Controller {
      * Vista de la cueva — destino final del camino.
      */
     public function cueva() {
+        $model     = $this->model('FamiliaModel');
+        $id_familia = $_SESSION['user_id'];
+
+        $estudiantes = $model->getEstudiantesByFamilia($id_familia);
+        $estadisticas = [];
+        foreach ($estudiantes as $est) {
+            $estadisticas[$est->id_estudiante] = $model->getEstadisticasEstudiante(
+                $est->id_estudiante,
+                $id_familia
+            );
+        }
+
+        $actividades_camino = $model->getAllActividadesPath($id_familia);
+
         $data = [
-            'title' => 'La Cueva',
+            'title'              => 'La Cueva',
+            'estudiantes'        => $estudiantes,
+            'estadisticas'       => $estadisticas,
+            'actividades_camino' => $actividades_camino
         ];
 
         $this->view('padres/cueva', $data);
+    }
+    /**
+     * Vista de la cima de la montaña.
+     */
+    public function pico_montana() {
+        $model     = $this->model('FamiliaModel');
+        $id_familia = $_SESSION['user_id'];
+
+        $estudiantes = $model->getEstudiantesByFamilia($id_familia);
+        $estadisticas = [];
+        foreach ($estudiantes as $est) {
+            $estadisticas[$est->id_estudiante] = $model->getEstadisticasEstudiante(
+                $est->id_estudiante,
+                $id_familia
+            );
+        }
+
+        $actividades_camino = $model->getAllActividadesPath($id_familia);
+
+        $data = [
+            'title'              => 'Pico de la Montaña',
+            'estudiantes'        => $estudiantes,
+            'estadisticas'       => $estadisticas,
+            'actividades_camino' => $actividades_camino
+        ];
+
+        $this->view('padres/pico_montana', $data);
     }
 }

@@ -3,49 +3,36 @@ $data        = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
 $now         = new DateTime();
 
-// ── Agrupar actividades por número de semana del año ──
-$actsByWeek = []; // [weekNum => [act, ...]]
+// ── Agrupar actividades por clave año-semana ('YYYY-WW') para evitar colisiones entre años ──
+$actsByWeek = []; // ['YYYY-WW' => [act, ...]]
 foreach ($actividades as $act) {
-    $fechaInicio = new DateTime($act->fecha_hora_inicio);
-    $semana = (int)$fechaInicio->format('W'); // ISO week number
-    if (!isset($actsByWeek[$semana])) {
-        $actsByWeek[$semana] = [];
-    }
-    $actsByWeek[$semana][] = $act;
+    $fd  = new DateTime($act->fecha_hora_inicio);
+    $key = $fd->format('o-W'); // ISO year + ISO week, e.g. "2026-27"
+    $actsByWeek[$key][] = $act;
 }
 
-// ── Siempre generar exactamente 12 semanas fijas (coincide con los 12 nodos del camino) ──
-// La semana de referencia es la primera semana que tenga actividad,
-// o la semana actual si no hay actividades.
-$totalSemanas = 12;
+// Ordenar las claves cronológicamente
+$allWeekKeys = array_keys($actsByWeek);
+sort($allWeekKeys); // lexicographic sort works correctly for 'YYYY-WW'
+
+// ── Los primeros 23 slots del programa = Montaña ──
+$totalSemanas = 23;
 $etapas = [];
-
-if (!empty($actsByWeek)) {
-    $allWeekNums = array_keys($actsByWeek);
-    sort($allWeekNums);
-    $startWeek = $allWeekNums[0]; // semana inicial del programa
-} else {
-    $startWeek = (int)(new DateTime())->format('W');
-}
-
 $actual_assigned = false;
+
 for ($s = 1; $s <= $totalSemanas; $s++) {
-    $weekNum = $startWeek + ($s - 1);
-    $acts    = $actsByWeek[$weekNum] ?? [];
+    $weekKey = $allWeekKeys[$s - 1] ?? null; // null = sin actividades ese slot
+    $acts    = $weekKey ? ($actsByWeek[$weekKey] ?? []) : [];
     $count   = count($acts);
 
     // Determinar estado de la semana
     if ($count === 0) {
-        // Sin actividades → bloqueado si es futuro, inasistencia si es pasado
-        // Calculamos la fecha de esa semana (lunes)
-        $weekDate = new DateTime();
-        $weekDate->setISODate((int)(new DateTime())->format('Y'), $weekNum);
-        $estado = ($weekDate > $now) ? 'bloqueado' : 'inasistencia';
+        // Sin actividades → bloqueado (gris)
+        $estado = 'bloqueado';
     } else {
-        // Calcular estado basado en actividades de la semana
-        $completadas  = 0;
+        $completadas   = 0;
         $inasistencias = 0;
-        $futuras      = 0;
+        $futuras       = 0;
         foreach ($acts as $act) {
             $fd = new DateTime($act->fecha_hora_inicio);
             if ($fd <= $now) {
@@ -59,13 +46,15 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
             if (!$actual_assigned) {
                 $estado = 'actual';
                 $actual_assigned = true;
-            } else $estado = 'bloqueado';
+            } else {
+                $estado = 'futuro';
+            }
         } elseif ($completadas > 0 && $inasistencias === 0) {
             $estado = 'completado';
         } elseif ($inasistencias > 0 && $completadas === 0) {
             $estado = 'inasistencia';
         } else {
-            $estado = 'mixto'; // tiene completadas e inasistencias
+            $estado = 'mixto';
         }
     }
 
@@ -74,7 +63,6 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
     $dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
     foreach (array_slice($acts, 0, 5) as $act) {
         $fd = new DateTime($act->fecha_hora_inicio);
-        $actEstado = 'bloqueado';
         if ($fd <= $now) {
             $actEstado = $act->asistencia_registrada > 0 ? 'completado' : 'inasistencia';
         } else {
@@ -94,13 +82,13 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
     }
 
     $etapas[] = [
-        'semana'       => $s,
-        'nombre'       => 'Semana ' . $s,
-        'estado'       => $estado,
-        'is_peak'      => ($s === $totalSemanas),
-        'multiple'     => ($count > 2), // azul si >2 actividades
-        'dias'         => $dias,
-        'total_acts'   => $count,
+        'semana'     => $s,
+        'nombre'     => 'Semana ' . $s . ($weekKey ? " ($weekKey)" : ''),
+        'estado'     => $estado,
+        'is_peak'    => ($s === $totalSemanas),
+        'multiple'   => ($count > 2),
+        'dias'       => $dias,
+        'total_acts' => $count,
     ];
 }
 
@@ -138,20 +126,30 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
     $offsetCorrX = -40; // desplazamiento horizontal global
     $offsetCorrY = 0; // desplazamiento vertical global
 
-$refPoints = [
-    1  => ['x' => 500.00 + $offsetCorrX, 'y' => 830.00 + $offsetCorrY], // Inicio — EXTRAPOLADO (tu línea no llegaba al borde)
-    2  => ['x' => 411.00 + $offsetCorrX, 'y' => 790.00 + $offsetCorrY],
-    3  => ['x' => 200.00 + $offsetCorrX, 'y' => 720.00 + $offsetCorrY],
-    4  => ['x' => 245.00 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY],
-    5  => ['x' => 230.00 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY],
-    6  => ['x' => 320.00 + $offsetCorrX, 'y' => 640.00 + $offsetCorrY],
-    7  => ['x' => 500.00 + $offsetCorrX, 'y' => 606.00 + $offsetCorrY], // curva más amplia a la derecha
-    8  => ['x' => 550.00 + $offsetCorrX, 'y' => 560.00 + $offsetCorrY],
-    9  => ['x' => 307.00 + $offsetCorrX, 'y' => 500.00 + $offsetCorrY],
-    10 => ['x' => 450.00 + $offsetCorrX, 'y' => 442.00 + $offsetCorrY],
-    11 => ['x' => 430.00 + $offsetCorrX, 'y' => 465.00 + $offsetCorrY],
-    12 => ['x' => 469.00 + $offsetCorrX, 'y' =>  380.00 + $offsetCorrY], // entrada a la cueva — EXTRAPOLADO
-];
+    $refPoints = [
+        1  => ['x' => 500.00 + $offsetCorrX, 'y' => 830.00 + $offsetCorrY], // Inicio (original)
+        2  => ['x' => 455.50 + $offsetCorrX, 'y' => 810.00 + $offsetCorrY], // intermedio 1-2
+        3  => ['x' => 411.00 + $offsetCorrX, 'y' => 790.00 + $offsetCorrY], // original 2
+        4  => ['x' => 305.50 + $offsetCorrX, 'y' => 755.00 + $offsetCorrY], // intermedio 2-3
+        5  => ['x' => 200.00 + $offsetCorrX, 'y' => 720.00 + $offsetCorrY], // original 3
+        6  => ['x' => 222.50 + $offsetCorrX, 'y' => 698.00 + $offsetCorrY], // intermedio 3-4
+        7  => ['x' => 245.00 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY], // original 4
+        8  => ['x' => 237.50 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY], // intermedio 4-5
+        9  => ['x' => 230.00 + $offsetCorrX, 'y' => 676.00 + $offsetCorrY], // original 5
+        10 => ['x' => 275.00 + $offsetCorrX, 'y' => 658.00 + $offsetCorrY], // intermedio 5-6
+        11 => ['x' => 320.00 + $offsetCorrX, 'y' => 640.00 + $offsetCorrY], // original 6
+        12 => ['x' => 410.00 + $offsetCorrX, 'y' => 623.00 + $offsetCorrY], // intermedio 6-7
+        13 => ['x' => 500.00 + $offsetCorrX, 'y' => 606.00 + $offsetCorrY], // original 7
+        14 => ['x' => 525.00 + $offsetCorrX, 'y' => 583.00 + $offsetCorrY], // intermedio 7-8
+        15 => ['x' => 550.00 + $offsetCorrX, 'y' => 560.00 + $offsetCorrY], // original 8
+        16 => ['x' => 428.50 + $offsetCorrX, 'y' => 530.00 + $offsetCorrY], // intermedio 8-9
+        17 => ['x' => 307.00 + $offsetCorrX, 'y' => 500.00 + $offsetCorrY], // original 9
+        18 => ['x' => 378.50 + $offsetCorrX, 'y' => 471.00 + $offsetCorrY], // intermedio 9-10
+        19 => ['x' => 450.00 + $offsetCorrX, 'y' => 442.00 + $offsetCorrY], // original 10
+        20 => ['x' => 440.00 + $offsetCorrX, 'y' => 453.50 + $offsetCorrY], // intermedio 10-11
+        22 => ['x' => 500.50 + $offsetCorrX, 'y' => 400.50 + $offsetCorrY], // intermedio 11-12
+        23 => ['x' => 469.00 + $offsetCorrX, 'y' => 380.00 + $offsetCorrY], // original 12 — entrada a la cueva
+    ];
 
     $imgRefW = 723;
     $imgRefH = 1024;
@@ -716,14 +714,9 @@ require APPROOT . '/views/inc/header.php';
                     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                     group.setAttribute('style', `transform-origin:${pt.cx}px ${pt.cy}px; cursor:pointer;`);
 
-                    // ── Color logic ──
+                    // ── Color logic — attendance-based only ──
                     let fillColor, strokeColor, outerColor;
-                    if (pt.multiple) {
-                        // Blue = week with >2 activities
-                        fillColor = '#3b82f6';
-                        strokeColor = '#1d4ed8';
-                        outerColor = '#93c5fd';
-                    } else if (pt.is_peak) {
+                    if (pt.is_peak) {
                         fillColor = '#fcd34d';
                         strokeColor = '#f59e0b';
                         outerColor = '#fde68a';
@@ -739,15 +732,20 @@ require APPROOT . '/views/inc/header.php';
                                 stroke: '#b45309',
                                 outer: '#fbbf24'
                             },
+                            futuro: {
+                                fill: '#3b82f6',
+                                stroke: '#1d4ed8',
+                                outer: '#93c5fd'
+                            },
                             inasistencia: {
                                 fill: '#ef4444',
                                 stroke: '#991b1b',
                                 outer: '#f87171'
                             },
                             mixto: {
-                                fill: '#a855f7',
-                                stroke: '#7e22ce',
-                                outer: '#d8b4fe'
+                                fill: '#f97316',
+                                stroke: '#c2410c',
+                                outer: '#fed7aa'
                             },
                             bloqueado: {
                                 fill: '#94a3b8',
@@ -761,12 +759,13 @@ require APPROOT . '/views/inc/header.php';
                         outerColor = c.outer;
                     }
 
+
                     if (pt.is_peak) {
                         // Halo de luz exterior para la flecha de la cima
                         const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         outer.setAttribute('cx', pt.cx);
                         outer.setAttribute('cy', pt.cy);
-                        outer.setAttribute('r', '32');
+                        outer.setAttribute('r', '20');
                         outer.setAttribute('fill', outerColor);
                         outer.setAttribute('opacity', '0.5');
                         outer.setAttribute('filter', 'url(#glow)');
@@ -803,7 +802,7 @@ require APPROOT . '/views/inc/header.php';
                         const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         outer.setAttribute('cx', pt.cx);
                         outer.setAttribute('cy', pt.cy);
-                        outer.setAttribute('r', '22');
+                        outer.setAttribute('r', '14');
                         outer.setAttribute('fill', outerColor);
                         outer.setAttribute('opacity', '0.55');
                         if (pt.estado !== 'bloqueado') outer.setAttribute('filter', 'url(#glow)');
@@ -813,7 +812,7 @@ require APPROOT . '/views/inc/header.php';
                         const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         dot.setAttribute('cx', pt.cx);
                         dot.setAttribute('cy', pt.cy);
-                        dot.setAttribute('r', '16');
+                        dot.setAttribute('r', '10');
                         dot.setAttribute('fill', fillColor);
                         dot.setAttribute('stroke', strokeColor);
                         dot.setAttribute('stroke-width', '2.5');
@@ -825,14 +824,14 @@ require APPROOT . '/views/inc/header.php';
                         const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         pulse.setAttribute('cx', pt.cx);
                         pulse.setAttribute('cy', pt.cy);
-                        pulse.setAttribute('r', '12');
+                        pulse.setAttribute('r', '8');
                         pulse.setAttribute('fill', 'none');
                         pulse.setAttribute('stroke', '#fbbf24');
                         pulse.setAttribute('stroke-width', '2');
                         pulse.setAttribute('opacity', '0.8');
                         const aR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
                         aR.setAttribute('attributeName', 'r');
-                        aR.setAttribute('values', '12;18;12;24;12;12');
+                        aR.setAttribute('values', '8;13;8;18;8;8');
                         aR.setAttribute('keyTimes', '0;0.15;0.3;0.45;0.7;1');
                         aR.setAttribute('dur', '2.5s');
                         aR.setAttribute('repeatCount', 'indefinite');
@@ -865,7 +864,7 @@ require APPROOT . '/views/inc/header.php';
             // ── SVG viewBox zoom helpers ──
             const svgEl = document.getElementById('mountainSVG');
             const origVBW = vbW;
-            const origVBH = totalH;
+            const origVBH = totalH + 150;
             let vbAnimReq = null;
 
             function animateViewBox(fromVB, toVB, durationMs, onDone) {
@@ -942,6 +941,9 @@ require APPROOT . '/views/inc/header.php';
                 if (pt.is_peak) {
                     window.location.href = '<?= URLROOT ?>/padres/cueva';
                     return;
+                }
+                if (!pt.dias || pt.dias.length === 0) {
+                    return; // No zoom if there are no activities
                 }
                 if (zoomedPoint === pt.semana) {
                     resetCurrentZoom();
