@@ -234,21 +234,23 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
 }
 
 
-// Cálculo del termómetro de asistencia
-$actividadesProgramadas = $totalEtapas;
+// Cálculo del termómetro de asistencia — basado en actividades individuales reales
+// Solo cuenta actividades ya realizadas (completado + inasistencia), no las futuras
+$actividadesPasadas  = 0;
 $actividadesAsistidas = 0;
 foreach ($etapas as $e) {
-    if ($e['estado'] === 'completado') $actividadesAsistidas++;
-}
-if (isset($estadisticas) && is_array($estadisticas)) {
-    $actividadesProgramadas = 0;
-    $actividadesAsistidas = 0;
-    foreach ($estadisticas as $est) {
-        $actividadesProgramadas += $est->total;
-        $actividadesAsistidas += $est->presentes;
+    foreach ($e['dias'] as $dia) {
+        if ($dia['estado'] === 'completado') {
+            $actividadesPasadas++;
+            $actividadesAsistidas++;
+        } elseif ($dia['estado'] === 'inasistencia') {
+            $actividadesPasadas++;
+        }
+        // 'futuro' se ignora: no aporta ni al numerador ni al denominador
     }
 }
-$porcentajeTermometro = $actividadesProgramadas > 0 ? round(($actividadesAsistidas / $actividadesProgramadas) * 100) : 0;
+$actividadesProgramadas = $actividadesPasadas; // para compatibilidad con el resto del código
+$porcentajeTermometro = $actividadesPasadas > 0 ? round(($actividadesAsistidas / $actividadesPasadas) * 100) : 0;
 
 $activeMoodIndex = 3;
 if ($porcentajeTermometro >= 75) $activeMoodIndex = 0;
@@ -1050,7 +1052,7 @@ require APPROOT . '/views/inc/header.php';
                 // Dismiss backdrop
                 const backdrop = document.createElement('div');
                 backdrop.style.cssText = 'position:absolute;inset:0;pointer-events:auto;background:rgba(0,0,0,0.35);backdrop-filter:blur(3px);';
-                backdrop.addEventListener('click', closeDayPicker);
+                backdrop.addEventListener('click', () => resetCurrentZoom());
                 overlay.appendChild(backdrop);
 
                 // Fan container — centrado en pantalla
@@ -1275,7 +1277,7 @@ require APPROOT . '/views/inc/header.php';
                         document.getElementById('cardBackBtn')?.addEventListener('click', (ev) => {
                             ev.stopPropagation();
                             card.classList.remove('expanded');
-                            closeDayPicker();
+                            resetCurrentZoom();
                         });
                     });
 

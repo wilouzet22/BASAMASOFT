@@ -555,6 +555,8 @@ require APPROOT . '/views/inc/header.php';
         resetCurrentZoom();
     }
 
+    let justClosed = false;
+
     function closeDayPicker() {
         const overlay = document.getElementById('cardFanOverlay');
         if (!overlay) return;
@@ -563,9 +565,21 @@ require APPROOT . '/views/inc/header.php';
             fan.style.opacity = '0';
             fan.style.transform = 'translateY(60px) scale(0.85)';
         }
+
+        // Reset inmediato: paneo al centro + scroll al fondo de la montaña
+        resetCurrentZoom();
+        if (panoSlider) {
+            panoSlider.value = 50;
+            syncPano();
+        }
+        if (mainContent) {
+            mainContent.scrollTop = mainContent.scrollHeight;
+        }
+
+        justClosed = true;
         setTimeout(() => {
             if (overlay) overlay.remove();
-            resetCurrentZoom();
+            justClosed = false;
         }, 320);
     }
 
@@ -642,8 +656,7 @@ require APPROOT . '/views/inc/header.php';
         overlay.style.cssText = 'position:fixed;inset:0;z-index:75;display:flex;align-items:center;justify-content:center;pointer-events:none;';
 
         const backdrop = document.createElement('div');
-        backdrop.style.cssText = 'position:absolute;inset:0;pointer-events:auto;background:rgba(0,0,0,0.35);backdrop-filter:blur(3px);';
-        backdrop.addEventListener('click', closeDayPicker);
+        backdrop.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:rgba(0,0,0,0.35);backdrop-filter:blur(3px);';
         overlay.appendChild(backdrop);
 
         const fan = document.createElement('div');
@@ -872,6 +885,24 @@ require APPROOT . '/views/inc/header.php';
             }
         });
     });
+
+    // Cerrar tarjetas al hacer click fuera de las tarjetas (1 solo click)
+    document.addEventListener('click', (e) => {
+        if (justClosed) return;
+        const fan = document.getElementById('cardFan');
+        if (!fan) return;
+        if (!fan.contains(e.target)) {
+            closeDayPicker();
+        }
+    });
+
+    // Cerrar tarjetas al hacer scroll en el contenido principal
+    if (mainContent) {
+        mainContent.addEventListener('scroll', () => {
+            const overlay = document.getElementById('cardFanOverlay');
+            if (overlay) closeDayPicker();
+        }, { passive: true });
+    }
 
     // Inicializar
     syncPano();
