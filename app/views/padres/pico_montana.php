@@ -89,22 +89,11 @@ for ($s = 1; $s <= 39; $s++) {
 
 // Coordenadas del camino — espacio de referencia 2739x2391 (tamaño real de pico_montaña_final.jpg)
 $picoPoints = [
-    1  => ['x' => 430,  'y' => 2100],
-    2  => ['x' => 560,  'y' => 1980],
-    3  => ['x' => 720,  'y' => 1870],
-    4  => ['x' => 900,  'y' => 1760],
-    5  => ['x' => 1080, 'y' => 1650],
-    6  => ['x' => 1260, 'y' => 1560],
-    7  => ['x' => 1450, 'y' => 1480],
-    8  => ['x' => 1640, 'y' => 1400],
-    9  => ['x' => 1820, 'y' => 1320],
-    10 => ['x' => 1980, 'y' => 1230],
-    11 => ['x' => 2100, 'y' => 1120],
-    12 => ['x' => 2180, 'y' => 1000],
-    13 => ['x' => 2230, 'y' => 880],
-    14 => ['x' => 2270, 'y' => 760],
-    15 => ['x' => 2300, 'y' => 640],
-    16 => ['x' => 2320, 'y' => 520],
+    1 => ['x' => 727,  'y' => 1884], // Inicio (plataforma junto a la cueva)
+    2 => ['x' => 1548, 'y' => 1403],
+    3 => ['x' => 1126, 'y' => 1091],
+    4 => ['x' => 1628, 'y' =>  720],
+    5 => ['x' => 1415, 'y' =>   80], // cima
 ];
 
 // Tomamos de la 24 a la 39 (índices 23 a 38)
@@ -252,32 +241,28 @@ $extraStyles = '
             );
         }
 
-        /* Animación para la flecha del último punto apuntando al nororiente (45º) con movimiento */
-        @keyframes peak-arrow-bounce {
-            0%, 100% {
-                transform: rotate(45deg) translate(0px, 0px);
-            }
-            50% {
-                transform: rotate(45deg) translate(0px, -15px);
-            }
-        }
-        .peak-arrow-animated {
-            animation: peak-arrow-bounce 1.4s ease-in-out infinite;
-            transform-origin: 0px 0px;
-        }
-
-        /* Animación para la flecha de retorno (primer punto) apuntando al occidente con inclinación de 25º (-115deg) */
+        /* Animación para la flecha de retorno (primer punto) apuntando al norte 30º */
         @keyframes return-arrow-bounce {
             0%, 100% {
-                transform: rotate(-115deg) translate(0px, 0px);
+                transform: rotate(30deg) translate(0px, 0px);
             }
             50% {
-                transform: rotate(-115deg) translate(0px, -15px);
+                transform: rotate(30deg) translate(0px, -15px);
             }
         }
         .return-arrow-animated {
             animation: return-arrow-bounce 1.4s ease-in-out infinite;
             transform-origin: 0px 0px;
+        }
+
+        /* Aura pulsante del punto cumbre */
+        @keyframes summit-pulse {
+            0%, 100% { r: 48; opacity: 0.55; }
+            50%       { r: 60; opacity: 0.25; }
+        }
+        @keyframes summit-pulse2 {
+            0%, 100% { r: 60; opacity: 0.30; }
+            50%       { r: 75; opacity: 0.10; }
         }
     </style>
 ';
@@ -299,7 +284,7 @@ require APPROOT . '/views/inc/header.php';
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- Main content — fondo pico unificado en SVG -->
-    <main id="mainContent" class="flex-1 lg:ml-72 min-h-screen relative transition-all duration-300 bg-[#0d141f] overflow-hidden">
+    <main id="mainContent" class="flex-1 lg:ml-72 min-h-screen relative transition-all duration-300 bg-[#0d141f] overflow-y-auto overflow-x-hidden">
 
         <!-- Contenedor único SVG que incluye imagen de fondo y waypoints. Panneado vía JS -->
         <div id="panoContainer" class="absolute pointer-events-none" style="z-index:10; top:0; left:0;">
@@ -350,35 +335,36 @@ require APPROOT . '/views/inc/header.php';
                         class="pico-wp" data-semana="<?= $semana ?>">
                         <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
                             <!-- Heartbeat pulse -->
-                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="8" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.8">
-                                <animate attributeName="r" values="8;13;8;18;8;8" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="12" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                                <animate attributeName="r" values="12;19.5;12;27;12;12" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
                             </circle>
                         <?php endif; ?>
 
                         <?php if ($esUltimoPunto): ?>
-                            <!-- Anillo glow exterior -->
-                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
-                                fill="<?= $c['outer'] ?>" opacity="0.5"
-                                filter="url(#picoGlow)" />
-                            <!-- Flecha animada idéntica a camino.php -->
-                            <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
-                                <g class="peak-arrow-animated">
-                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
-                                        fill="<?= $c['fill'] ?>"
-                                        stroke="<?= $c['stroke'] ?>"
-                                        stroke-width="3"
-                                        stroke-linejoin="round" />
-                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
-                                        fill="#ffffff"
-                                        opacity="0.7" />
-                                </g>
-                            </g>
+                            <!-- Aura exterior pulsante capa 2 -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="60" fill="#fde68a" opacity="0.18" filter="url(#picoGlow)">
+                                <animate attributeName="r" values="60;76;60" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.18;0.07;0.18" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                            <!-- Aura exterior pulsante capa 1 -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="46" fill="#fbbf24" opacity="0.40" filter="url(#picoGlow)">
+                                <animate attributeName="r" values="46;58;46" dur="2s" begin="0.3s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.40;0.20;0.40" dur="2s" begin="0.3s" repeatCount="indefinite" />
+                            </circle>
+                            <!-- Gran punto dorado cumbre -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="34"
+                                fill="#fcd34d"
+                                stroke="#f59e0b"
+                                stroke-width="5" />
+                            <!-- Brillo interior -->
+                            <circle cx="<?= $cx - 9 ?>" cy="<?= $cy - 9 ?>" r="10"
+                                fill="#ffffff" opacity="0.35" />
                         <?php elseif ($esPrimerPunto): ?>
-                            <!-- Flecha de retorno animada -->
-                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
+                            <!-- Flecha de retorno animada (apuntando al norte 30º, 50% más grande) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="42"
                                 fill="<?= $c['outer'] ?>" opacity="0.5"
                                 filter="url(#picoGlow)" />
-                            <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
+                            <g transform="translate(<?= $cx ?>, <?= $cy ?>) scale(1.5)">
                                 <g class="return-arrow-animated">
                                     <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
                                         fill="<?= $c['fill'] ?>"
@@ -391,15 +377,15 @@ require APPROOT . '/views/inc/header.php';
                                 </g>
                             </g>
                         <?php else: ?>
-                            <!-- Anillo glow exterior (idéntico a camino.php) -->
-                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="22"
+                            <!-- Anillo glow exterior (idéntico a camino.php, 50% más grande) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="33"
                                 fill="<?= $c['outer'] ?>" opacity="0.55"
                                 filter="url(#picoGlow)" />
-                            <!-- Círculo principal -->
-                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="16"
+                            <!-- Círculo principal (50% más grande) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="24"
                                 fill="<?= $c['fill'] ?>"
                                 stroke="<?= $c['stroke'] ?>"
-                                stroke-width="2.5" />
+                                stroke-width="3.75" />
                         <?php endif; ?>
                     </g>
                 <?php endforeach; ?>
@@ -448,9 +434,8 @@ require APPROOT . '/views/inc/header.php';
         panoContainer.style.width = scaledW + 'px';
         panoContainer.style.height = scaledH + 'px';
 
-        // Centrar verticalmente siempre (object-position: ... 50%)
-        const top = (h - scaledH) / 2;
-        panoContainer.style.top = top + 'px';
+        // Alinear al tope para permitir scroll vertical
+        panoContainer.style.top = '0px';
 
         // Paneado horizontal basado en el slider (0 a 100)
         let pct = 50;
@@ -878,7 +863,7 @@ require APPROOT . '/views/inc/header.php';
         el.addEventListener('click', (e) => {
             const sem = parseInt(el.getAttribute('data-semana'));
             if (sem === 1) {
-                window.location.href = '<?= URLROOT ?>/padres/camino';
+                window.location.href = '<?= URLROOT ?>/padres/cueva';
                 return;
             }
             const pt = etapasPico[sem - 1];
@@ -890,6 +875,10 @@ require APPROOT . '/views/inc/header.php';
 
     // Inicializar
     syncPano();
+    // Iniciar con scroll al fondo para mostrar la cueva y las etapas iniciales de inmediato
+    setTimeout(() => {
+        mainContent.scrollTop = mainContent.scrollHeight;
+    }, 100);
 </script>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>
