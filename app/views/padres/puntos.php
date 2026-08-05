@@ -152,7 +152,7 @@ require APPROOT . '/views/inc/header.php';
                         <!-- Leyenda manual -->
                         <div class="mt-4 space-y-2">
                             <?php
-                            $chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
+                            $chartColors = ['#b91610b6', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
                             foreach ($por_tipo as $i => $t):
                                 $pct = $t->total > 0 ? round(($t->asistidas / $t->total) * 100) : 0;
                                 $color = $chartColors[$i % count($chartColors)];
@@ -297,7 +297,7 @@ require APPROOT . '/views/inc/header.php';
                     data: dataTipo.map(d => d.asistidas),
                     backgroundColor: chartColors,
                     borderWidth: 2,
-                    borderColor: '#fff',
+                    borderColor: '#424242ff',
                     hoverOffset: 8
                 }]
             },

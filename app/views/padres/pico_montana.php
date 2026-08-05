@@ -17,7 +17,7 @@ sort($allWeekKeys);
 
 $etapasProg = [];
 $actual_assigned = false;
-for ($s = 1; $s <= 39; $s++) {
+for ($s = 1; $s <= 41; $s++) {
     $weekKey = $allWeekKeys[$s - 1] ?? null;
     $acts    = $weekKey ? ($actsByWeek[$weekKey] ?? []) : [];
     $count   = count($acts);
@@ -80,7 +80,7 @@ for ($s = 1; $s <= 39; $s++) {
         'semana'     => $s,
         'nombre'     => 'Semana ' . $s . ($weekKey ? " ($weekKey)" : ''),
         'estado'     => $estado,
-        'is_peak'    => ($s === 39),
+        'is_peak'    => ($s === 41),
         'multiple'   => ($count > 2),
         'dias'       => $dias,
         'total_acts' => $count,
@@ -96,8 +96,8 @@ $picoPoints = [
     5 => ['x' => 1415, 'y' =>   80], // cima
 ];
 
-// Tomamos de la 24 a la 39 (índices 23 a 38)
-$etapasPico = array_slice($etapasProg, 23, 16);
+// Tomamos de la 38 a la 41 (índices 37 a 40)
+$etapasPico = array_slice($etapasProg, 37, 4);
 foreach ($etapasPico as $i => &$etapa) {
     $ptCoord = $picoPoints[$i + 1] ?? ['x' => 0, 'y' => 0];
     $etapa['cx'] = $ptCoord['x'];
@@ -264,6 +264,8 @@ $extraStyles = '
             0%, 100% { r: 60; opacity: 0.30; }
             50%       { r: 75; opacity: 0.10; }
         }
+        }
+
     </style>
 ';
 require APPROOT . '/views/inc/header.php';
@@ -400,6 +402,8 @@ require APPROOT . '/views/inc/header.php';
                 aria-label="Deslizar imagen horizontalmente" />
             <span class="material-symbols-outlined" title="Derecha">chevron_right</span>
         </div>
+
+
 
     </main>
 </div>
@@ -912,4 +916,8 @@ require APPROOT . '/views/inc/header.php';
     }, 100);
 </script>
 
+<?php
+$etapasTermometro = $etapasProg;
+require APPROOT . '/views/padres/termometro.php';
+?>
 <?php require APPROOT . '/views/inc/footer.php'; ?>

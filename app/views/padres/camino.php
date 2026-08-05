@@ -15,8 +15,8 @@ foreach ($actividades as $act) {
 $allWeekKeys = array_keys($actsByWeek);
 sort($allWeekKeys); // lexicographic sort works correctly for 'YYYY-WW'
 
-// ── Los primeros 23 slots del programa = Montaña ──
-$totalSemanas = 23;
+// ── Los primeros 22 slots del programa = Montaña ──
+$totalSemanas = 22;
 $etapas = [];
 $actual_assigned = false;
 
@@ -234,33 +234,9 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
 }
 
 
-// Cálculo del termómetro de asistencia — basado en actividades individuales reales
-// Solo cuenta actividades ya realizadas (completado + inasistencia), no las futuras
-$actividadesPasadas  = 0;
-$actividadesAsistidas = 0;
-foreach ($etapas as $e) {
-    foreach ($e['dias'] as $dia) {
-        if ($dia['estado'] === 'completado') {
-            $actividadesPasadas++;
-            $actividadesAsistidas++;
-        } elseif ($dia['estado'] === 'inasistencia') {
-            $actividadesPasadas++;
-        }
-        // 'futuro' se ignora: no aporta ni al numerador ni al denominador
-    }
-}
-$actividadesProgramadas = $actividadesPasadas; // para compatibilidad con el resto del código
-$porcentajeTermometro = $actividadesPasadas > 0 ? round(($actividadesAsistidas / $actividadesPasadas) * 100) : 0;
-
-$activeMoodIndex = 3;
-if ($porcentajeTermometro >= 75) $activeMoodIndex = 0;
-elseif ($porcentajeTermometro >= 50) $activeMoodIndex = 1;
-elseif ($porcentajeTermometro >= 25) $activeMoodIndex = 2;
-?>
-<?php
 $data = $data ?? [];
 $bodyClass = 'bg-surface-container-lowest text-on-background font-lexend min-h-screen overflow-x-hidden select-none';
-$extraStyles = '
+$extraStyles = <<<'EOT'
     <style>
         .glass-panel {
             background: rgba(255, 255, 255, 0.15);
@@ -327,28 +303,7 @@ $extraStyles = '
             #mountainSVG { min-height: 120vh; }
         }
 
-        /* Thermometer: bottom-right on mobile, mid-right on desktop */
-        #thermometerWidget {
-            position: fixed;
-            right: 0.75rem;
-            bottom: 1rem;
-            top: auto;
-            transform: none;
-            z-index: 40;
-        }
-        @media (min-width: 768px) {
-            #thermometerWidget {
-                top: 50%;
-                bottom: auto;
-                transform: translateY(-50%);
-                right: 1rem;
-            }
-        }
-        /* Shrink thermometer tube on very small screens */
-        @media (max-width: 479px) {
-            #thermometerWidget { display: none; }
-            #thermometerMini   { display: flex !important; }
-        }
+
 
         /* Sidebar collapse */
         @media (min-width: 1024px) {
@@ -402,7 +357,7 @@ $extraStyles = '
             #actividadModal .modal-card { border-radius: 2rem; }
         }
     </style>
-';
+EOT;
 require APPROOT . '/views/inc/header.php';
 ?>
 
@@ -618,61 +573,7 @@ require APPROOT . '/views/inc/header.php';
 
 
 
-        <!-- ====== THERMOMETER (responsive — hidden on xs, fixed on sm+) ====== -->
-        <!-- Mini pill shown only on xs (< 480px) -->
-        <div id="thermometerMini" class="fixed bottom-4 right-4 z-40 hidden items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-2 rounded-full border border-outline-variant shadow-xl">
-            <span class="material-symbols-outlined text-base" style="color:<?php
-                                                                            if ($porcentajeTermometro >= 75) echo '#22c55e';
-                                                                            elseif ($porcentajeTermometro >= 50) echo '#eab308';
-                                                                            elseif ($porcentajeTermometro >= 25) echo '#f97316';
-                                                                            else echo '#ef4444';
-                                                                            ?>;"><?php
-                                                                                    if ($porcentajeTermometro >= 75) echo 'sentiment_very_satisfied';
-                                                                                    elseif ($porcentajeTermometro >= 50) echo 'sentiment_neutral';
-                                                                                    elseif ($porcentajeTermometro >= 25) echo 'sentiment_dissatisfied';
-                                                                                    else echo 'sentiment_very_dissatisfied';
-                                                                                    ?></span>
-            <span class="text-xs font-black text-primary"><?= $porcentajeTermometro ?>%</span>
-        </div>
 
-        <!-- Full thermometer for sm+ -->
-        <div id="thermometerWidget" class="flex flex-col items-center bg-white/90 backdrop-blur-md p-3 rounded-[48px] border border-outline-variant shadow-2xl gap-2">
-            <!-- Tube + Faces inside -->
-            <div class="relative flex flex-col items-center" style="height:180px; width:36px;">
-                <!-- Tube background -->
-                <div class="absolute inset-x-2 top-0 bottom-0 rounded-t-full bg-slate-200/70 border border-slate-300 shadow-inner overflow-hidden">
-                    <!-- Liquid fill -->
-                    <div id="thermLiquid" class="absolute bottom-0 left-0 right-0 rounded-t-full transition-all duration-1000 ease-in-out"
-                        style="height:<?= $porcentajeTermometro ?>%; background:linear-gradient(to top,#ef4444,#f97316,#eab308,#22c55e);"></div>
-                </div>
-                <!-- Faces overlaid inside the tube at 25%, 50%, 75%, 100% positions -->
-                <?php
-                $faces = [
-                    ['icon' => 'sentiment_very_dissatisfied', 'pct' => 0,  'color' => '#ef4444'],
-                    ['icon' => 'sentiment_dissatisfied',      'pct' => 33, 'color' => '#f97316'],
-                    ['icon' => 'sentiment_neutral',           'pct' => 58, 'color' => '#eab308'],
-                    ['icon' => 'sentiment_very_satisfied',    'pct' => 83, 'color' => '#22c55e'],
-                ];
-                foreach ($faces as $face):
-                    $topPct = 100 - $face['pct'] - 12;
-                    $covered = $porcentajeTermometro >= ($face['pct'] + 10);
-                ?>
-                    <div class="absolute left-0 right-0 flex justify-center" style="top:<?= $topPct ?>%;">
-                        <span class="material-symbols-outlined transition-all duration-700"
-                            style="font-size:16px; color:<?= $covered ? '#ffffff' : $face['color'] ?>;">
-                            <?= $face['icon'] ?>
-                        </span>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            <!-- Bulb -->
-            <div class="w-9 h-9 rounded-full -mt-1 z-10 flex items-center justify-center border-2 border-white shadow-md"
-                style="background:<?= $porcentajeTermometro > 0 ? '#ef4444' : '#94a3b8' ?>;">
-                <div class="w-3 h-3 bg-white/40 rounded-full"></div>
-            </div>
-            <!-- % label -->
-            <span class="text-[11px] font-bold text-primary mt-1"><?= $porcentajeTermometro ?>%</span>
-        </div>
 
         <script>
             // ====== MOUNTAIN RENDER – WEEK MODE ======
@@ -1499,6 +1400,11 @@ require APPROOT . '/views/inc/header.php';
 
     </main>
 </div><!-- end flex -->
+
+<?php
+$etapasTermometro = $etapas;
+require APPROOT . '/views/padres/termometro.php';
+?>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>

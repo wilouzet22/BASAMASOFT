@@ -17,7 +17,7 @@ sort($allWeekKeys);
 
 $etapasProg = [];
 $actual_assigned = false;
-for ($s = 1; $s <= 39; $s++) {
+for ($s = 1; $s <= 41; $s++) {
     $weekKey = $allWeekKeys[$s - 1] ?? null;
     $acts    = $weekKey ? ($actsByWeek[$weekKey] ?? []) : [];
     $count   = count($acts);
@@ -81,7 +81,7 @@ for ($s = 1; $s <= 39; $s++) {
         'semana'     => $s,
         'nombre'     => 'Semana ' . $s . ($weekKey ? " ($weekKey)" : ''),
         'estado'     => $estado,
-        'is_peak'    => ($s === 39),
+        'is_peak'    => ($s === 41),
         'multiple'   => ($count > 2),
         'dias'       => $dias,
         'total_acts' => $count,
@@ -106,11 +106,10 @@ $cuevaPoints = [
     13 => ['x' => 1175, 'y' => 363],
     14 => ['x' => 1235, 'y' => 336],
     15 => ['x' => 1297, 'y' => 323],
-    16 => ['x' => 1346, 'y' => 300],
 ];
 
-// Para cueva, tomamos de la 24 a la 39 (índices 23 a 38)
-$etapasCueva = array_slice($etapasProg, 23, 16);
+// Para cueva, tomamos de la 23 a la 37 (índices 22 a 36)
+$etapasCueva = array_slice($etapasProg, 22, 15);
 foreach ($etapasCueva as $i => &$etapa) {
     $ptCoord = $cuevaPoints[$i + 1] ?? ['x' => 0, 'y' => 0];
     $etapa['cx'] = $ptCoord['x'];
@@ -281,6 +280,7 @@ $extraStyles = '
             animation: return-arrow-bounce 1.4s ease-in-out infinite;
             transform-origin: 0px 0px;
         }
+
     </style>
 ';
 require APPROOT . '/views/inc/header.php';
@@ -306,105 +306,105 @@ require APPROOT . '/views/inc/header.php';
         <!-- Contenedor único SVG que incluye imagen de fondo y waypoints. Panneado vía JS -->
         <div id="panoContainer" class="absolute pointer-events-none" style="z-index:10; top:0; left:0;">
             <svg id="cuevaWaypointsSVG"
-                 viewBox="0 0 1632 964"
-                 preserveAspectRatio="none"
-                 style="width:100%; height:100%; pointer-events:none;">
-                
+                viewBox="0 0 1632 964"
+                preserveAspectRatio="none"
+                style="width:100%; height:100%; pointer-events:none;">
+
                 <!-- Imagen de fondo incrustada (1632x964) -->
-                <image href="<?= URLROOT ?>/public/assets/img/caverna.png" 
-                       x="0" y="0" width="1632" height="964" 
-                       preserveAspectRatio="xMidYMid slice" />
+                <image href="<?= URLROOT ?>/public/assets/img/caverna.png"
+                    x="0" y="0" width="1632" height="964"
+                    preserveAspectRatio="xMidYMid slice" />
                 <defs>
                     <filter id="cuevaGlow" x="-30%" y="-30%" width="160%" height="160%">
                         <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
                     </filter>
                 </defs>
 
-                 <?php
-                 // Mapa de colores igual que camino.php
-                 $colorMap = [
-                     'completado'  => ['fill' => '#10b981', 'stroke' => '#047857', 'outer' => '#34d399'],
-                     'actual'      => ['fill' => '#f59e0b', 'stroke' => '#b45309', 'outer' => '#fbbf24'],
-                     'futuro'      => ['fill' => '#3b82f6', 'stroke' => '#1d4ed8', 'outer' => '#93c5fd'],
-                     'inasistencia'=> ['fill' => '#ef4444', 'stroke' => '#991b1b', 'outer' => '#f87171'],
-                     'mixto'       => ['fill' => '#f97316', 'stroke' => '#c2410c', 'outer' => '#fed7aa'],
-                     'bloqueado'   => ['fill' => '#94a3b8', 'stroke' => '#475569', 'outer' => '#cbd5e1'],
-                 ];
+                <?php
+                // Mapa de colores igual que camino.php
+                $colorMap = [
+                    'completado'  => ['fill' => '#10b981', 'stroke' => '#047857', 'outer' => '#34d399'],
+                    'actual'      => ['fill' => '#f59e0b', 'stroke' => '#b45309', 'outer' => '#fbbf24'],
+                    'futuro'      => ['fill' => '#3b82f6', 'stroke' => '#1d4ed8', 'outer' => '#93c5fd'],
+                    'inasistencia' => ['fill' => '#ef4444', 'stroke' => '#991b1b', 'outer' => '#f87171'],
+                    'mixto'       => ['fill' => '#f97316', 'stroke' => '#c2410c', 'outer' => '#fed7aa'],
+                    'bloqueado'   => ['fill' => '#94a3b8', 'stroke' => '#475569', 'outer' => '#cbd5e1'],
+                ];
 
-                 $totalPuntos = count($cuevaPoints);
-                 foreach ($cuevaPoints as $semana => $pt):
-                     $etapaInfo = $etapasCueva[$semana - 1] ?? null;
-                     $estadoActual = $etapaInfo ? $etapaInfo['estado'] : 'bloqueado';
+                $totalPuntos = count($cuevaPoints);
+                foreach ($cuevaPoints as $semana => $pt):
+                    $etapaInfo = $etapasCueva[$semana - 1] ?? null;
+                    $estadoActual = $etapaInfo ? $etapaInfo['estado'] : 'bloqueado';
 
-                     // Use attendance-based color only (no blue override for multiple)
-                     $c = $colorMap[$estadoActual] ?? $colorMap['bloqueado'];
+                    // Use attendance-based color only (no blue override for multiple)
+                    $c = $colorMap[$estadoActual] ?? $colorMap['bloqueado'];
 
-                     $cx = $pt['x'];
-                     $cy = $pt['y'];
-                     $esUltimoPunto = ($semana === $totalPuntos); // Punto destino final
-                     $esPrimerPunto = ($semana === 1); // Punto de inicio (retorno)
-                     if ($esUltimoPunto) {
-                         $c = ['fill' => '#fcd34d', 'stroke' => '#f59e0b', 'outer' => '#fde68a'];
-                     }
-                 ?>
-                 <!-- Semana <?= $semana ?> -->
-                 <g style="transform-origin:<?= $cx ?>px <?= $cy ?>px; cursor:pointer; pointer-events:all;"
-                    class="cueva-wp" data-semana="<?= $semana ?>">
-                     <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
-                     <!-- Heartbeat pulse -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="8" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.8">
-                         <animate attributeName="r" values="8;13;8;18;8;8" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
-                     </circle>
-                     <?php endif; ?>
+                    $cx = $pt['x'];
+                    $cy = $pt['y'];
+                    $esUltimoPunto = ($semana === $totalPuntos); // Punto destino final
+                    $esPrimerPunto = ($semana === 1); // Punto de inicio (retorno)
+                    if ($esUltimoPunto) {
+                        $c = ['fill' => '#fcd34d', 'stroke' => '#f59e0b', 'outer' => '#fde68a'];
+                    }
+                ?>
+                    <!-- Semana <?= $semana ?> -->
+                    <g style="transform-origin:<?= $cx ?>px <?= $cy ?>px; cursor:pointer; pointer-events:all;"
+                        class="cueva-wp" data-semana="<?= $semana ?>">
+                        <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
+                            <!-- Heartbeat pulse -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="8" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.8">
+                                <animate attributeName="r" values="8;13;8;18;8;8" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
+                            </circle>
+                        <?php endif; ?>
 
-                     <?php if ($esUltimoPunto): ?>
-                     <!-- Anillo glow exterior -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
-                         fill="<?= $c['outer'] ?>" opacity="0.5"
-                         filter="url(#cuevaGlow)" />
-                     <!-- Flecha animada idéntica a camino.php -->
-                     <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
-                         <g class="peak-arrow-animated">
-                             <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
-                                 fill="<?= $c['fill'] ?>"
-                                 stroke="<?= $c['stroke'] ?>"
-                                 stroke-width="3"
-                                 stroke-linejoin="round" />
-                             <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
-                                 fill="#ffffff"
-                                 opacity="0.7" />
-                         </g>
-                     </g>
-                     <?php elseif ($esPrimerPunto): ?>
-                     <!-- Flecha de retorno animada -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
-                         fill="<?= $c['outer'] ?>" opacity="0.5"
-                         filter="url(#cuevaGlow)" />
-                     <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
-                         <g class="return-arrow-animated">
-                             <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
-                                 fill="<?= $c['fill'] ?>"
-                                 stroke="<?= $c['stroke'] ?>"
-                                 stroke-width="3"
-                                 stroke-linejoin="round" />
-                             <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
-                                 fill="#ffffff"
-                                 opacity="0.7" />
-                         </g>
-                     </g>
-                     <?php else: ?>
-                     <!-- Anillo glow exterior (idéntico a camino.php) -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="22"
-                         fill="<?= $c['outer'] ?>" opacity="0.55"
-                         filter="url(#cuevaGlow)" />
-                     <!-- Círculo principal -->
-                     <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="16"
-                         fill="<?= $c['fill'] ?>"
-                         stroke="<?= $c['stroke'] ?>"
-                         stroke-width="2.5" />
-                     <?php endif; ?>
-                 </g>
-                 <?php endforeach; ?>
+                        <?php if ($esUltimoPunto): ?>
+                            <!-- Anillo glow exterior -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
+                                fill="<?= $c['outer'] ?>" opacity="0.5"
+                                filter="url(#cuevaGlow)" />
+                            <!-- Flecha animada idéntica a camino.php -->
+                            <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
+                                <g class="peak-arrow-animated">
+                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
+                                        fill="<?= $c['fill'] ?>"
+                                        stroke="<?= $c['stroke'] ?>"
+                                        stroke-width="3"
+                                        stroke-linejoin="round" />
+                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
+                                        fill="#ffffff"
+                                        opacity="0.7" />
+                                </g>
+                            </g>
+                        <?php elseif ($esPrimerPunto): ?>
+                            <!-- Flecha de retorno animada -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="28"
+                                fill="<?= $c['outer'] ?>" opacity="0.5"
+                                filter="url(#cuevaGlow)" />
+                            <g transform="translate(<?= $cx ?>, <?= $cy ?>)">
+                                <g class="return-arrow-animated">
+                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
+                                        fill="<?= $c['fill'] ?>"
+                                        stroke="<?= $c['stroke'] ?>"
+                                        stroke-width="3"
+                                        stroke-linejoin="round" />
+                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
+                                        fill="#ffffff"
+                                        opacity="0.7" />
+                                </g>
+                            </g>
+                        <?php else: ?>
+                            <!-- Anillo glow exterior (idéntico a camino.php) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="22"
+                                fill="<?= $c['outer'] ?>" opacity="0.55"
+                                filter="url(#cuevaGlow)" />
+                            <!-- Círculo principal -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="16"
+                                fill="<?= $c['fill'] ?>"
+                                stroke="<?= $c['stroke'] ?>"
+                                stroke-width="2.5" />
+                        <?php endif; ?>
+                    </g>
+                <?php endforeach; ?>
 
             </svg>
         </div>
@@ -416,6 +416,8 @@ require APPROOT . '/views/inc/header.php';
                 aria-label="Deslizar imagen horizontalmente" />
             <span class="material-symbols-outlined" title="Derecha">chevron_right</span>
         </div>
+
+
 
     </main>
 </div>
@@ -434,11 +436,11 @@ require APPROOT . '/views/inc/header.php';
 
     function syncPano() {
         if (!panoContainer || !mainContent) return;
-        
+
         const w = mainContent.clientWidth;
         const h = mainContent.clientHeight;
         if (w === 0 || h === 0) return;
-        
+
         const imgW = 1632;
         const imgH = 964;
 
@@ -460,7 +462,7 @@ require APPROOT . '/views/inc/header.php';
             pct = parseFloat(panoSlider.value);
             panoSlider.style.setProperty('--pano-fill', pct + '%');
         }
-        
+
         // maxScroll es cuánto espacio sobra horizontalmente que podemos scrollear
         const maxScroll = scaledW - w;
         const left = -(maxScroll * (pct / 100));
@@ -491,7 +493,7 @@ require APPROOT . '/views/inc/header.php';
 
     if (panoSlider) {
         panoSlider.addEventListener('input', syncPano);
-        
+
         // Touch panning
         let touchStartX = null;
         let startVal = null;
@@ -499,8 +501,10 @@ require APPROOT . '/views/inc/header.php';
             if (e.target.closest('#panoSliderBar') || e.target.closest('#cardFanOverlay')) return;
             touchStartX = e.touches[0].clientX;
             startVal = parseFloat(panoSlider.value);
-        }, { passive: true });
-        
+        }, {
+            passive: true
+        });
+
         document.addEventListener('touchmove', e => {
             if (touchStartX === null) return;
             const dx = e.touches[0].clientX - touchStartX;
@@ -509,16 +513,25 @@ require APPROOT . '/views/inc/header.php';
             const newVal = Math.min(100, Math.max(0, startVal + deltaPct));
             panoSlider.value = newVal;
             syncPano();
-        }, { passive: true });
-        
-        document.addEventListener('touchend', () => { touchStartX = null; }, { passive: true });
+        }, {
+            passive: true
+        });
+
+        document.addEventListener('touchend', () => {
+            touchStartX = null;
+        }, {
+            passive: true
+        });
 
         // Fade suave del slider
         let hideTimer;
+
         function showBar() {
             panoBar.style.opacity = '1';
             clearTimeout(hideTimer);
-            hideTimer = setTimeout(() => { panoBar.style.opacity = '0.55'; }, 2500);
+            hideTimer = setTimeout(() => {
+                panoBar.style.opacity = '0.55';
+            }, 2500);
         }
         panoSlider.addEventListener('input', showBar);
         panoBar.addEventListener('mouseenter', () => clearTimeout(hideTimer));
@@ -598,24 +611,68 @@ require APPROOT . '/views/inc/header.php';
         closeDayPicker();
         const n = pt.dias.length;
         const vw = window.innerWidth;
-        
+
         let fanW, fanH, cardW, cardH, cardPad, txStep, fontSize, fontSm, fontXs, iconSize, badgeSz, badgePad, cardRadius, cardBorder;
         if (vw < 480) {
-            fanW = 260; fanH = 200; cardW = 105; cardH = 160; cardPad = '10px 8px'; txStep = 30;
-            fontSize = '11px'; fontSm = '9px'; fontXs = '8px'; iconSize = '28px'; badgeSz = '8px'; badgePad = '3px 10px';
-            cardRadius = '12px'; cardBorder = '3px';
+            fanW = 260;
+            fanH = 200;
+            cardW = 105;
+            cardH = 160;
+            cardPad = '10px 8px';
+            txStep = 30;
+            fontSize = '11px';
+            fontSm = '9px';
+            fontXs = '8px';
+            iconSize = '28px';
+            badgeSz = '8px';
+            badgePad = '3px 10px';
+            cardRadius = '12px';
+            cardBorder = '3px';
         } else if (vw < 768) {
-            fanW = 340; fanH = 260; cardW = 140; cardH = 210; cardPad = '12px 10px'; txStep = 42;
-            fontSize = '13px'; fontSm = '11px'; fontXs = '9px'; iconSize = '36px'; badgeSz = '9px'; badgePad = '3px 12px';
-            cardRadius = '16px'; cardBorder = '3px';
+            fanW = 340;
+            fanH = 260;
+            cardW = 140;
+            cardH = 210;
+            cardPad = '12px 10px';
+            txStep = 42;
+            fontSize = '13px';
+            fontSm = '11px';
+            fontXs = '9px';
+            iconSize = '36px';
+            badgeSz = '9px';
+            badgePad = '3px 12px';
+            cardRadius = '16px';
+            cardBorder = '3px';
         } else if (vw < 1280) {
-            fanW = 500; fanH = 380; cardW = 200; cardH = 305; cardPad = '16px 14px'; txStep = 60;
-            fontSize = '15px'; fontSm = '12px'; fontXs = '10px'; iconSize = '50px'; badgeSz = '11px'; badgePad = '4px 16px';
-            cardRadius = '20px'; cardBorder = '4px';
+            fanW = 500;
+            fanH = 380;
+            cardW = 200;
+            cardH = 305;
+            cardPad = '16px 14px';
+            txStep = 60;
+            fontSize = '15px';
+            fontSm = '12px';
+            fontXs = '10px';
+            iconSize = '50px';
+            badgeSz = '11px';
+            badgePad = '4px 16px';
+            cardRadius = '20px';
+            cardBorder = '4px';
         } else {
-            fanW = 630; fanH = 480; cardW = 255; cardH = 390; cardPad = '20px 18px'; txStep = 75;
-            fontSize = '19px'; fontSm = '14px'; fontXs = '11px'; iconSize = '63px'; badgeSz = '14px'; badgePad = '6px 20px';
-            cardRadius = '24px'; cardBorder = '5px';
+            fanW = 630;
+            fanH = 480;
+            cardW = 255;
+            cardH = 390;
+            cardPad = '20px 18px';
+            txStep = 75;
+            fontSize = '19px';
+            fontSm = '14px';
+            fontXs = '11px';
+            iconSize = '63px';
+            badgeSz = '14px';
+            badgePad = '6px 20px';
+            cardRadius = '24px';
+            cardBorder = '5px';
         }
 
         const overlay = document.createElement('div');
@@ -633,10 +690,38 @@ require APPROOT . '/views/inc/header.php';
         overlay.appendChild(fan);
 
         const stateMap = {
-            completado: { color: '#10b981', light: '#d1fae5', badge: '#065f46', icon: 'thumb_up', label: 'Asistió', suit: '♠' },
-            inasistencia: { color: '#ef4444', light: '#fee2e2', badge: '#991b1b', icon: 'block', label: 'Faltó', suit: '♥' },
-            futuro: { color: '#3b82f6', light: '#dbeafe', badge: '#1e40af', icon: 'event', label: 'Próxima', suit: '♦' },
-            bloqueado: { color: '#94a3b8', light: '#f1f5f9', badge: '#475569', icon: 'lock', label: 'Bloqueado', suit: '♣' }
+            completado: {
+                color: '#10b981',
+                light: '#d1fae5',
+                badge: '#065f46',
+                icon: 'thumb_up',
+                label: 'Asistió',
+                suit: '♠'
+            },
+            inasistencia: {
+                color: '#ef4444',
+                light: '#fee2e2',
+                badge: '#991b1b',
+                icon: 'block',
+                label: 'Faltó',
+                suit: '♥'
+            },
+            futuro: {
+                color: '#3b82f6',
+                light: '#dbeafe',
+                badge: '#1e40af',
+                icon: 'event',
+                label: 'Próxima',
+                suit: '♦'
+            },
+            bloqueado: {
+                color: '#94a3b8',
+                light: '#f1f5f9',
+                badge: '#475569',
+                icon: 'lock',
+                label: 'Bloqueado',
+                suit: '♣'
+            }
         };
 
         const totalSpread = Math.min(n * 16, 72);
@@ -652,10 +737,22 @@ require APPROOT . '/views/inc/header.php';
             else if (tipoStr.includes('clase') || tipoStr.includes('evaluaci') || tipoStr.includes('taller') || tipoStr.includes('escolar')) resolvedTipo = 'escolar';
 
             const typeInfo = {
-                psicologia: { color: '#38bdf8', icon: 'psychology' },
-                citacion: { color: '#64748b', icon: 'gavel' },
-                escolar: { color: '#1e3a8a', icon: 'menu_book' },
-                extraescolar: { color: '#f97316', icon: 'schedule' }
+                psicologia: {
+                    color: '#38bdf8',
+                    icon: 'psychology'
+                },
+                citacion: {
+                    color: '#64748b',
+                    icon: 'gavel'
+                },
+                escolar: {
+                    color: '#1e3a8a',
+                    icon: 'menu_book'
+                },
+                extraescolar: {
+                    color: '#f97316',
+                    icon: 'schedule'
+                }
             };
 
             let cardColor = s.color;
@@ -822,4 +919,8 @@ require APPROOT . '/views/inc/header.php';
     syncPano();
 </script>
 
+<?php
+$etapasTermometro = $etapasProg;
+require APPROOT . '/views/padres/termometro.php';
+?>
 <?php require APPROOT . '/views/inc/footer.php'; ?>

@@ -3,7 +3,6 @@ $currentPage = $_SERVER['REQUEST_URI'] ?? '';
 $isDashboard = (strpos($currentPage, '/padres/dashboard') !== false) || ($activePage ?? '') === 'dashboard';
 $isCamino    = (strpos($currentPage, '/padres/camino') !== false) || ($activePage ?? '') === 'camino';
 $isPuntos    = (strpos($currentPage, '/padres/puntos') !== false) || ($activePage ?? '') === 'puntos';
-$isPico      = (strpos($currentPage, '/padres/pico_montana') !== false) || ($activePage ?? '') === 'pico_montana';
 ?>
 
 <style>
@@ -111,13 +110,6 @@ $isPico      = (strpos($currentPage, '/padres/pico_montana') !== false) || ($act
                    href="<?php echo URLROOT; ?>/padres/camino" style="animation-delay:0ms">
                     <span class="material-symbols-outlined flex-shrink-0" <?php echo $isCamino ? 'style="font-variation-settings:\'FILL\' 1;"' : ''; ?>>mountain_flag</span>
                     <span class="font-medium text-sm sidebar-text">Camino de Montaña</span>
-                </a>
-
-                <!-- Pico de la Montaña -->
-                <a class="submenu-item sidebar-item-link <?php echo $isPico ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'; ?> rounded-2xl px-4 py-3 flex items-center gap-3 transition-all" 
-                   href="<?php echo URLROOT; ?>/padres/pico_montana" style="animation-delay:40ms">
-                    <span class="material-symbols-outlined flex-shrink-0" <?php echo $isPico ? 'style="font-variation-settings:\'FILL\' 1;"' : ''; ?>>landscape</span>
-                    <span class="font-medium text-sm sidebar-text">Pico de la Montaña</span>
                 </a>
 
                 <!-- Mis Puntos -->
