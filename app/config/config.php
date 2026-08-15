@@ -7,8 +7,15 @@ define('DB_NAME', 'prueba1_asistencia');
 
 // App Root
 define('APPROOT', dirname(dirname(__FILE__)));
-// URLROOT
-define('URLROOT', 'http://localhost/BASAMASOFT');
+// URLROOT (Auto-detectado dinámicamente)
+if (!defined('URLROOT')) {
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scriptDir = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])) : '';
+    $baseDir = str_replace('/public', '', $scriptDir);
+    $baseDir = rtrim($baseDir, '/');
+    define('URLROOT', $protocol . '://' . $host . $baseDir);
+}
 // Site Name
 define('SITENAME', 'EduSaft');
 

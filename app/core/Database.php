@@ -7,7 +7,7 @@
  * Return rows and results
  */
 class Database {
-    private $host = DB_HOST;
+    private $host = ;
     private $user = DB_USER;
     private $pass = DB_PASS;
     private $dbname = DB_NAME;

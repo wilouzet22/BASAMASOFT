@@ -391,7 +391,7 @@ function abrirComicModal(act) {
     
     let fotos = act.fotos;
     if (!fotos || fotos.length === 0) {
-        fotos = ['/BASAMASOFT/public/assets/img/actividades/actividad_familia.png'];
+        fotos = ['<?php echo URLROOT; ?>/assets/img/actividades/actividad_familia.png'];
     }
     
     modalSlides = fotos;
