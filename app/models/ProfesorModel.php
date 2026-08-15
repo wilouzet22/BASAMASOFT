@@ -141,4 +141,38 @@ class ProfesorModel {
         $row = $this->db->single();
         return $row ? (int)$row->total : 0;
     }
+
+    /**
+     * Obtiene los mensajes de contacto enviados a este profesor.
+     */
+    public function getMensajesContacto($id_profesor) {
+        $this->db->query(
+            'SELECT m.*, f.nombre_principal_acudiente, f.apellidos_principal_acudiente, f.email_contacto
+             FROM mensajes_contacto m
+             INNER JOIN familias f ON m.id_familia_fk = f.id_familia
+             WHERE m.id_profesor_fk = :id_profesor AND m.destinatario_tipo = "profesor"
+             ORDER BY m.fecha_envio DESC'
+        );
+        $this->db->bind(':id_profesor', $id_profesor);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Marca un mensaje como leído.
+     */
+    public function marcarMensajeLeido($id_mensaje) {
+        $this->db->query('UPDATE mensajes_contacto SET leido = 1 WHERE id_mensaje = :id_mensaje AND destinatario_tipo = "profesor"');
+        $this->db->bind(':id_mensaje', $id_mensaje);
+        return $this->db->execute();
+    }
+
+    /**
+     * Guarda la respuesta a un mensaje de contacto.
+     */
+    public function responderMensaje($id_mensaje, $respuesta) {
+        $this->db->query('UPDATE mensajes_contacto SET respuesta = :respuesta, fecha_respuesta = NOW(), leido_familia = 0, leido = 1 WHERE id_mensaje = :id_mensaje AND destinatario_tipo = "profesor"');
+        $this->db->bind(':respuesta', $respuesta);
+        $this->db->bind(':id_mensaje', $id_mensaje);
+        return $this->db->execute();
+    }
 }

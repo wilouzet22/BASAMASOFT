@@ -276,4 +276,40 @@ class Admin extends Controller {
 
         $this->view('admin/auditoria', $data);
     }
+
+    /**
+     * Mensajes enviados por familias a directivas.
+     */
+    public function mensajes() {
+        $model = $this->model('AdministradorModel');
+        $id_admin = $_SESSION['user_id'];
+        
+        // Manejo de respuesta
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_mensaje'], $_POST['respuesta'])) {
+            $id_mensaje = (int)$_POST['id_mensaje'];
+            $respuesta = trim($_POST['respuesta']);
+            if (!empty($respuesta)) {
+                $model->responderMensaje($id_mensaje, $respuesta);
+                header('Location: ' . URLROOT . '/admin/mensajes?reply=ok');
+                exit;
+            }
+        }
+
+        // Si se marca una como leída vía GET
+        if (isset($_GET['leer']) && is_numeric($_GET['leer'])) {
+            $model->marcarMensajeLeido((int)$_GET['leer']);
+            header('Location: ' . URLROOT . '/admin/mensajes');
+            exit;
+        }
+
+        $mensajes = $model->getMensajesContacto($id_admin);
+
+        $data = [
+            'title'    => 'Mensajes de Familias',
+            'mensajes' => $mensajes,
+            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !$m->leido)),
+        ];
+
+        $this->view('shared/mensajes', $data);
+    }
 }

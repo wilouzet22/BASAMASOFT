@@ -4,7 +4,7 @@
 ?>
 <?php if (!$isCaminoPage): ?>
 <footer class="bg-white border-t mt-12 transition-colors duration-200">
-    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 flex flex-col items-center gap-6 lg:px-8">
         <?php
             $isAdminOrDocente = (strpos($uri_footer, '/admin') !== false || strpos($uri_footer, '/docentes') !== false);
         ?>
@@ -24,8 +24,13 @@
             </a>
         </div>
         <?php endif; ?>
-        <div class="mt-8 md:mt-0 md:order-1">
-            <p class="text-center text-base text-gray-400">&copy; <?php echo date('Y'); ?> EduSaft. Todos los derechos reservados.</p>
+        <div class="mt-8 md:mt-0 md:order-1 w-full flex flex-col items-center text-center">
+            <div class="text-sm text-gray-500 space-y-1 mb-4">
+                <p>Dirección: Calle 63 No 108BB - 160 Barrio: Robledo Santa Margarita</p>
+                <p>Contacto: Bachillerato: 3004176050 - Sec.Escuela Santa Margarita: 3004184485 - Sec.Escuela Pedro Nel Ospina: 3004186418</p>
+                <p>Correo electrónico: contactenos@iebarriosantamargarita.edu.co | Medellín - Antioquia - Colombia</p>
+            </div>
+            <p class="text-base text-gray-400">&copy; <?php echo date('Y'); ?> EduSaft. Todos los derechos reservados.</p>
         </div>
     </div>
 </footer>
@@ -211,11 +216,11 @@
             <span class="material-symbols-outlined text-2xl">stars</span>
             <span>Puntos</span>
         </a>
-        <a href="<?php echo URLROOT; ?>/auth/logout"
+        <button type="button" onclick="openLogoutModal()"
            class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-red-500">
             <span class="material-symbols-outlined text-2xl">logout</span>
             <span>Salir</span>
-        </a>
+        </button>
     <?php endif; ?>
 </nav>
 </body>

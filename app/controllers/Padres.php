@@ -46,6 +46,8 @@ class Padres extends Controller {
             'estadisticas'        => $estadisticas,
             'asistencias_recientes' => $model->getAsistenciasByFamilia($id_familia, 5),
             'proximas_actividades'  => $model->getProximasActividades($id_familia),
+            'profesores'          => $model->getAllProfesores(),
+            'directivas'          => $model->getAllDirectivas(),
         ];
 
         $this->view('padres/dashboard', $data);
@@ -99,7 +101,9 @@ class Padres extends Controller {
             'title'              => 'Camino de Éxito',
             'estudiantes'        => $estudiantes,
             'estadisticas'       => $estadisticas,
-            'actividades_camino' => $actividades_camino
+            'actividades_camino' => $actividades_camino,
+            'profesores'         => $model->getAllProfesores(),
+            'directivas'         => $model->getAllDirectivas(),
         ];
 
         $this->view('padres/camino', $data);
@@ -120,6 +124,8 @@ class Padres extends Controller {
             'racha'          => $model->getRachaActual($id_familia),
             'asistencias'    => $model->getAsistenciasByFamilia($id_familia, 10),
             'estudiantes'    => $model->getEstudiantesByFamilia($id_familia),
+            'profesores'     => $model->getAllProfesores(),
+            'directivas'     => $model->getAllDirectivas(),
         ];
 
         $this->view('padres/puntos', $data);
@@ -147,7 +153,9 @@ class Padres extends Controller {
             'title'              => 'La Cueva',
             'estudiantes'        => $estudiantes,
             'estadisticas'       => $estadisticas,
-            'actividades_camino' => $actividades_camino
+            'actividades_camino' => $actividades_camino,
+            'profesores'         => $model->getAllProfesores(),
+            'directivas'         => $model->getAllDirectivas(),
         ];
 
         $this->view('padres/cueva', $data);
@@ -174,7 +182,9 @@ class Padres extends Controller {
             'title'              => 'Pico de la Montaña',
             'estudiantes'        => $estudiantes,
             'estadisticas'       => $estadisticas,
-            'actividades_camino' => $actividades_camino
+            'actividades_camino' => $actividades_camino,
+            'profesores'         => $model->getAllProfesores(),
+            'directivas'         => $model->getAllDirectivas(),
         ];
 
         $this->view('padres/pico_montana', $data);
@@ -199,5 +209,111 @@ class Padres extends Controller {
         header('Location: ' . URLROOT . '/padres/camino?opinion=ok');
         exit;
     }
-}
 
+    /**
+     * Recibe y guarda un mensaje de contacto (a profesor o directiva).
+     */
+    public function enviar_mensaje() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URLROOT . '/padres/dashboard');
+            exit;
+        }
+        $tipo          = trim($_POST['tipo'] ?? '');
+        $id_dest       = (int)($_POST['id_destinatario'] ?? 0);
+        $titulo        = trim($_POST['titulo'] ?? '');
+        $asunto        = trim($_POST['asunto'] ?? '');
+        $mensaje       = trim($_POST['mensaje'] ?? '');
+        
+        $referer = $_SERVER['HTTP_REFERER'] ?? (URLROOT . '/padres/dashboard');
+        $referer = preg_replace('/([&?])msg_(ok|error)=1&?/', '$1', $referer);
+        $referer = rtrim($referer, '?&');
+        $sep = (strpos($referer, '?') !== false) ? '&' : '?';
+
+        if (empty($tipo) || $id_dest === 0 || empty($titulo) || empty($mensaje)) {
+            header('Location: ' . $referer . $sep . 'msg_error=1');
+            exit;
+        }
+        $model = $this->model('FamiliaModel');
+        $model->guardarMensajeContacto($_SESSION['user_id'], $tipo, $id_dest, $titulo, $asunto, $mensaje);
+        header('Location: ' . $referer . $sep . 'msg_ok=1');
+        exit;
+    }
+
+    /**
+     * Bandeja de entrada para las familias (respuestas de profesores y directivas).
+     */
+    public function mensajes() {
+        $model = $this->model('FamiliaModel');
+        $id_familia = $_SESSION['user_id'];
+        
+        // Si se marca una respuesta como leída vía GET
+        if (isset($_GET['leer']) && is_numeric($_GET['leer'])) {
+            $model->marcarRespuestaLeida((int)$_GET['leer'], $id_familia);
+            header('Location: ' . URLROOT . '/padres/mensajes');
+            exit;
+        }
+
+        $mensajes = $model->getMensajesByFamilia($id_familia);
+
+        $data = [
+            'title'    => 'Mis Mensajes',
+            'mensajes' => $mensajes,
+            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !empty($m->respuesta) && !$m->leido_familia)),
+            'profesores' => $model->getAllProfesores(),
+            'directivas' => $model->getAllDirectivas(),
+        ];
+
+        $this->view('padres/mensajes', $data);
+    }
+
+    /**
+     * Sube o actualiza la foto de perfil de la familia.
+     */
+    public function subir_foto() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['foto_perfil'])) {
+            header('Location: ' . URLROOT . '/padres/dashboard');
+            exit;
+        }
+
+        $id_familia = $_SESSION['user_id'];
+        $file       = $_FILES['foto_perfil'];
+        $allowed    = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        $maxSize    = 3 * 1024 * 1024; // 3 MB
+
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            header('Location: ' . URLROOT . '/padres/dashboard?foto_error=upload');
+            exit;
+        }
+        if (!in_array(mime_content_type($file['tmp_name']), $allowed)) {
+            header('Location: ' . URLROOT . '/padres/dashboard?foto_error=type');
+            exit;
+        }
+        if ($file['size'] > $maxSize) {
+            header('Location: ' . URLROOT . '/padres/dashboard?foto_error=size');
+            exit;
+        }
+
+        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'familia_' . $id_familia . '_' . time() . '.' . strtolower($ext);
+        $dest     = APPROOT . '/../public/assets/img/perfiles/' . $filename;
+
+        // Eliminar foto anterior si existe
+        $model       = $this->model('FamiliaModel');
+        $familiaData = $model->findById($id_familia);
+        if ($familiaData && !empty($familiaData->foto_perfil)) {
+            $old = APPROOT . '/../public/assets/img/perfiles/' . $familiaData->foto_perfil;
+            if (file_exists($old)) @unlink($old);
+        }
+
+        if (move_uploaded_file($file['tmp_name'], $dest)) {
+            $model->actualizarFoto($id_familia, $filename);
+            // Actualizar sesión
+            $_SESSION['foto_perfil'] = $filename;
+            $referer = $_SERVER['HTTP_REFERER'] ?? URLROOT . '/padres/dashboard';
+            header('Location: ' . $referer . (strpos($referer, '?') === false ? '?' : '&') . 'foto_ok=1');
+        } else {
+            header('Location: ' . URLROOT . '/padres/dashboard?foto_error=move');
+        }
+        exit;
+    }
+}

@@ -418,7 +418,7 @@ require APPROOT . '/views/inc/header.php';
     <!-- Sidebar reusable -->
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
-    <main id="mainScrollContainer" class="flex-1 lg:ml-72 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
+    <main id="mainScrollContainer" class="flex-1 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
 
         <!-- ====== MOUNTAIN VIEWPORT (Native scroll) ====== -->
         <div class="relative w-full" id="mountainViewport">
@@ -1337,43 +1337,6 @@ require APPROOT . '/views/inc/header.php';
             if (hash === '#contactos') setTimeout(() => openModal('contactosModal'), 400);
             if (hash === '#opinion') setTimeout(() => openModal('opinionModal'), 400);
 
-            // Toast de éxito al volver desde enviar_opinion
-            <?php if (isset($_GET['opinion']) && $_GET['opinion'] === 'ok'): ?>
-            (function() {
-                const t = document.createElement('div');
-                t.innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>¡Gracias! Tu opinión fue enviada.</span>';
-                Object.assign(t.style, {
-                    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
-                    background:'#10b981', color:'#fff', display:'flex', alignItems:'center',
-                    gap:'8px', padding:'12px 24px', borderRadius:'999px', zIndex:'9999',
-                    boxShadow:'0 4px 20px rgba(0,0,0,0.3)', fontSize:'14px', fontWeight:'600',
-                    opacity:'0', transition:'opacity .4s'
-                });
-                document.body.appendChild(t);
-                requestAnimationFrame(() => { t.style.opacity = '1'; });
-                setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 4000);
-            })();
-            <?php endif; ?>
-
-            function openModal(id) {
-                const modal = document.getElementById(id);
-                if (!modal) return;
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.children[0].classList.remove('opacity-0');
-                    modal.children[1].classList.remove('scale-95', 'opacity-0');
-                    modal.children[1].classList.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-
-            function closeModal(id) {
-                const modal = document.getElementById(id);
-                if (!modal) return;
-                modal.children[0].classList.add('opacity-0');
-                modal.children[1].classList.add('scale-95', 'opacity-0');
-                modal.children[1].classList.remove('scale-100', 'opacity-100');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            }
 
             document.addEventListener('DOMContentLoaded', () => renderAll());
         </script>
@@ -1441,52 +1404,6 @@ require APPROOT . '/views/inc/header.php';
                     <div class="bg-surface-container p-4 flex justify-end">
                         <button onclick="closeModal('actividadModal')" class="px-6 py-2 bg-primary text-on-primary font-bold rounded-full hover:bg-primary-hover transition-colors shadow-sm">Entendido</button>
                     </div>
-                </div>
-            </div>
-
-            <!-- Contactos Modal -->
-            <div id="contactosModal" class="fixed inset-0 z-[60] hidden">
-                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-primary flex items-center gap-2"><span class="material-symbols-outlined">group</span> Contactos</h3>
-                        <button onclick="closeModal('contactosModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                            <div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed"><span class="material-symbols-outlined">person</span></div>
-                            <div>
-                                <span class="text-label-md font-bold block">Guía Maestro</span>
-                                <span class="text-xs text-on-surface-variant">guia@edusaft.edu</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                            <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed"><span class="material-symbols-outlined">group</span></div>
-                            <div>
-                                <span class="text-label-md font-bold block">Compañeros (Grupo A)</span>
-                                <span class="text-xs text-on-surface-variant">12 estudiantes</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Opinión Modal -->
-            <div id="opinionModal" class="fixed inset-0 z-[60] hidden">
-                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('opinionModal')"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-secondary flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> Danos tu Opinión</h3>
-                        <button onclick="closeModal('opinionModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
-                    </div>
-                    <p class="text-sm italic text-on-surface-variant mb-4">"El camino es tan importante como la cima."</p>
-                    <form method="POST" action="<?php echo URLROOT; ?>/padres/enviar_opinion" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold mb-1">¿Cómo podemos mejorar?</label>
-                            <textarea name="mensaje" rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-secondary text-on-secondary font-bold rounded-xl py-3 shadow-md hover:opacity-90 transition-opacity">Enviar Opinión</button>
-                    </form>
                 </div>
             </div>
 

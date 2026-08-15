@@ -71,7 +71,7 @@ require APPROOT . '/views/inc/header.php';
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- ====== MAIN CONTENT ====== -->
-    <main id="mainContent" class="flex-1 lg:ml-72 transition-all duration-300 min-h-screen">
+    <main id="mainContent" class="flex-1 transition-all duration-300 min-h-screen">
         <div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
 
             <!-- Page Header -->

@@ -95,5 +95,41 @@ class Docentes extends Controller {
 
         $this->view('docentes/notificaciones', $data);
     }
+
+    /**
+     * Mensajes enviados por familias a este profesor.
+     */
+    public function mensajes() {
+        $model = $this->model('ProfesorModel');
+        $id_profesor = $_SESSION['user_id'];
+        
+        // Manejo de respuesta
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_mensaje'], $_POST['respuesta'])) {
+            $id_mensaje = (int)$_POST['id_mensaje'];
+            $respuesta = trim($_POST['respuesta']);
+            if (!empty($respuesta)) {
+                $model->responderMensaje($id_mensaje, $respuesta);
+                header('Location: ' . URLROOT . '/docentes/mensajes?reply=ok');
+                exit;
+            }
+        }
+
+        // Si se marca una como leída vía GET
+        if (isset($_GET['leer']) && is_numeric($_GET['leer'])) {
+            $model->marcarMensajeLeido((int)$_GET['leer']);
+            header('Location: ' . URLROOT . '/docentes/mensajes');
+            exit;
+        }
+
+        $mensajes = $model->getMensajesContacto($id_profesor);
+
+        $data = [
+            'title'    => 'Mensajes de Familias',
+            'mensajes' => $mensajes,
+            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !$m->leido)),
+        ];
+
+        $this->view('shared/mensajes', $data);
+    }
 }
 

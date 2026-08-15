@@ -113,6 +113,13 @@
         <!-- Divisor Sistema -->
         <p class="sidebar-divider-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 px-3 pt-3 pb-1">Sistema</p>
 
+        <a href="<?php echo URLROOT; ?>/admin/mensajes"
+           title="Mensajes"
+           class="sidebar-item <?php echo strpos($currentPage, '/admin/mensajes') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
+            <span class="material-symbols-outlined sidebar-nav-icon shrink-0">mail</span>
+            <span class="sidebar-label truncate">Mensajes</span>
+        </a>
+
         <a href="<?php echo URLROOT; ?>/admin/auditoria"
            title="Auditoría"
            class="sidebar-item <?php echo strpos($currentPage, '/admin/auditoria') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">

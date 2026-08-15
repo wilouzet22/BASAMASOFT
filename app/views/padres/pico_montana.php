@@ -337,7 +337,7 @@ require APPROOT . '/views/inc/header.php';
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- Main content — fondo pico unificado en SVG -->
-    <main id="mainContent" class="flex-1 lg:ml-72 min-h-screen relative transition-all duration-300 bg-[#0d141f] overflow-y-auto overflow-x-hidden">
+    <main id="mainContent" class="flex-1 min-h-screen relative transition-all duration-300 bg-[#0d141f] overflow-y-auto overflow-x-hidden">
 
         <!-- Contenedor único SVG que incluye imagen de fondo y waypoints. Panneado vía JS -->
         <div id="panoContainer" class="absolute pointer-events-none" style="z-index:10; top:0; left:0;">

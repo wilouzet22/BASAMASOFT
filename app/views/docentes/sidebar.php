@@ -55,6 +55,12 @@
             <span class="material-symbols-outlined sidebar-nav-icon shrink-0">event_available</span>
             <span class="sidebar-label truncate">Asistencia</span>
         </a>
+        <a href="<?php echo URLROOT; ?>/docentes/mensajes"
+           title="Mensajes"
+           class="<?php echo strpos($currentPage, '/docentes/mensajes') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
+            <span class="material-symbols-outlined sidebar-nav-icon shrink-0">mail</span>
+            <span class="sidebar-label truncate">Mensajes</span>
+        </a>
         <a href="<?php echo URLROOT; ?>/docentes/notificaciones"
            title="Notificaciones"
            class="<?php echo strpos($currentPage, '/docentes/notificaciones') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">

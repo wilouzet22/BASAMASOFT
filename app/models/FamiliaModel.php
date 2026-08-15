@@ -20,6 +20,25 @@ class FamiliaModel {
     }
 
     /**
+     * Busca una familia por ID.
+     */
+    public function findById($id_familia) {
+        $this->db->query('SELECT * FROM familias WHERE id_familia = :id LIMIT 1');
+        $this->db->bind(':id', $id_familia);
+        return $this->db->single();
+    }
+
+    /**
+     * Actualiza la foto de perfil de la familia.
+     */
+    public function actualizarFoto($id_familia, $filename) {
+        $this->db->query('UPDATE familias SET foto_perfil = :foto WHERE id_familia = :id');
+        $this->db->bind(':foto', $filename);
+        $this->db->bind(':id', $id_familia);
+        return $this->db->execute();
+    }
+
+    /**
      * Obtiene los estudiantes (hijos) asociados a una familia, con grado y grupo.
      */
     public function getEstudiantesByFamilia($id_familia) {
@@ -246,6 +265,79 @@ class FamiliaModel {
             }
         }
         return $racha;
+    }
+
+    /**
+     * Obtiene todos los profesores del sistema.
+     */
+    public function getAllProfesores() {
+        $this->db->query(
+            'SELECT p.id_profesor, p.nombres, p.apellidos, p.email, p.telefono,
+                    GROUP_CONCAT(g.nombre_grupo SEPARATOR ", ") AS grupos
+             FROM profesores p
+             LEFT JOIN profesor_grupo pg ON p.id_profesor = pg.id_profesor_fk
+             LEFT JOIN grupos g ON pg.id_grupo_fk = g.id_grupo
+             GROUP BY p.id_profesor
+             ORDER BY p.apellidos ASC'
+        );
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Obtiene todos los administradores (directivas).
+     */
+    public function getAllDirectivas() {
+        $this->db->query(
+            'SELECT id_administrador, nombres, apellidos, correo AS email, telefono
+             FROM administrador
+             ORDER BY apellidos ASC'
+        );
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Guarda un mensaje de contacto (para profesores o directivas).
+     */
+    public function guardarMensajeContacto($id_familia, $tipo, $id_destinatario, $titulo, $asunto, $mensaje) {
+        if ($tipo === 'profesor') {
+            $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, destinatario_tipo, id_profesor_fk, titulo, asunto, mensaje) VALUES (:id_familia, "profesor", :id_dest, :titulo, :asunto, :mensaje)');
+        } else {
+            $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, destinatario_tipo, id_administrador_fk, titulo, asunto, mensaje) VALUES (:id_familia, "directiva", :id_dest, :titulo, :asunto, :mensaje)');
+        }
+        $this->db->bind(':id_familia', $id_familia);
+        $this->db->bind(':id_dest', $id_destinatario);
+        $this->db->bind(':titulo', $titulo);
+        $this->db->bind(':asunto', $asunto);
+        $this->db->bind(':mensaje', $mensaje);
+        return $this->db->execute();
+    }
+
+    /**
+     * Obtiene todos los mensajes enviados por una familia y sus respuestas.
+     */
+    public function getMensajesByFamilia($id_familia) {
+        $this->db->query(
+            'SELECT m.*, 
+                    p.nombres AS prof_nombres, p.apellidos AS prof_apellidos, p.email AS prof_email,
+                    a.nombres AS admin_nombres, a.apellidos AS admin_apellidos, a.correo AS admin_email
+             FROM mensajes_contacto m
+             LEFT JOIN profesores p ON m.id_profesor_fk = p.id_profesor
+             LEFT JOIN administrador a ON m.id_administrador_fk = a.id_administrador
+             WHERE m.id_familia_fk = :id_familia
+             ORDER BY m.fecha_envio DESC'
+        );
+        $this->db->bind(':id_familia', $id_familia);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Marca una respuesta como leída por la familia.
+     */
+    public function marcarRespuestaLeida($id_mensaje, $id_familia) {
+        $this->db->query('UPDATE mensajes_contacto SET leido_familia = 1 WHERE id_mensaje = :id_mensaje AND id_familia_fk = :id_familia');
+        $this->db->bind(':id_mensaje', $id_mensaje);
+        $this->db->bind(':id_familia', $id_familia);
+        return $this->db->execute();
     }
 
     /**
