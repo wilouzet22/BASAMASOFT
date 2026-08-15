@@ -37,7 +37,7 @@
 <?php endif; ?>
 
 <!-- Selector Flotante de Temas (Esquina Inferior Derecha) -->
-<div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2.5">
+<div id="global-theme-selector" class="fixed bottom-[85px] md:bottom-6 right-4 md:right-6 z-50 flex flex-col items-end gap-2.5">
     <!-- Menú Desplegable de Temas -->
     <div id="theme-options-menu" class="hidden flex-col items-end gap-2 transition-all duration-300 opacity-0 transform translate-y-3 pointer-events-none mb-1">
         <!-- Opción: Modo Súper Oscuro -->
@@ -174,9 +174,9 @@
             <span class="material-symbols-outlined text-2xl" style="<?php echo strpos($uri_nav, '/admin/actividades') !== false ? 'font-variation-settings:\'FILL\' 1' : ''; ?>">event</span>
             <span>Actividades</span>
         </a>
-        <button type="button" onclick="toggleMobileSidebar()"
+        <button type="button" onclick="openModal('adminMoreModal')"
                 class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
-            <span class="material-symbols-outlined text-2xl">menu</span>
+            <span class="material-symbols-outlined text-2xl">more_horiz</span>
             <span>Más</span>
         </button>
     <?php elseif ($isDocente): ?>
@@ -195,9 +195,9 @@
             <span class="material-symbols-outlined text-2xl">event_available</span>
             <span>Asistencia</span>
         </a>
-        <button type="button" onclick="toggleDocentesMobileSidebar()"
+        <button type="button" onclick="openModal('docentesMoreModal')"
                 class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
-            <span class="material-symbols-outlined text-2xl">menu</span>
+            <span class="material-symbols-outlined text-2xl">more_horiz</span>
             <span>Más</span>
         </button>
     <?php elseif ($isFamilia): ?>
@@ -216,12 +216,142 @@
             <span class="material-symbols-outlined text-2xl">stars</span>
             <span>Puntos</span>
         </a>
-        <button type="button" onclick="openLogoutModal()"
-           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-red-500">
-            <span class="material-symbols-outlined text-2xl">logout</span>
-            <span>Salir</span>
+        <a href="<?php echo URLROOT; ?>/padres/mensajes"
+           class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 <?php echo strpos($uri_nav, '/padres/mensajes') !== false ? 'text-primary' : 'text-gray-500'; ?>">
+            <span class="material-symbols-outlined text-2xl">mail</span>
+            <span>Mensajes</span>
+        </a>
+        <button type="button" id="mobileMoreBtn"
+                onclick="openModal('mobileMoreModal')"
+                class="flex flex-col items-center flex-1 py-1 text-[10px] gap-0.5 text-gray-500">
+            <span class="material-symbols-outlined text-2xl">more_horiz</span>
+            <span>Más</span>
         </button>
     <?php endif; ?>
 </nav>
+
+<!-- ===== MODALS DE NAVEGACIÓN (MÁS OPCIONES) ===== -->
+
+<!-- 1. ADMIN MODAL -->
+<?php if ($isAdmin): ?>
+<div id="adminMoreModal" class="fixed inset-0 z-[200] hidden items-center justify-center pointer-events-none">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" 
+         onclick="closeModal('adminMoreModal')"></div>
+    <div class="relative bg-surface rounded-3xl p-6 max-w-sm w-[85%] max-h-[85vh] overflow-y-auto mx-auto shadow-2xl border border-outline-variant/50 transform scale-95 opacity-0 transition-all duration-300 pointer-events-auto flex flex-col gap-2">
+        <h3 class="text-xl font-extrabold text-on-surface mb-2 text-center">Menú Principal</h3>
+        
+        <a href="<?php echo URLROOT; ?>/admin/profesores" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">school</span>
+            <span class="font-bold text-sm">Profesores</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/familias" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">family_restroom</span>
+            <span class="font-bold text-sm">Familias</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/sedes" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">domain</span>
+            <span class="font-bold text-sm">Sedes</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/grupos" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">category</span>
+            <span class="font-bold text-sm">Grupos</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/mensajes" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">mail</span>
+            <span class="font-bold text-sm">Mensajes</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/auditoria" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">history</span>
+            <span class="font-bold text-sm">Auditoría</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/admin/configuracion" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">settings</span>
+            <span class="font-bold text-sm">Configuración</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/auth/logout" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-error-container/20 hover:bg-error-container/50 transition-colors text-error mt-2 border border-error/20">
+            <span class="material-symbols-outlined text-2xl text-error">logout</span>
+            <span class="font-bold text-sm">Cerrar sesión</span>
+        </a>
+        
+        <div class="mt-2 w-full flex justify-center">
+            <button type="button" onclick="closeModal('adminMoreModal')" class="text-xs text-on-surface-variant font-bold uppercase tracking-wider hover:text-on-surface p-2">CERRAR MENÚ</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- 2. DOCENTES MODAL -->
+<?php if ($isDocente): ?>
+<div id="docentesMoreModal" class="fixed inset-0 z-[200] hidden items-center justify-center pointer-events-none">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" 
+         onclick="closeModal('docentesMoreModal')"></div>
+    <div class="relative bg-surface rounded-3xl p-6 max-w-sm w-[85%] max-h-[85vh] overflow-y-auto mx-auto shadow-2xl border border-outline-variant/50 transform scale-95 opacity-0 transition-all duration-300 pointer-events-auto flex flex-col gap-2">
+        <h3 class="text-xl font-extrabold text-on-surface mb-2 text-center">Menú Principal</h3>
+        
+        <a href="<?php echo URLROOT; ?>/docentes/mensajes" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">mail</span>
+            <span class="font-bold text-sm">Mensajes</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/notificaciones" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">notifications</span>
+            <span class="font-bold text-sm">Notificaciones</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/configuracion" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface">
+            <span class="material-symbols-outlined text-2xl text-primary">settings</span>
+            <span class="font-bold text-sm">Configuración</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/auth/logout" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-error-container/20 hover:bg-error-container/50 transition-colors text-error mt-2 border border-error/20">
+            <span class="material-symbols-outlined text-2xl text-error">logout</span>
+            <span class="font-bold text-sm">Cerrar sesión</span>
+        </a>
+        
+        <div class="mt-2 w-full flex justify-center">
+            <button type="button" onclick="closeModal('docentesMoreModal')" class="text-xs text-on-surface-variant font-bold uppercase tracking-wider hover:text-on-surface p-2">CERRAR MENÚ</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- 3. PADRES MODAL -->
+<?php if ($isFamilia): ?>
+<div id="mobileMoreModal" class="fixed inset-0 z-[200] hidden items-center justify-center pointer-events-none">
+    <!-- Backdrop con blur -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" 
+         onclick="closeModal('mobileMoreModal')"></div>
+    
+    <!-- Contenido del modal -->
+    <div class="relative bg-surface rounded-3xl p-6 max-w-sm w-[85%] mx-auto shadow-2xl border border-outline-variant/50 transform scale-95 opacity-0 transition-all duration-300 pointer-events-auto flex flex-col gap-2">
+        <h3 class="text-xl font-extrabold text-on-surface mb-4 text-center">Menú de Opciones</h3>
+        
+        <a href="<?php echo URLROOT; ?>/padres/mensajes"
+           class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors <?php echo strpos($uri_nav, '/padres/mensajes') !== false ? 'text-primary' : 'text-on-surface'; ?>">
+            <span class="material-symbols-outlined text-2xl <?php echo strpos($uri_nav, '/padres/mensajes') !== false ? 'text-primary' : 'text-primary'; ?>">mail</span>
+            <span class="font-bold text-sm">Mis Mensajes</span>
+        </a>
+
+        <button type="button" onclick="closeModal('mobileMoreModal'); setTimeout(()=>openModal('contactosModal'), 300)"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface w-full text-left">
+            <span class="material-symbols-outlined text-2xl text-tertiary">group</span>
+            <span class="font-bold text-sm">Contáctanos</span>
+        </button>
+
+        <button type="button" onclick="closeModal('mobileMoreModal'); setTimeout(()=>openModal('opinionModal'), 300)"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-container-low hover:bg-primary/10 transition-colors text-on-surface w-full text-left">
+            <span class="material-symbols-outlined text-2xl text-secondary">chat_bubble</span>
+            <span class="font-bold text-sm">Opinión</span>
+        </button>
+
+        <button type="button" onclick="closeModal('mobileMoreModal'); setTimeout(()=>openLogoutModal(), 300)"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl bg-error-container/20 hover:bg-error-container/50 transition-colors text-error w-full text-left mt-2 border border-error/20">
+            <span class="material-symbols-outlined text-2xl text-error">logout</span>
+            <span class="font-bold text-sm">Cerrar sesión</span>
+        </button>
+        
+        <div class="mt-4 w-full flex justify-center">
+            <button type="button" onclick="closeModal('mobileMoreModal')" class="text-xs text-on-surface-variant font-bold uppercase tracking-wider hover:text-on-surface p-2 transition-colors">CERRAR MENÚ</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 </body>
 </html>

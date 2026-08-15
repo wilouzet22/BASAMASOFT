@@ -1,30 +1,36 @@
 <?php
+
 /**
  * Docentes Controller
  * Panel de docentes — protegido, solo rol 'profesor'.
  */
-class Docentes extends Controller {
+class Docentes extends Controller
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->_requireProfesor();
     }
 
     /** Verifica que el usuario sea profesor */
-    private function _requireProfesor() {
+    private function _requireProfesor()
+    {
         if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'profesor') {
             header('Location: ' . URLROOT . '/auth/login');
             exit;
         }
     }
 
-    public function index() {
+    public function index()
+    {
         $this->dashboard();
     }
 
     /**
      * Dashboard del docente con sus grupos, conteos y asistencias recientes.
      */
-    public function dashboard() {
+    public function dashboard()
+    {
         $model      = $this->model('ProfesorModel');
         $id_profesor = $_SESSION['user_id'];
 
@@ -42,7 +48,8 @@ class Docentes extends Controller {
     /**
      * Vista de actividades del docente.
      */
-    public function actividades() {
+    public function actividades()
+    {
         $model      = $this->model('ProfesorModel');
         $id_profesor = $_SESSION['user_id'];
 
@@ -57,7 +64,8 @@ class Docentes extends Controller {
     /**
      * Vista de registro de asistencia del docente.
      */
-    public function asistencia() {
+    public function asistencia()
+    {
         $model      = $this->model('ProfesorModel');
         $id_profesor = $_SESSION['user_id'];
 
@@ -74,10 +82,11 @@ class Docentes extends Controller {
     /**
      * Notificaciones del docente: opiniones enviadas por familias de sus grupos.
      */
-    public function notificaciones() {
+    public function notificaciones()
+    {
         $familiaModel = $this->model('FamiliaModel');
         $id_profesor = $_SESSION['user_id'];
-        
+
         $opiniones = $familiaModel->getOpinionesByProfesor($id_profesor);
 
         // Si se marca una como leída vía GET
@@ -97,19 +106,23 @@ class Docentes extends Controller {
     }
 
     /**
-     * Mensajes enviados por familias a este profesor.
+     * Mensajes enviados/recibidos por este profesor.
      */
-    public function mensajes() {
+    public function mensajes()
+    {
         $model = $this->model('ProfesorModel');
         $id_profesor = $_SESSION['user_id'];
-        
-        // Manejo de respuesta
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_mensaje'], $_POST['respuesta'])) {
-            $id_mensaje = (int)$_POST['id_mensaje'];
-            $respuesta = trim($_POST['respuesta']);
-            if (!empty($respuesta)) {
-                $model->responderMensaje($id_mensaje, $respuesta);
-                header('Location: ' . URLROOT . '/docentes/mensajes?reply=ok');
+
+        // Manejo de envío de nuevo mensaje
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_familia'], $_POST['titulo'], $_POST['mensaje'])) {
+            $id_familia = (int)$_POST['id_familia'];
+            $titulo = trim($_POST['titulo']);
+            $asunto = trim($_POST['asunto'] ?? '');
+            $mensaje = trim($_POST['mensaje']);
+            
+            if (!empty($id_familia) && !empty($titulo) && !empty($mensaje)) {
+                $model->enviarMensajeFamilia($id_profesor, $id_familia, $titulo, $asunto, $mensaje);
+                header('Location: ' . URLROOT . '/docentes/mensajes?send=ok');
                 exit;
             }
         }
@@ -122,14 +135,29 @@ class Docentes extends Controller {
         }
 
         $mensajes = $model->getMensajesContacto($id_profesor);
+        $familias = $model->getFamiliasByProfesor($id_profesor);
 
         $data = [
-            'title'    => 'Mensajes de Familias',
+            'title'    => 'Mensajes',
             'mensajes' => $mensajes,
-            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !$m->leido)),
+            'familias' => $familias,
+            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !$m->leido && $m->destinatario_tipo === 'profesor')),
         ];
 
         $this->view('shared/mensajes', $data);
     }
-}
 
+    /**
+     * Elimina un mensaje
+     */
+    public function eliminar_mensaje($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $model = $this->model('ProfesorModel');
+            $id_profesor = $_SESSION['user_id'];
+            $model->eliminarMensaje($id, $id_profesor);
+        }
+        header('Location: ' . URLROOT . '/docentes/mensajes');
+        exit;
+    }
+}

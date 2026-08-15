@@ -296,13 +296,13 @@ class FamiliaModel {
     }
 
     /**
-     * Guarda un mensaje de contacto (para profesores o directivas).
+     * Guarda un mensaje de contacto enviado por la familia (para profesores o directivas).
      */
     public function guardarMensajeContacto($id_familia, $tipo, $id_destinatario, $titulo, $asunto, $mensaje) {
         if ($tipo === 'profesor') {
-            $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, destinatario_tipo, id_profesor_fk, titulo, asunto, mensaje) VALUES (:id_familia, "profesor", :id_dest, :titulo, :asunto, :mensaje)');
+            $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, remitente_tipo, destinatario_tipo, id_profesor_fk, titulo, asunto, mensaje) VALUES (:id_familia, "familia", "profesor", :id_dest, :titulo, :asunto, :mensaje)');
         } else {
-            $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, destinatario_tipo, id_administrador_fk, titulo, asunto, mensaje) VALUES (:id_familia, "directiva", :id_dest, :titulo, :asunto, :mensaje)');
+            $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, remitente_tipo, destinatario_tipo, id_administrador_fk, titulo, asunto, mensaje) VALUES (:id_familia, "familia", "directiva", :id_dest, :titulo, :asunto, :mensaje)');
         }
         $this->db->bind(':id_familia', $id_familia);
         $this->db->bind(':id_dest', $id_destinatario);
@@ -313,7 +313,7 @@ class FamiliaModel {
     }
 
     /**
-     * Obtiene todos los mensajes enviados por una familia y sus respuestas.
+     * Obtiene todos los mensajes enviados y recibidos por una familia.
      */
     public function getMensajesByFamilia($id_familia) {
         $this->db->query(
@@ -331,10 +331,10 @@ class FamiliaModel {
     }
 
     /**
-     * Marca una respuesta como leída por la familia.
+     * Marca un mensaje como leído por la familia.
      */
-    public function marcarRespuestaLeida($id_mensaje, $id_familia) {
-        $this->db->query('UPDATE mensajes_contacto SET leido_familia = 1 WHERE id_mensaje = :id_mensaje AND id_familia_fk = :id_familia');
+    public function marcarMensajeLeido($id_mensaje, $id_familia) {
+        $this->db->query('UPDATE mensajes_contacto SET leido = 1 WHERE id_mensaje = :id_mensaje AND id_familia_fk = :id_familia AND destinatario_tipo = "familia"');
         $this->db->bind(':id_mensaje', $id_mensaje);
         $this->db->bind(':id_familia', $id_familia);
         return $this->db->execute();

@@ -181,6 +181,17 @@ $etapasFinalCueva[] = [
 ];
 
 $bodyClass = 'antialiased min-h-screen';
+// ── Porcentaje de asistencia para el header móvil ──
+$_hPast = 0; $_hAsist = 0;
+foreach ($actividades as $_a) {
+    $_fd = new DateTime($_a->fecha_hora_inicio);
+    if ($_fd <= $now) {
+        if ($_a->asistencia_registrada > 0) { $_hPast++; $_hAsist++; }
+        else $_hPast++;
+    }
+}
+$pctHeader = $_hPast > 0 ? round(($_hAsist / $_hPast) * 100) : 0;
+
 $extraStyles = '
     <style>
         /* Sidebar collapse */
@@ -268,6 +279,12 @@ $extraStyles = '
             width: min(460px, 88vw);
             transition: opacity 0.3s ease;
         }
+        /* En móvil, subir para no tapar el navbar inferior */
+        @media (max-width: 1023px) {
+            #panoSliderBar {
+                bottom: calc(80px + 0.75rem);
+            }
+        }
         #panoSliderBar:hover { opacity: 1 !important; }
         #panoSliderBar span.material-symbols-outlined {
             color: rgba(255,255,255,0.75);
@@ -344,20 +361,79 @@ $extraStyles = '
             transform-origin: 0px 0px;
         }
 
+        @media (max-width: 1023px) {
+            #global-theme-selector { display: none !important; }
+            #thermometerMini       { display: none !important; }
+        }
+
+        /* Scrollbar invisible por defecto, aparece al desplazarse */
+        #mainContent {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+            transition: scrollbar-color 0.3s;
+        }
+        #mainContent:hover,
+        #mainContent.scrolling {
+            scrollbar-color: rgba(255,255,255,0.35) transparent;
+        }
+        #mainContent::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        #mainContent::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #mainContent::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 9999px;
+            transition: background 0.3s;
+        }
+        #mainContent:hover::-webkit-scrollbar-thumb,
+        #mainContent.scrolling::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.35);
+        }
     </style>
 ';
 require APPROOT . '/views/inc/header.php';
 ?>
 
 <!-- Mobile Header -->
-<header class="lg:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
-    <div class="flex items-center gap-3">
+<header class="lg:hidden flex justify-between items-center px-4 py-3 bg-white border-b border-outline-variant sticky top-0 z-50">
+    <div class="flex items-center gap-2">
         <span class="font-bold text-primary text-lg">Camino de Cueva</span>
+        <?php
+        if ($pctHeader >= 75)     { $hColor = '#22c55e'; $hIcon = 'sentiment_very_satisfied'; }
+        elseif ($pctHeader >= 50) { $hColor = '#eab308'; $hIcon = 'sentiment_neutral'; }
+        elseif ($pctHeader >= 25) { $hColor = '#f97316'; $hIcon = 'sentiment_dissatisfied'; }
+        else                      { $hColor = '#ef4444'; $hIcon = 'sentiment_very_dissatisfied'; }
+        ?>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black border" style="background:<?= $hColor ?>22; color:<?= $hColor ?>; border-color:<?= $hColor ?>44;">
+            <span class="material-symbols-outlined" style="font-size:14px;color:<?= $hColor ?>"><?= $hIcon ?></span>
+            <?= $pctHeader ?>%
+        </span>
     </div>
-    <button id="menuToggleBtn" class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-        <span class="material-symbols-outlined">menu</span>
-    </button>
+    <div class="flex items-center gap-1.5">
+        <button id="headerThemeToggle" class="p-1.5 text-yellow-500 hover:bg-surface-container-low rounded-full transition-colors active:scale-95" title="Tema">
+            <span class="material-symbols-outlined text-[1.3rem]">palette</span>
+        </button>
+    </div>
 </header>
+<script>
+(function() {
+    function bindHeaderTheme() {
+        var btn = document.getElementById('headerThemeToggle');
+        var mainBtn = document.getElementById('theme-main-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (mainBtn) mainBtn.click();
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindHeaderTheme);
+    } else { bindHeaderTheme(); }
+})();
+</script>
 
 <div class="flex">
     <!-- Sidebar reusable -->
@@ -532,6 +608,18 @@ require APPROOT . '/views/inc/header.php';
 
     if (panoSlider) {
         panoSlider.addEventListener('input', syncPano);
+
+        // Mostrar scrollbar brevemente al desplazarse
+        let scrollHideTimer;
+        if (mainContent) {
+            mainContent.addEventListener('scroll', () => {
+                mainContent.classList.add('scrolling');
+                clearTimeout(scrollHideTimer);
+                scrollHideTimer = setTimeout(() => {
+                    mainContent.classList.remove('scrolling');
+                }, 1000);
+            }, { passive: true });
+        }
 
         // Touch panning
         let touchStartX = null;
@@ -989,4 +1077,10 @@ require APPROOT . '/views/inc/header.php';
 $etapasTermometro = $etapasProg;
 require APPROOT . '/views/padres/termometro.php';
 ?>
+<style>
+    @media (max-width: 1023px) {
+        /* Override termometro.php's display: flex !important */
+        #thermometerMini { display: none !important; }
+    }
+</style>
 <?php require APPROOT . '/views/inc/footer.php'; ?>

@@ -46,9 +46,6 @@ require APPROOT . '/views/inc/header.php';
         <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-10 w-10 rounded-full" alt="Logo">
         <span class="font-bold text-primary">EduSaft</span>
     </div>
-    <button id="mobile-menu-toggle" class="p-2 text-on-surface-variant">
-        <span class="material-symbols-outlined">menu</span>
-    </button>
 </header>
 
 <div class="flex">

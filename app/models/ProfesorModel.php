@@ -143,17 +143,19 @@ class ProfesorModel {
     }
 
     /**
-     * Obtiene los mensajes de contacto enviados a este profesor.
+     * Obtiene los mensajes de contacto enviados a este profesor o enviados por este profesor.
      */
     public function getMensajesContacto($id_profesor) {
         $this->db->query(
             'SELECT m.*, f.nombre_principal_acudiente, f.apellidos_principal_acudiente, f.email_contacto
              FROM mensajes_contacto m
              INNER JOIN familias f ON m.id_familia_fk = f.id_familia
-             WHERE m.id_profesor_fk = :id_profesor AND m.destinatario_tipo = "profesor"
+             WHERE (m.id_profesor_fk = :id_profesor AND m.destinatario_tipo = "profesor")
+                OR (m.id_profesor_fk = :id_profesor2 AND m.remitente_tipo = "profesor")
              ORDER BY m.fecha_envio DESC'
         );
         $this->db->bind(':id_profesor', $id_profesor);
+        $this->db->bind(':id_profesor2', $id_profesor);
         return $this->db->resultSet();
     }
 
@@ -167,12 +169,42 @@ class ProfesorModel {
     }
 
     /**
-     * Guarda la respuesta a un mensaje de contacto.
+     * Guarda un mensaje nuevo enviado por el profesor a una familia.
      */
-    public function responderMensaje($id_mensaje, $respuesta) {
-        $this->db->query('UPDATE mensajes_contacto SET respuesta = :respuesta, fecha_respuesta = NOW(), leido_familia = 0, leido = 1 WHERE id_mensaje = :id_mensaje AND destinatario_tipo = "profesor"');
-        $this->db->bind(':respuesta', $respuesta);
+    public function enviarMensajeFamilia($id_profesor, $id_familia, $titulo, $asunto, $mensaje) {
+        $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, remitente_tipo, destinatario_tipo, id_profesor_fk, titulo, asunto, mensaje) VALUES (:id_familia, "profesor", "familia", :id_prof, :titulo, :asunto, :mensaje)');
+        $this->db->bind(':id_familia', $id_familia);
+        $this->db->bind(':id_prof', $id_profesor);
+        $this->db->bind(':titulo', $titulo);
+        $this->db->bind(':asunto', $asunto);
+        $this->db->bind(':mensaje', $mensaje);
+        return $this->db->execute();
+    }
+
+    /**
+     * Obtiene las familias de los estudiantes que están en los grupos del profesor.
+     */
+    public function getFamiliasByProfesor($id_profesor) {
+        $this->db->query(
+            'SELECT DISTINCT f.id_familia, f.nombre_principal_acudiente, f.apellidos_principal_acudiente
+             FROM familias f
+             INNER JOIN familia_estudiante fe ON f.id_familia = fe.id_familia_fk
+             INNER JOIN estudiantes e ON fe.id_estudiante_fk = e.id_estudiante
+             INNER JOIN profesor_grupo pg ON e.id_grupo_fk = pg.id_grupo_fk
+             WHERE pg.id_profesor_fk = :id_profesor
+             ORDER BY f.apellidos_principal_acudiente ASC'
+        );
+        $this->db->bind(':id_profesor', $id_profesor);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Elimina un mensaje (ya sea enviado o recibido por el profesor).
+     */
+    public function eliminarMensaje($id_mensaje, $id_profesor) {
+        $this->db->query('DELETE FROM mensajes_contacto WHERE id_mensaje = :id_mensaje AND id_profesor_fk = :id_profesor');
         $this->db->bind(':id_mensaje', $id_mensaje);
+        $this->db->bind(':id_profesor', $id_profesor);
         return $this->db->execute();
     }
 }

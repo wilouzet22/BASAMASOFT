@@ -240,15 +240,15 @@ class Padres extends Controller {
     }
 
     /**
-     * Bandeja de entrada para las familias (respuestas de profesores y directivas).
+     * Bandeja de entrada para las familias (mensajes recibidos y enviados).
      */
     public function mensajes() {
         $model = $this->model('FamiliaModel');
         $id_familia = $_SESSION['user_id'];
         
-        // Si se marca una respuesta como leída vía GET
+        // Si se marca un mensaje como leído vía GET
         if (isset($_GET['leer']) && is_numeric($_GET['leer'])) {
-            $model->marcarRespuestaLeida((int)$_GET['leer'], $id_familia);
+            $model->marcarMensajeLeido((int)$_GET['leer'], $id_familia);
             header('Location: ' . URLROOT . '/padres/mensajes');
             exit;
         }
@@ -258,7 +258,7 @@ class Padres extends Controller {
         $data = [
             'title'    => 'Mis Mensajes',
             'mensajes' => $mensajes,
-            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !empty($m->respuesta) && !$m->leido_familia)),
+            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !$m->leido && $m->destinatario_tipo === 'familia')),
             'profesores' => $model->getAllProfesores(),
             'directivas' => $model->getAllDirectivas(),
         ];

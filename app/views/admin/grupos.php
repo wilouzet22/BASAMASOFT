@@ -96,6 +96,7 @@
                 </div>
             </div>
         </main>
+        <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 
     <!-- Modal Crear Grupo -->
@@ -150,6 +151,5 @@
     </div>
     <?php endif; ?>
 
-<?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>
