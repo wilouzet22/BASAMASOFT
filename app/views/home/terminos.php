@@ -7,7 +7,14 @@
     <title><?php echo $data['title']; ?> - <?php echo SITENAME; ?></title>
     <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
     <link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Manrope:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700;900" onload="this.rel='stylesheet'" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="icon" href="<?php echo URLROOT; ?>/assets/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/tailwind.min.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" onerror="this.onerror=null;this.src='<?php echo URLROOT; ?>/assets/js/tailwindcss.js';"></script>
+    <script>
+        if (typeof tailwind === 'undefined') {
+            document.write('<script src="<?php echo URLROOT; ?>/assets/js/tailwindcss.js"><\/script>');
+        }
+    </script>
     <style type="text/tailwindcss">
       :root {
         --primary-color: #137fec;

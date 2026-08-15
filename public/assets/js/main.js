@@ -1,4 +1,3 @@
-```javascript
 // Scripts principales para EduSaft
 document.addEventListener('DOMContentLoaded', () => {
     console.log('EduSaft cargado');
@@ -66,4 +65,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-```

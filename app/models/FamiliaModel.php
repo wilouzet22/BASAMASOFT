@@ -247,5 +247,47 @@ class FamiliaModel {
         }
         return $racha;
     }
+
+    /**
+     * Guarda una opinión enviada por una familia.
+     */
+    public function guardarOpinion($id_familia, $mensaje) {
+        $this->db->query('INSERT INTO opiniones (id_familia_fk, mensaje) VALUES (:f, :m)');
+        $this->db->bind(':f', $id_familia);
+        $this->db->bind(':m', $mensaje);
+        return $this->db->execute();
+    }
+
+    /**
+     * Devuelve las opiniones de las familias que pertenecen a los grupos asignados a un profesor.
+     */
+    public function getOpinionesByProfesor($id_profesor, $soloNoLeidas = false) {
+        $sql = 'SELECT DISTINCT o.*, f.nombre_principal_acudiente, f.apellidos_principal_acudiente
+                FROM opiniones o
+                INNER JOIN familias f ON f.id_familia = o.id_familia_fk
+                INNER JOIN familia_estudiante fe ON fe.id_familia_fk = f.id_familia
+                INNER JOIN estudiantes e ON e.id_estudiante = fe.id_estudiante_fk
+                INNER JOIN profesor_grupo pg ON pg.id_grupo_fk = e.id_grupo_fk
+                WHERE pg.id_profesor_fk = :id_profesor';
+        
+        if ($soloNoLeidas) {
+            $sql .= ' AND o.leida = 0';
+        }
+        $sql .= ' ORDER BY o.fecha_creacion DESC';
+        
+        $this->db->query($sql);
+        $this->db->bind(':id_profesor', $id_profesor);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Marca una opinión como leída.
+     */
+    public function marcarOpinionLeida($id_opinion) {
+        $this->db->query('UPDATE opiniones SET leida = 1 WHERE id_opinion = :id');
+        $this->db->bind(':id', $id_opinion);
+        return $this->db->execute();
+    }
 }
+
 

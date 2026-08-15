@@ -124,4 +124,80 @@ class Padres extends Controller {
 
         $this->view('padres/puntos', $data);
     }
+
+    /**
+     * Vista de la cueva — destino final del camino.
+     */
+    public function cueva() {
+        $model     = $this->model('FamiliaModel');
+        $id_familia = $_SESSION['user_id'];
+
+        $estudiantes = $model->getEstudiantesByFamilia($id_familia);
+        $estadisticas = [];
+        foreach ($estudiantes as $est) {
+            $estadisticas[$est->id_estudiante] = $model->getEstadisticasEstudiante(
+                $est->id_estudiante,
+                $id_familia
+            );
+        }
+
+        $actividades_camino = $model->getAllActividadesPath($id_familia);
+
+        $data = [
+            'title'              => 'La Cueva',
+            'estudiantes'        => $estudiantes,
+            'estadisticas'       => $estadisticas,
+            'actividades_camino' => $actividades_camino
+        ];
+
+        $this->view('padres/cueva', $data);
+    }
+    /**
+     * Vista de la cima de la montaña.
+     */
+    public function pico_montana() {
+        $model     = $this->model('FamiliaModel');
+        $id_familia = $_SESSION['user_id'];
+
+        $estudiantes = $model->getEstudiantesByFamilia($id_familia);
+        $estadisticas = [];
+        foreach ($estudiantes as $est) {
+            $estadisticas[$est->id_estudiante] = $model->getEstadisticasEstudiante(
+                $est->id_estudiante,
+                $id_familia
+            );
+        }
+
+        $actividades_camino = $model->getAllActividadesPath($id_familia);
+
+        $data = [
+            'title'              => 'Pico de la Montaña',
+            'estudiantes'        => $estudiantes,
+            'estadisticas'       => $estadisticas,
+            'actividades_camino' => $actividades_camino
+        ];
+
+        $this->view('padres/pico_montana', $data);
+    }
+
+    /**
+     * Recibe y guarda la opinión enviada por una familia.
+     */
+    public function enviar_opinion() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URLROOT . '/padres/camino');
+            exit;
+        }
+        $mensaje = trim($_POST['mensaje'] ?? '');
+        if (empty($mensaje)) {
+            header('Location: ' . URLROOT . '/padres/camino#opinion');
+            exit;
+        }
+        $model = $this->model('FamiliaModel');
+        $model->guardarOpinion($_SESSION['user_id'], $mensaje);
+        // Redirige con flag de éxito para mostrar toast en la vista
+        header('Location: ' . URLROOT . '/padres/camino?opinion=ok');
+        exit;
+    }
 }
+

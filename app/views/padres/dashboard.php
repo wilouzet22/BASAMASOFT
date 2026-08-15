@@ -1,7 +1,7 @@
-<?php 
-$data = $data ?? []; 
+<?php
+$data = $data ?? [];
 $bodyClass = 'bg-surface-container-lowest text-on-background font-lexend min-h-screen';
-require APPROOT . '/views/inc/header.php'; 
+require APPROOT . '/views/inc/header.php';
 ?>
 
 <style>
@@ -9,197 +9,150 @@ require APPROOT . '/views/inc/header.php';
     #asistenciaSubmenu {
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+        transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
         opacity: 0;
     }
+
     #asistenciaSubmenu.open {
         max-height: 320px;
         opacity: 1;
     }
+
     /* Animacion escalera helicoptero para items del submenu */
     @keyframes submenu-drop {
-        0%   { opacity: 0; transform: translateY(-18px); }
-        60%  { opacity: 1; transform: translateY(4px); }
-        100% { opacity: 1; transform: translateY(0); }
+        0% {
+            opacity: 0;
+            transform: translateY(-18px);
+        }
+
+        60% {
+            opacity: 1;
+            transform: translateY(4px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     #asistenciaSubmenu.open .submenu-item {
-        animation: submenu-drop 0.32s cubic-bezier(0.34,1.56,0.64,1) both;
+        animation: submenu-drop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
 </style>
-    <!-- Mobile Header -->
-    <header class="md:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
-        <div class="flex items-center gap-3">
-            <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-10 w-10 rounded-full" alt="Logo">
-            <span class="font-bold text-primary">EduSaft</span>
-        </div>
-        <button id="mobile-menu-toggle" class="p-2 text-on-surface-variant">
-            <span class="material-symbols-outlined">menu</span>
-        </button>
-    </header>
+<!-- Mobile Header -->
+<header class="md:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-10 w-10 rounded-full" alt="Logo">
+        <span class="font-bold text-primary">EduSaft</span>
+    </div>
+    <button id="mobile-menu-toggle" class="p-2 text-on-surface-variant">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+</header>
 
-    <div class="flex">
-        <!-- Premium Sidebar -->
-        <nav id="userSidebar" class="flex flex-col fixed left-0 top-0 h-full w-72 bg-white border-r border-outline-variant z-40 transition-transform duration-300 -translate-x-full lg:translate-x-0">
-            <div class="p-8 sidebar-header transition-all duration-300">
-                <div class="flex flex-col items-center text-center gap-3 mb-2 sidebar-logo-container transition-all duration-300">
-                    <div class="p-3 bg-primary/10 rounded-2xl flex-shrink-0">
-                        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-16 w-16 object-contain" alt="Logo">
-                    </div>
-                    <span class="text-2xl font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
+<div class="flex">
+    <!-- Sidebar reusable -->
+    <?php require APPROOT . '/views/padres/sidebar.php'; ?>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 md:ml-72 min-h-screen bg-surface-container-lowest flex flex-col">
+        <!-- Top Bar -->
+        <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
+            <div class="flex items-center gap-4">
+                <button id="desktop-menu-toggle" class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95">menu</button>
+                <div>
+                    <h2 class="text-xl font-bold text-on-surface">Panel de Control</h2>
+                    <p class="text-sm text-on-surface-variant">
+                        Bienvenido, <span class="text-primary font-bold"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
+                    </p>
                 </div>
-                <p class="text-xs text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
             </div>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-on-surface">Acudiente</p>
+                        <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Portal Familiar</p>
+                    </div>
+                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                    </a>
+                </div>
+            </div>
+        </header>
 
-            <div class="flex-grow px-4 space-y-2">
-                <a href="<?php echo URLROOT; ?>/padres/dashboard"
-                   class="flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all group">
-                    <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                    <span class="font-medium">Panel Principal</span>
-                </a>
-                
-                <!-- Historial Asistencias (Dropdown Menu) -->
-                <div class="space-y-1">
-                    <button id="asistenciaDropdownBtn" 
-                            class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group focus:outline-none">
-                        <div class="flex items-center gap-4">
-                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">history</span>
-                            <span class="font-medium">Historial Asistencias</span>
+        <div class="p-6 md:p-10 space-y-8 max-w-7xl mx-auto w-full">
+
+            <!-- Hero Card con info de próximas actividades -->
+            <?php
+            $total_asistencias_familia = 0;
+            $total_presentes = 0;
+            foreach ($data['estadisticas'] as $est_stat) {
+                $total_asistencias_familia += $est_stat->total;
+                $total_presentes += $est_stat->presentes;
+            }
+            $porcentaje_global = ($total_asistencias_familia > 0) ? round(($total_presentes / $total_asistencias_familia) * 100) : 0;
+            $barra_width = min($porcentaje_global, 100);
+            ?>
+            <div class="relative bg-primary rounded-[2.5rem] p-8 md:p-12 text-on-primary overflow-hidden shadow-2xl shadow-primary/30 group">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-secondary/20 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
+                    <div class="flex-1 text-center md:text-left">
+                        <span class="inline-block px-4 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                            Portal Familiar — EduSaft
+                        </span>
+                        <h3 class="text-3xl md:text-4xl font-black mb-4 tracking-tight">
+                            Tu historial de asistencias
+                        </h3>
+                        <p class="text-on-primary/80 mb-8 max-w-md">
+                            Consulta la asistencia de tus hijos y las próximas actividades de su institución.
+                        </p>
+                        <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                            <a href="<?php echo URLROOT; ?>/padres/camino"
+                                class="bg-white text-primary px-8 py-3.5 rounded-2xl font-bold text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                                Ver Historial Completo
+                                <span class="material-symbols-outlined">history</span>
+                            </a>
                         </div>
-                        <span id="asistenciaDropdownChevron" class="material-symbols-outlined text-sm transition-transform duration-300">expand_more</span>
-                    </button>
-                    
-                    <div id="asistenciaSubmenu" class="hidden space-y-1 overflow-hidden transition-all duration-300 max-h-0">
-                        <a href="<?php echo URLROOT; ?>/padres/camino"
-                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:0ms">
-                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">mountain_flag</span>
-                            <span class="font-medium">Camino de Montaña</span>
-                        </a>
-                        <a href="<?php echo URLROOT; ?>/padres/puntos"
-                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:80ms">
-                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">workspace_premium</span>
-                            <span class="font-medium">Mis Puntos</span>
-                        </a>
-                        <a href="<?php echo URLROOT; ?>/padres/camino#contactos"
-                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:160ms">
-                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">group</span>
-                            <span class="font-medium">Contáctanos</span>
-                        </a>
-                        <a href="<?php echo URLROOT; ?>/padres/camino#opinion"
-                           class="submenu-item flex items-center gap-4 px-4 py-3.5 rounded-2xl text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all group" style="animation-delay:240ms">
-                            <span class="material-symbols-outlined transition-transform group-hover:scale-110">chat_bubble</span>
-                            <span class="font-medium">Opinión</span>
-                        </a>
                     </div>
-                </div>
-            </div>
-
-            <div class="p-4 mt-auto space-y-2">
-                <a href="<?php echo URLROOT; ?>/auth/logout"
-                   class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-error hover:bg-error/10 transition-all">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span class="font-medium">Cerrar Sesión</span>
-                </a>
-            </div>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 md:ml-72 min-h-screen bg-surface-container-lowest flex flex-col">
-            <!-- Top Bar -->
-            <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
-                <div class="flex items-center gap-4">
-                    <button id="desktop-menu-toggle" class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95">menu</button>
-                    <div>
-                        <h2 class="text-xl font-bold text-on-surface">Panel de Control</h2>
-                        <p class="text-sm text-on-surface-variant">
-                            Bienvenido, <span class="text-primary font-bold"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
+                    <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                        <div class="flex justify-between items-end mb-4">
+                            <span class="text-sm font-bold">Asistencia Global</span>
+                            <span class="text-2xl font-black"><?php echo $porcentaje_global; ?>%</span>
+                        </div>
+                        <div class="w-full bg-white/20 h-4 rounded-full overflow-hidden">
+                            <div class="bg-secondary h-full transition-all duration-1000"
+                                style="width: <?php echo $barra_width; ?>%"></div>
+                        </div>
+                        <p class="text-[10px] mt-4 opacity-70 text-center italic">
+                            "<?php echo $total_presentes; ?> de <?php echo $total_asistencias_familia; ?> asistencias marcadas como presente"
                         </p>
                     </div>
                 </div>
-                <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-on-surface">Acudiente</p>
-                            <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Portal Familiar</p>
-                        </div>
-                        <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
-                            <span class="material-symbols-outlined text-primary">person</span>
-                        </a>
-                    </div>
-                </div>
-            </header>
+            </div>
 
-            <div class="p-6 md:p-10 space-y-8 max-w-7xl mx-auto w-full">
-
-                <!-- Hero Card con info de próximas actividades -->
-                <?php
-                    $total_asistencias_familia = 0;
-                    $total_presentes = 0;
-                    foreach ($data['estadisticas'] as $est_stat) {
-                        $total_asistencias_familia += $est_stat->total;
-                        $total_presentes += $est_stat->presentes;
-                    }
-                    $porcentaje_global = ($total_asistencias_familia > 0) ? round(($total_presentes / $total_asistencias_familia) * 100) : 0;
-                    $barra_width = min($porcentaje_global, 100);
-                ?>
-                <div class="relative bg-primary rounded-[2.5rem] p-8 md:p-12 text-on-primary overflow-hidden shadow-2xl shadow-primary/30 group">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-secondary/20 rounded-full -ml-10 -mb-10 blur-2xl"></div>
-
-                    <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
-                        <div class="flex-1 text-center md:text-left">
-                            <span class="inline-block px-4 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
-                                Portal Familiar — EduSaft
-                            </span>
-                            <h3 class="text-3xl md:text-4xl font-black mb-4 tracking-tight">
-                                Tu historial de asistencias
-                            </h3>
-                            <p class="text-on-primary/80 mb-8 max-w-md">
-                                Consulta la asistencia de tus hijos y las próximas actividades de su institución.
-                            </p>
-                            <div class="flex flex-wrap gap-4 justify-center md:justify-start">
-                                <a href="<?php echo URLROOT; ?>/padres/camino"
-                                   class="bg-white text-primary px-8 py-3.5 rounded-2xl font-bold text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2">
-                                    Ver Historial Completo
-                                    <span class="material-symbols-outlined">history</span>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
-                            <div class="flex justify-between items-end mb-4">
-                                <span class="text-sm font-bold">Asistencia Global</span>
-                                <span class="text-2xl font-black"><?php echo $porcentaje_global; ?>%</span>
-                            </div>
-                            <div class="w-full bg-white/20 h-4 rounded-full overflow-hidden">
-                                <div class="bg-secondary h-full transition-all duration-1000"
-                                     style="width: <?php echo $barra_width; ?>%"></div>
-                            </div>
-                            <p class="text-[10px] mt-4 opacity-70 text-center italic">
-                                "<?php echo $total_presentes; ?> de <?php echo $total_asistencias_familia; ?> asistencias marcadas como presente"
-                            </p>
-                        </div>
-                    </div>
+            <!-- Mis Hijos -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xl font-bold text-on-surface">Mis Hijos</h4>
                 </div>
 
-                <!-- Mis Hijos -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h4 class="text-xl font-bold text-on-surface">Mis Hijos</h4>
+                <?php if (empty($data['estudiantes'])): ?>
+                    <div class="bg-white p-8 rounded-3xl border border-outline-variant text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl block mb-2">person_off</span>
+                        <p>No hay estudiantes vinculados a su cuenta.</p>
                     </div>
-
-                    <?php if (empty($data['estudiantes'])): ?>
-                        <div class="bg-white p-8 rounded-3xl border border-outline-variant text-center text-on-surface-variant">
-                            <span class="material-symbols-outlined text-4xl block mb-2">person_off</span>
-                            <p>No hay estudiantes vinculados a su cuenta.</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <?php foreach ($data['estudiantes'] as $est):
-                                $stat = $data['estadisticas'][$est->id_estudiante] ?? (object)['porcentaje'=>0,'presentes'=>0,'ausentes'=>0,'total'=>0];
-                                $colors = ['primary','secondary','tertiary'];
-                                static $colorIdx = 0;
-                                $color = $colors[$colorIdx % count($colors)];
-                                $colorIdx++;
-                            ?>
+                <?php else: ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <?php foreach ($data['estudiantes'] as $est):
+                            $stat = $data['estadisticas'][$est->id_estudiante] ?? (object)['porcentaje' => 0, 'presentes' => 0, 'ausentes' => 0, 'total' => 0];
+                            $colors = ['primary', 'secondary', 'tertiary'];
+                            static $colorIdx = 0;
+                            $color = $colors[$colorIdx % count($colors)];
+                            $colorIdx++;
+                        ?>
                             <div class="bg-white p-6 rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-all group">
                                 <div class="flex items-center gap-4 mb-6">
                                     <div class="w-16 h-16 rounded-2xl bg-<?php echo $color; ?>/10 flex items-center justify-center text-<?php echo $color; ?>">
@@ -224,7 +177,7 @@ require APPROOT . '/views/inc/header.php';
                                     </div>
                                     <div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
                                         <div class="bg-<?php echo $color; ?> h-full transition-all duration-700"
-                                             style="width: <?php echo $stat->porcentaje; ?>%"></div>
+                                            style="width: <?php echo $stat->porcentaje; ?>%"></div>
                                     </div>
                                     <div class="flex gap-4 text-xs text-on-surface-variant pt-1">
                                         <span class="text-green-700 font-medium">✓ <?php echo $stat->presentes; ?> presentes</span>
@@ -233,13 +186,13 @@ require APPROOT . '/views/inc/header.php';
                                     </div>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
 
-                <!-- Próximas Actividades -->
-                <?php if (!empty($data['proximas_actividades'])): ?>
+            <!-- Próximas Actividades -->
+            <?php if (!empty($data['proximas_actividades'])): ?>
                 <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm">
                     <h4 class="text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">event_upcoming</span>
@@ -247,28 +200,28 @@ require APPROOT . '/views/inc/header.php';
                     </h4>
                     <div class="space-y-3">
                         <?php foreach ($data['proximas_actividades'] as $act): ?>
-                        <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors">
-                            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-                                <span class="material-symbols-outlined">event</span>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors">
+                                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+                                    <span class="material-symbols-outlined">event</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-bold text-on-surface text-sm"><?php echo htmlspecialchars($act->nombre_actividad); ?></p>
+                                    <p class="text-xs text-on-surface-variant">
+                                        <?php echo date('d/m/Y H:i', strtotime($act->fecha_hora_inicio)); ?> —
+                                        <?php echo htmlspecialchars($act->nombre_tipo); ?> · <?php echo htmlspecialchars($act->nombre_sede); ?>
+                                    </p>
+                                </div>
+                                <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                                    <?php echo htmlspecialchars($act->grupos); ?>
+                                </span>
                             </div>
-                            <div class="flex-1">
-                                <p class="font-bold text-on-surface text-sm"><?php echo htmlspecialchars($act->nombre_actividad); ?></p>
-                                <p class="text-xs text-on-surface-variant">
-                                    <?php echo date('d/m/Y H:i', strtotime($act->fecha_hora_inicio)); ?> —
-                                    <?php echo htmlspecialchars($act->nombre_tipo); ?> · <?php echo htmlspecialchars($act->nombre_sede); ?>
-                                </p>
-                            </div>
-                            <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                                <?php echo htmlspecialchars($act->grupos); ?>
-                            </span>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <?php endif; ?>
+            <?php endif; ?>
 
-                <!-- Últimas asistencias -->
-                <?php if (!empty($data['asistencias_recientes'])): ?>
+            <!-- Últimas asistencias -->
+            <?php if (!empty($data['asistencias_recientes'])): ?>
                 <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm">
                     <h4 class="text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
                         <span class="material-symbols-outlined text-secondary">history</span>
@@ -276,22 +229,22 @@ require APPROOT . '/views/inc/header.php';
                     </h4>
                     <div class="space-y-2">
                         <?php foreach ($data['asistencias_recientes'] as $asi): ?>
-                        <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 <?php echo $asi->presente ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
-                                <span class="material-symbols-outlined text-sm"><?php echo $asi->presente ? 'check' : 'close'; ?></span>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-surface-container transition-colors">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 <?php echo $asi->presente ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+                                    <span class="material-symbols-outlined text-sm"><?php echo $asi->presente ? 'check' : 'close'; ?></span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium text-on-surface text-sm">
+                                        <?php echo htmlspecialchars($asi->estudiante_nombre); ?>
+                                    </p>
+                                    <p class="text-xs text-on-surface-variant">
+                                        <?php echo htmlspecialchars($asi->nombre_actividad); ?> · <?php echo date('d/m/Y', strtotime($asi->fecha_registro)); ?>
+                                    </p>
+                                </div>
+                                <span class="text-xs font-bold px-2 py-0.5 rounded-full <?php echo $asi->presente ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                    <?php echo $asi->presente ? 'Presente' : 'Ausente'; ?>
+                                </span>
                             </div>
-                            <div class="flex-1">
-                                <p class="font-medium text-on-surface text-sm">
-                                    <?php echo htmlspecialchars($asi->estudiante_nombre); ?>
-                                </p>
-                                <p class="text-xs text-on-surface-variant">
-                                    <?php echo htmlspecialchars($asi->nombre_actividad); ?> · <?php echo date('d/m/Y', strtotime($asi->fecha_registro)); ?>
-                                </p>
-                            </div>
-                            <span class="text-xs font-bold px-2 py-0.5 rounded-full <?php echo $asi->presente ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
-                                <?php echo $asi->presente ? 'Presente' : 'Ausente'; ?>
-                            </span>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                     <div class="mt-4">
@@ -300,68 +253,37 @@ require APPROOT . '/views/inc/header.php';
                         </a>
                     </div>
                 </div>
-                <?php endif; ?>
+            <?php endif; ?>
 
-            </div>
-            <?php require APPROOT . '/views/inc/footer.php'; ?>
-        </main>
-    </div>
+        </div>
+        <?php require APPROOT . '/views/inc/footer.php'; ?>
+    </main>
+</div>
 
-    <style>
-        .force-close { transform: translateX(-100%) !important; }
-        .force-open  { transform: translateX(0%) !important;    }
-        /* Dropdown submenu animation */
-        #asistenciaSubmenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
-                        opacity   0.25s ease;
-            opacity: 0;
-        }
-        #asistenciaSubmenu.open {
-            max-height: 320px;
-            opacity: 1;
-        }
-    </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            /* ── Sidebar toggle (mobile / desktop) ── */
-            const sidebar    = document.getElementById('userSidebar');
-            const mobileBtn  = document.getElementById('mobile-menu-toggle');
-            const desktopBtn = document.getElementById('desktop-menu-toggle');
+<style>
+    .force-close {
+        transform: translateX(-100%) !important;
+    }
 
-            mobileBtn  && mobileBtn.addEventListener('click',  () => sidebar.classList.toggle('force-open'));
-            desktopBtn && desktopBtn.addEventListener('click', () => sidebar.classList.toggle('force-close'));
+    .force-open {
+        transform: translateX(0%) !important;
+    }
 
-            /* ── Historial Asistencias dropdown ── */
-            const dropBtn  = document.getElementById('asistenciaDropdownBtn');
-            const submenu  = document.getElementById('asistenciaSubmenu');
-            const chevron  = document.getElementById('asistenciaDropdownChevron');
+    /* Dropdown submenu animation */
+    #asistenciaSubmenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.25s ease;
+        opacity: 0;
+    }
 
-            // Auto-open if current page is a child route
-            const path = window.location.pathname;
-            const isChild = path.includes('/padres/camino') || path.includes('/padres/puntos');
-            if (isChild) { openDropdown(); }
+    #asistenciaSubmenu.open {
+        max-height: 320px;
+        opacity: 1;
+    }
+</style>
 
-            dropBtn && dropBtn.addEventListener('click', () => {
-                submenu.classList.contains('open') ? closeDropdown() : openDropdown();
-            });
-
-            function openDropdown() {
-                submenu.classList.remove('hidden');
-                // force reflow so transition fires
-                submenu.offsetHeight;
-                submenu.classList.add('open');
-                chevron.style.transform = 'rotate(180deg)';
-                dropBtn.classList.add('text-primary', 'bg-primary/5');
-            }
-            function closeDropdown() {
-                submenu.classList.remove('open');
-                chevron.style.transform = 'rotate(0deg)';
-                dropBtn.classList.remove('text-primary', 'bg-primary/5');
-                submenu.addEventListener('transitionend', () => submenu.classList.add('hidden'), { once: true });
-            }
-        });
-    </script>
 </body>
+
 </html>

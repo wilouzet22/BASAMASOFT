@@ -1,236 +1,113 @@
-<?php include '../assets/includes/header.php'; ?>
+<?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
 
+<body class="bg-background text-on-background font-body-md graph-paper-bg min-h-screen flex flex-col md:flex-row">
+    <?php require APPROOT . '/views/docentes/sidebar.php'; ?>
 
-<div class="flex min-h-screen">
-    <?php include 'sidebar.php'; ?>
-      <main class="flex-1 p-8">
-        <header class="mb-8">
-          <h2 class="text-3xl font-bold text-[var(--text-primary)]">
-            Gestión de Notificaciones
-          </h2>
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen" style="margin-left:16rem">
+        <!-- TopAppBar -->
+        <header class="flex justify-between items-center h-16 px-6 w-full bg-white top-0 z-50 border-b border-outline-variant shadow-sm">
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleDocentesCollapse()"
+                        class="hidden md:flex w-9 h-9 items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="text-xl font-extrabold tracking-tight text-primary md:hidden">Edusaft</div>
+                <div class="hidden md:block text-on-surface-variant text-sm">Panel Docente</div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-on-surface-variant hidden md:inline"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
+                <a href="<?php echo URLROOT; ?>/auth/logout"
+                   class="px-4 py-1.5 rounded-full text-sm font-semibold border border-outline text-on-surface-variant hover:bg-surface-container transition-colors">
+                   Salir
+                </a>
+            </div>
         </header>
-        <div class="grid grid-cols-1 gap-8">
-          <section class="lg:col-span-3">
-            <div class="bg-white p-6 rounded-lg shadow-sm">
-              <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
-                Crear Nueva Notificación
-              </h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2">
-                  <label
-                    class="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-                    for="notification-message"
-                    >Mensaje</label
-                  >
-                  <textarea
-                    class="form-textarea w-full rounded-md border-[var(--border-color)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition duration-150 ease-in-out text-sm"
-                    id="notification-message"
-                    placeholder="Escriba su notificación aquí para los padres de familia..."
-                    rows="4"
-                  ></textarea>
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6 md:p-8">
+            <div class="max-w-3xl mx-auto">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-3xl">notifications</span>
+                            Notificaciones
+                        </h1>
+                        <p class="text-sm text-on-surface-variant mt-1">Opiniones y comentarios enviados por las familias.</p>
+                    </div>
+                    <?php if ($data['no_leidas'] > 0): ?>
+                    <span class="bg-error text-white text-xs font-bold px-3 py-1.5 rounded-full shadow">
+                        <?php echo $data['no_leidas']; ?> sin leer
+                    </span>
+                    <?php endif; ?>
                 </div>
-                <div>
-                  <label
-                    class="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-                    for="notification-type"
-                    >Tipo de Notificación</label
-                  >
-                  <select
-                    class="form-select w-full rounded-md border-[var(--border-color)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition duration-150 ease-in-out text-sm"
-                    id="notification-type"
-                  >
-                    <option>Alerta en el sistema</option>
-                    <option>Pop-up</option>
-                    <option>Email</option>
-                  </select>
+
+                <!-- Lista de opiniones -->
+                <?php if (empty($data['opiniones'])): ?>
+                <div class="flex flex-col items-center justify-center py-24 text-on-surface-variant gap-4">
+                    <span class="material-symbols-outlined text-6xl opacity-30">mark_chat_read</span>
+                    <p class="text-lg font-semibold">No hay notificaciones aún.</p>
+                    <p class="text-sm">Cuando una familia envíe una opinión, aparecerá aquí.</p>
                 </div>
-                <div>
-                  <label
-                    class="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-                    for="notification-audience"
-                    >Audiencia</label
-                  >
-                  <select
-                    class="form-select w-full rounded-md border-[var(--border-color)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition duration-150 ease-in-out text-sm"
-                    id="notification-audience"
-                  >
-                    <option>Todos los padres</option>
-                    <option>Padres de 1er Grado</option>
-                    <option>Padres de 2do Grado</option>
-                    <option>Padres del Taller de Arte</option>
-                  </select>
+                <?php else: ?>
+                <div class="flex flex-col gap-4">
+                    <?php foreach ($data['opiniones'] as $op): ?>
+                    <?php $leida = (bool)$op->leida; ?>
+                    <div class="relative bg-surface rounded-2xl shadow-sm border <?php echo $leida ? 'border-outline-variant' : 'border-primary/40 shadow-primary/10 shadow-md'; ?> p-5 flex gap-4 items-start transition-all">
+                        <!-- Indicador no leído -->
+                        <?php if (!$leida): ?>
+                        <span class="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+                        <?php endif; ?>
+
+                        <!-- Avatar -->
+                        <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0 <?php echo $leida ? 'bg-surface-container text-on-surface-variant' : 'bg-primary-container text-on-primary-container'; ?>">
+                            <span class="material-symbols-outlined text-2xl">person</span>
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="font-bold text-on-surface text-sm">
+                                    <?php echo htmlspecialchars($op->nombre_principal_acudiente . ' ' . $op->apellidos_principal_acudiente); ?>
+                                </span>
+                                <span class="text-xs text-on-surface-variant">·</span>
+                                <span class="text-xs text-on-surface-variant">
+                                    <?php
+                                        $fecha = new DateTime($op->fecha_creacion);
+                                        echo $fecha->format('d M Y, H:i');
+                                    ?>
+                                </span>
+                                <?php if (!$leida): ?>
+                                <span class="text-xs bg-primary text-white rounded-full px-2 py-0.5 font-semibold">Nueva</span>
+                                <?php endif; ?>
+                            </div>
+                            <p class="text-sm text-on-surface leading-relaxed whitespace-pre-line">
+                                <?php echo nl2br(htmlspecialchars($op->mensaje)); ?>
+                            </p>
+                        </div>
+
+                        <!-- Acción marcar leída -->
+                        <?php if (!$leida): ?>
+                        <a href="<?php echo URLROOT; ?>/docentes/notificaciones?leer=<?php echo $op->id_opinion; ?>"
+                           title="Marcar como leída"
+                           class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-primary">
+                            <span class="material-symbols-outlined text-xl">done_all</span>
+                        </a>
+                        <?php else: ?>
+                        <span class="shrink-0 w-9 h-9 flex items-center justify-center text-on-surface-variant opacity-40">
+                            <span class="material-symbols-outlined text-xl">done_all</span>
+                        </span>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <div>
-                  <label
-                    class="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-                    for="schedule-date"
-                    >Programar Envío (Opcional)</label
-                  >
-                  <input
-                    class="form-input w-full rounded-md border-[var(--border-color)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition duration-150 ease-in-out text-sm"
-                    id="schedule-date"
-                    type="datetime-local"
-                  />
-                </div>
-                <div class="flex items-end">
-                  <button
-                    class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--primary-color)] text-white text-sm font-semibold rounded-md shadow-sm hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)] transition-colors"
-                  >
-                    <span class="material-symbols-outlined">send</span>
-                    <span>Enviar o Programar</span>
-                  </button>
-                </div>
-              </div>
+                <?php endif; ?>
+
             </div>
-          </section>
-          <section class="lg:col-span-3">
-            <div class="bg-white p-6 rounded-lg shadow-sm">
-              <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
-                Historial de Notificaciones
-              </h3>
-              <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th
-                        class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider"
-                        scope="col"
-                      >
-                        Mensaje
-                      </th>
-                      <th
-                        class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider"
-                        scope="col"
-                      >
-                        Audiencia
-                      </th>
-                      <th
-                        class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider"
-                        scope="col"
-                      >
-                        Fecha de Envío
-                      </th>
-                      <th
-                        class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider"
-                        scope="col"
-                      >
-                        Estado
-                      </th>
-                      <th class="relative px-6 py-3" scope="col">
-                        <span class="sr-only">Acciones</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)] max-w-sm truncate"
-                      >
-                        Recordatorio: Mañana es el taller de lectura. ¡No
-                        falten!
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]"
-                      >
-                        Todos los padres
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]"
-                      >
-                        15 de Mayo, 2024 - 09:00 AM
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
-                          >Enviado</span
-                        >
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                      >
-                        <a
-                          class="text-[var(--primary-color)] hover:text-opacity-80"
-                          href="#"
-                          >Ver</a
-                        >
-                      </td>
-                    </tr>
-                    <tr>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)] max-w-sm truncate"
-                      >
-                        Nuevo video disponible en la plataforma sobre
-                        matemáticas divertidas.
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]"
-                      >
-                        Padres de 2do Grado
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]"
-                      >
-                        12 de Mayo, 2024 - 03:30 PM
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
-                          >Enviado</span
-                        >
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                      >
-                        <a
-                          class="text-[var(--primary-color)] hover:text-opacity-80"
-                          href="#"
-                          >Ver</a
-                        >
-                      </td>
-                    </tr>
-                    <tr>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)] max-w-sm truncate"
-                      >
-                        Confirmación de asistencia para el evento de fin de año.
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]"
-                      >
-                        Todos los padres
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]"
-                      >
-                        20 de Mayo, 2024 - 10:00 AM
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
-                          >Programado</span
-                        >
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                      >
-                        <a
-                          class="text-[var(--primary-color)] hover:text-opacity-80 mr-2"
-                          href="#"
-                          >Editar</a
-                        >
-                        <a class="text-red-600 hover:text-red-800" href="#"
-                          >Cancelar</a
-                        >
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
+        </main>
     </div>
-<?php include '../assets/includes/footer.php'; ?>
+
+<?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>

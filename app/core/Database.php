@@ -7,16 +7,21 @@
  * Return rows and results
  */
 class Database {
-    private $host = DB_HOST;
-    private $user = DB_USER;
-    private $pass = DB_PASS;
-    private $dbname = DB_NAME;
+    private $host = 'localhost';
+    private $user = 'root';
+    private $pass = '';
+    private $dbname = 'prueba1_asistencia';
 
     private $dbh;
     private $stmt;
     private $error;
 
     public function __construct() {
+        if (defined('DB_HOST')) $this->host = DB_HOST;
+        if (defined('DB_USER')) $this->user = DB_USER;
+        if (defined('DB_PASS')) $this->pass = DB_PASS;
+        if (defined('DB_NAME')) $this->dbname = DB_NAME;
+
         // Set DSN
         $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname;
         $options = array(
@@ -79,5 +84,10 @@ class Database {
     // Get row count
     public function rowCount() {
         return $this->stmt->rowCount();
+    }
+
+    // Get the last inserted ID
+    public function lastInsertId() {
+        return $this->dbh->lastInsertId();
     }
 }

@@ -20,73 +20,89 @@
         })();
     </script>
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="icon" href="<?php echo URLROOT; ?>/assets/img/logo.png" type="image/png">
+    <link rel="shortcut icon" href="<?php echo URLROOT; ?>/assets/img/logo.png" type="image/x-icon">
+
+    <!-- Tailwind Base CSS (Carga inmediata sin depender de CDN externa) -->
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/tailwind.min.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/style.css">
+
+    <!-- Tailwind JS Script con Fallback Local si cdn.tailwindcss.com no responde -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" onerror="this.onerror=null;this.src='<?php echo URLROOT; ?>/assets/js/tailwindcss.js';"></script>
+    <script>
+        if (typeof tailwind === 'undefined') {
+            document.write('<script src="<?php echo URLROOT; ?>/assets/js/tailwindcss.js"><\/script>');
+        }
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-tertiary-fixed": "#002113",
-                        "inverse-surface": "#213145",
-                        "on-error": "#ffffff",
-                        "surface-container-highest": "#d3e4fe",
-                        "on-tertiary-container": "#3fd298",
-                        "on-primary-container": "#a8b8ff",
-                        "inverse-on-surface": "#eaf1ff",
-                        "primary": "#00288e",
-                        "on-secondary": "#ffffff",
-                        "surface-container-high": "#dce9ff",
-                        "on-surface-variant": "#444653",
-                        "surface": "#f8f9ff",
-                        "on-background": "#0b1c30",
-                        "primary-fixed": "#dde1ff",
-                        "inverse-primary": "#b8c4ff",
-                        "outline-variant": "#c4c5d5",
-                        "surface-variant": "#d3e4fe",
-                        "on-primary": "#ffffff",
-                        "on-tertiary": "#ffffff",
-                        "surface-dim": "#cbdbf5",
-                        "surface-container": "#e5eeff",
-                        "primary-container": "#1e40af",
-                        "error": "#ba1a1a",
-                        "secondary": "#a93349",
-                        "surface-tint": "#3755c3",
-                        "secondary-fixed-dim": "#ffb2b9",
-                        "primary-fixed-dim": "#b8c4ff",
-                        "tertiary-fixed-dim": "#4edea3",
-                        "secondary-container": "#fe7488",
-                        "surface-container-lowest": "#ffffff",
-                        "on-surface": "#0b1c30",
-                        "on-secondary-fixed-variant": "#891933",
-                        "on-tertiary-fixed-variant": "#005236",
-                        "on-primary-fixed": "#001453",
-                        "on-secondary-container": "#730425",
-                        "outline": "#757684",
-                        "on-secondary-fixed": "#400010",
-                        "surface-container-low": "#eff4ff",
-                        "tertiary-container": "#00563a",
-                        "tertiary": "#003d27",
-                        "on-error-container": "#93000a",
-                        "on-primary-fixed-variant": "#173bab",
-                        "secondary-fixed": "#ffdadc",
-                        "tertiary-fixed": "#6ffbbe",
-                        "surface-bright": "#f8f9ff",
-                        "error-container": "#ffdad6",
-                        "background": "#f8f9ff"
-                    },
-                    "borderRadius": {
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "fontFamily": {
-                        "lexend": ["Lexend"],
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        "colors": {
+                            "on-tertiary-fixed": "#002113",
+                            "inverse-surface": "#213145",
+                            "on-error": "#ffffff",
+                            "surface-container-highest": "#d3e4fe",
+                            "on-tertiary-container": "#3fd298",
+                            "on-primary-container": "#a8b8ff",
+                            "inverse-on-surface": "#eaf1ff",
+                            "primary": "#00288e",
+                            "on-secondary": "#ffffff",
+                            "surface-container-high": "#dce9ff",
+                            "on-surface-variant": "#444653",
+                            "surface": "#f8f9ff",
+                            "on-background": "#0b1c30",
+                            "primary-fixed": "#dde1ff",
+                            "inverse-primary": "#b8c4ff",
+                            "outline-variant": "#c4c5d5",
+                            "surface-variant": "#d3e4fe",
+                            "on-primary": "#ffffff",
+                            "on-tertiary": "#ffffff",
+                            "surface-dim": "#cbdbf5",
+                            "surface-container": "#e5eeff",
+                            "primary-container": "#1e40af",
+                            "error": "#ba1a1a",
+                            "secondary": "#a93349",
+                            "surface-tint": "#3755c3",
+                            "secondary-fixed-dim": "#ffb2b9",
+                            "primary-fixed-dim": "#b8c4ff",
+                            "tertiary-fixed-dim": "#4edea3",
+                            "secondary-container": "#fe7488",
+                            "surface-container-lowest": "#ffffff",
+                            "on-surface": "#0b1c30",
+                            "on-secondary-fixed-variant": "#891933",
+                            "on-tertiary-fixed-variant": "#005236",
+                            "on-primary-fixed": "#001453",
+                            "on-secondary-container": "#730425",
+                            "outline": "#757684",
+                            "on-secondary-fixed": "#400010",
+                            "surface-container-low": "#eff4ff",
+                            "tertiary-container": "#00563a",
+                            "tertiary": "#003d27",
+                            "on-error-container": "#93000a",
+                            "on-primary-fixed-variant": "#173bab",
+                            "secondary-fixed": "#ffdadc",
+                            "tertiary-fixed": "#6ffbbe",
+                            "surface-bright": "#f8f9ff",
+                            "error-container": "#ffdad6",
+                            "background": "#f8f9ff"
+                        },
+                        "borderRadius": {
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                        },
+                        "fontFamily": {
+                            "lexend": ["Lexend"],
+                        }
                     }
                 }
-            }
+            };
         }
     </script>
     <style>
@@ -375,9 +391,9 @@
         }
 
         /* Proteger badges de color (chips/pills) en Modo Oscuro */
-        .dark .bg-green-100 { background-color: #16a34a !important; }
+        .dark .bg-green-50, .dark .bg-green-100 { background-color: #16a34a !important; }
         .dark .text-green-800, .dark .text-green-700, .dark .text-green-600 { color: #dcfce7 !important; }
-        .dark .bg-red-100 { background-color: #dc2626 !important; }
+        .dark .bg-red-50, .dark .bg-red-100 { background-color: #dc2626 !important; }
         .dark .text-red-800, .dark .text-red-700, .dark .text-red-600 { color: #fee2e2 !important; }
         .dark .bg-blue-50, .dark .bg-blue-100 { background-color: #1d4ed8 !important; }
         .dark .text-blue-800, .dark .text-blue-700, .dark .text-blue-600 { color: #dbeafe !important; }
@@ -389,6 +405,20 @@
         .dark .text-purple-800, .dark .text-purple-700 { color: #f3e8ff !important; }
         .dark .bg-emerald-100 { background-color: #059669 !important; }
         .dark .text-emerald-800, .dark .text-emerald-700 { color: #d1fae5 !important; }
+        
+        /* Arreglar fondos que se ven pálidos o blancos en oscuro */
+        .dark .bg-surface-variant { background-color: #334155 !important; }
+        .dark .bg-secondary\/5 { background-color: rgba(252, 165, 165, 0.05) !important; }
+        .dark .bg-secondary\/10 { background-color: rgba(252, 165, 165, 0.1) !important; }
+        .dark .bg-secondary\/20 { background-color: rgba(252, 165, 165, 0.2) !important; }
+        .dark .border-secondary\/20 { border-color: rgba(252, 165, 165, 0.2) !important; }
+
+        .dark .bg-primary-fixed { background-color: #1e3a8a !important; }
+        .dark .bg-secondary-fixed { background-color: #7f1d1d !important; }
+        .dark .bg-tertiary-fixed { background-color: #064e3b !important; }
+        .dark .bg-primary-fixed\/60 { background-color: rgba(30, 58, 138, 0.6) !important; }
+        .dark .bg-secondary-container\/30 { background-color: rgba(127, 29, 29, 0.3) !important; }
+        .dark .bg-tertiary-fixed\/40 { background-color: rgba(6, 78, 59, 0.4) !important; }
 
         /* 2. MODO SÚPER OSCURO (Negro Puro AMOLED + Letras Blancas) */
         .superdark body, .superdark .animated-bg, .superdark .graph-paper-bg, .superdark .bg-gray-50, .superdark .bg-background, .superdark .bg-surface-container-lowest, .superdark main, .superdark #mainScrollContainer {
@@ -493,9 +523,9 @@
         }
 
         /* Proteger badges de color (chips/pills) en Modo Súper Oscuro */
-        .superdark .bg-green-100 { background-color: #16a34a !important; }
+        .superdark .bg-green-50, .superdark .bg-green-100 { background-color: #16a34a !important; }
         .superdark .text-green-800, .superdark .text-green-700, .superdark .text-green-600 { color: #dcfce7 !important; }
-        .superdark .bg-red-100 { background-color: #dc2626 !important; }
+        .superdark .bg-red-50, .superdark .bg-red-100 { background-color: #dc2626 !important; }
         .superdark .text-red-800, .superdark .text-red-700, .superdark .text-red-600 { color: #fee2e2 !important; }
         .superdark .bg-blue-50, .superdark .bg-blue-100 { background-color: #1d4ed8 !important; }
         .superdark .text-blue-800, .superdark .text-blue-700, .superdark .text-blue-600 { color: #dbeafe !important; }
@@ -507,6 +537,20 @@
         .superdark .text-purple-800, .superdark .text-purple-700 { color: #f3e8ff !important; }
         .superdark .bg-emerald-100 { background-color: #059669 !important; }
         .superdark .text-emerald-800, .superdark .text-emerald-700 { color: #d1fae5 !important; }
+
+        /* Arreglar fondos que se ven pálidos o blancos en súper oscuro */
+        .superdark .bg-surface-variant { background-color: #262626 !important; }
+        .superdark .bg-secondary\/5 { background-color: rgba(248, 113, 113, 0.05) !important; }
+        .superdark .bg-secondary\/10 { background-color: rgba(248, 113, 113, 0.1) !important; }
+        .superdark .bg-secondary\/20 { background-color: rgba(248, 113, 113, 0.2) !important; }
+        .superdark .border-secondary\/20 { border-color: rgba(248, 113, 113, 0.2) !important; }
+
+        .superdark .bg-primary-fixed { background-color: #1e3a8a !important; }
+        .superdark .bg-secondary-fixed { background-color: #7f1d1d !important; }
+        .superdark .bg-tertiary-fixed { background-color: #064e3b !important; }
+        .superdark .bg-primary-fixed\/60 { background-color: rgba(30, 58, 138, 0.6) !important; }
+        .superdark .bg-secondary-container\/30 { background-color: rgba(127, 29, 29, 0.3) !important; }
+        .superdark .bg-tertiary-fixed\/40 { background-color: rgba(6, 78, 59, 0.4) !important; }
     </style>
     <?php if (!empty($extraStyles)) echo $extraStyles; ?>
 </head>

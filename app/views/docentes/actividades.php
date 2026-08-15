@@ -72,11 +72,13 @@
                                 <?php
                                     $ahora = new DateTime();
                                     $inicio = new DateTime($act->fecha_hora_inicio);
-                                    $fin    = !empty($act->fecha_hora_fin) ? new DateTime($act->fecha_hora_fin) : null;
+                                    // Si no tiene fecha de fin, se asume que termina al final del día de inicio
+                                    $fin = !empty($act->fecha_hora_fin) ? new DateTime($act->fecha_hora_fin) : (clone $inicio)->setTime(23, 59, 59);
+                                    
                                     if ($ahora < $inicio) {
                                         $estado = ['label' => 'Próxima', 'class' => 'bg-blue-100 text-blue-800'];
-                                    } elseif ($fin && $ahora > $fin) {
-                                        $estado = ['label' => 'Finalizada', 'class' => 'bg-gray-100 text-gray-600'];
+                                    } elseif ($ahora > $fin) {
+                                        $estado = ['label' => 'Finalizada', 'class' => 'bg-surface-variant text-on-surface-variant font-extrabold shadow-sm'];
                                     } else {
                                         $estado = ['label' => 'En Curso', 'class' => 'bg-green-100 text-green-800'];
                                     }
