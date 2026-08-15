@@ -120,8 +120,8 @@
 
             </div>
         </main>
+        <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 
-    <?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>

@@ -46,9 +46,6 @@ require APPROOT . '/views/inc/header.php';
         <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-10 w-10 rounded-full" alt="Logo">
         <span class="font-bold text-primary">EduSaft</span>
     </div>
-    <button id="mobile-menu-toggle" class="p-2 text-on-surface-variant">
-        <span class="material-symbols-outlined">menu</span>
-    </button>
 </header>
 
 <div class="flex">
@@ -56,7 +53,7 @@ require APPROOT . '/views/inc/header.php';
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <main class="flex-1 md:ml-72 min-h-screen bg-surface-container-lowest flex flex-col">
+    <main id="mainContent" class="flex-1 min-h-screen bg-surface-container-lowest flex flex-col">
         <!-- Top Bar -->
         <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
             <div class="flex items-center gap-4">
@@ -74,7 +71,7 @@ require APPROOT . '/views/inc/header.php';
                         <p class="text-sm font-bold text-on-surface">Acudiente</p>
                         <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Portal Familiar</p>
                     </div>
-                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="return confirm('¿Seguro que deseas salir de tu cuenta?');" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
+                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="event.preventDefault(); openLogoutModal();" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
                         <span class="material-symbols-outlined text-primary">person</span>
                     </a>
                 </div>

@@ -115,6 +115,7 @@
                 </div>
             <?php endif; ?>
         </main>
+        <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 
     <!-- Modal Crear Actividad -->
@@ -256,6 +257,5 @@
     });
     </script>
 
-    <?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>

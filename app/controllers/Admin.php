@@ -1,30 +1,36 @@
 <?php
+
 /**
  * Admin Controller
  * Panel de administración — protegido, solo rol 'administrador'.
  */
-class Admin extends Controller {
+class Admin extends Controller
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->_requireAdmin();
     }
 
     /** Verifica que el usuario sea administrador */
-    private function _requireAdmin() {
+    private function _requireAdmin()
+    {
         if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'administrador') {
             header('Location: ' . URLROOT . '/auth/login');
             exit;
         }
     }
 
-    public function index() {
+    public function index()
+    {
         $this->dashboard();
     }
 
     /**
      * Dashboard con estadísticas reales de la BD.
      */
-    public function dashboard() {
+    public function dashboard()
+    {
         $model = $this->model('AdministradorModel');
         $actividadModel = $this->model('ActividadModel');
 
@@ -49,14 +55,16 @@ class Admin extends Controller {
     /**
      * Vista de usuarios generales (redirige a profesores por defecto)
      */
-    public function usuarios() {
+    public function usuarios()
+    {
         $this->profesores();
     }
 
     /**
      * Vista de profesores
      */
-    public function profesores() {
+    public function profesores()
+    {
         $model = $this->model('AdministradorModel');
 
         $data = [
@@ -70,7 +78,8 @@ class Admin extends Controller {
     /**
      * Vista de familias
      */
-    public function familias() {
+    public function familias()
+    {
         $model = $this->model('AdministradorModel');
 
         $data = [
@@ -84,7 +93,8 @@ class Admin extends Controller {
     /**
      * Vista de estudiantes
      */
-    public function estudiantes() {
+    public function estudiantes()
+    {
         $model = $this->model('AdministradorModel');
 
         $data = [
@@ -98,7 +108,8 @@ class Admin extends Controller {
     /**
      * Vista de asistencias con registros reales.
      */
-    public function asistencias() {
+    public function asistencias()
+    {
         $model = $this->model('AsistenciaModel');
 
         $data = [
@@ -114,7 +125,8 @@ class Admin extends Controller {
     /**
      * Vista de sedes.
      */
-    public function sedes() {
+    public function sedes()
+    {
         $model = $this->model('AdministradorModel');
 
         $data = [
@@ -128,7 +140,8 @@ class Admin extends Controller {
     /**
      * Vista de actividades.
      */
-    public function actividades() {
+    public function actividades()
+    {
         $model = $this->model('ActividadModel');
         $adminModel = $this->model('AdministradorModel');
 
@@ -146,10 +159,11 @@ class Admin extends Controller {
     /**
      * Procesar la creación de una nueva actividad.
      */
-    public function crear_actividad() {
+    public function crear_actividad()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $model = $this->model('ActividadModel');
-            
+
             $data = [
                 'nombre_actividad'             => trim($_POST['nombre_actividad'] ?? ''),
                 'descripcion'                  => trim($_POST['descripcion'] ?? ''),
@@ -208,7 +222,8 @@ class Admin extends Controller {
     /**
      * Vista de gestión de grupos.
      */
-    public function grupos() {
+    public function grupos()
+    {
         $model = $this->model('AdministradorModel');
         $data = [
             'title'  => 'Gestión de Grupos',
@@ -216,7 +231,7 @@ class Admin extends Controller {
             'sedes'  => $model->getAllSedes(),
             // Para obtener los grados, podemos usar un método rápido o pasarlos desde aquí
         ];
-        
+
         // Obtener grados directamente
         $db = new Database();
         $db->query('SELECT * FROM grados ORDER BY id_grado ASC');
@@ -228,7 +243,8 @@ class Admin extends Controller {
     /**
      * Crea un nuevo grupo (Restringido al 1 de enero)
      */
-    public function crear_grupo() {
+    public function crear_grupo()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (date('m-d') !== '01-01') {
                 header('Location: ' . URLROOT . '/admin/grupos?error=not_jan1');
@@ -254,7 +270,8 @@ class Admin extends Controller {
     /**
      * Elimina un grupo
      */
-    public function eliminar_grupo($id) {
+    public function eliminar_grupo($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $model = $this->model('AdministradorModel');
             $model->eliminarGrupo($id);
@@ -266,7 +283,8 @@ class Admin extends Controller {
     /**
      * Vista de Auditoría — Actividad reciente del sistema.
      */
-    public function auditoria() {
+    public function auditoria()
+    {
         $model = $this->model('AdministradorModel');
 
         $data = [
@@ -275,5 +293,61 @@ class Admin extends Controller {
         ];
 
         $this->view('admin/auditoria', $data);
+    }
+
+    /**
+     * Mensajes enviados o recibidos por directivas.
+     */
+    public function mensajes()
+    {
+        $model = $this->model('AdministradorModel');
+        $id_admin = $_SESSION['user_id'];
+
+        // Manejo de envío de nuevo mensaje
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_familia'], $_POST['titulo'], $_POST['mensaje'])) {
+            $id_familia = (int)$_POST['id_familia'];
+            $titulo = trim($_POST['titulo']);
+            $asunto = trim($_POST['asunto'] ?? '');
+            $mensaje = trim($_POST['mensaje']);
+            
+            if (!empty($id_familia) && !empty($titulo) && !empty($mensaje)) {
+                $model->enviarMensajeFamilia($id_admin, $id_familia, $titulo, $asunto, $mensaje);
+                header('Location: ' . URLROOT . '/admin/mensajes?send=ok');
+                exit;
+            }
+        }
+
+        // Si se marca una como leída vía GET
+        if (isset($_GET['leer']) && is_numeric($_GET['leer'])) {
+            $model->marcarMensajeLeido((int)$_GET['leer']);
+            header('Location: ' . URLROOT . '/admin/mensajes');
+            exit;
+        }
+
+        $mensajes = $model->getMensajesContacto($id_admin);
+        $familias = $model->getAllFamilias();
+
+        $data = [
+            'title'    => 'Mensajes',
+            'mensajes' => $mensajes,
+            'familias' => $familias,
+            'no_leidos' => count(array_filter((array)$mensajes, fn($m) => !$m->leido && $m->destinatario_tipo === 'directiva')),
+        ];
+
+        $this->view('shared/mensajes', $data);
+    }
+
+    /**
+     * Elimina un mensaje
+     */
+    public function eliminar_mensaje($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $model = $this->model('AdministradorModel');
+            $id_admin = $_SESSION['user_id'];
+            $model->eliminarMensaje($id, $id_admin);
+        }
+        header('Location: ' . URLROOT . '/admin/mensajes');
+        exit;
     }
 }

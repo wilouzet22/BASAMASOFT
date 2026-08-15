@@ -198,5 +198,54 @@ class AdministradorModel {
         }
         return false;
     }
+
+    /**
+     * Obtiene los mensajes de contacto enviados a directivas o enviados por directivas.
+     */
+    public function getMensajesContacto($id_admin) {
+        $this->db->query(
+            'SELECT m.*, f.nombre_principal_acudiente, f.apellidos_principal_acudiente, f.email_contacto
+             FROM mensajes_contacto m
+             INNER JOIN familias f ON m.id_familia_fk = f.id_familia
+             WHERE (m.id_administrador_fk = :id_admin AND m.destinatario_tipo = "directiva")
+                OR (m.id_administrador_fk = :id_admin2 AND m.remitente_tipo = "directiva")
+             ORDER BY m.fecha_envio DESC'
+        );
+        $this->db->bind(':id_admin', $id_admin);
+        $this->db->bind(':id_admin2', $id_admin);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Marca un mensaje como leído.
+     */
+    public function marcarMensajeLeido($id_mensaje) {
+        $this->db->query('UPDATE mensajes_contacto SET leido = 1 WHERE id_mensaje = :id_mensaje AND destinatario_tipo = "directiva"');
+        $this->db->bind(':id_mensaje', $id_mensaje);
+        return $this->db->execute();
+    }
+
+    /**
+     * Guarda un mensaje nuevo enviado por una directiva a una familia.
+     */
+    public function enviarMensajeFamilia($id_admin, $id_familia, $titulo, $asunto, $mensaje) {
+        $this->db->query('INSERT INTO mensajes_contacto (id_familia_fk, remitente_tipo, destinatario_tipo, id_administrador_fk, titulo, asunto, mensaje) VALUES (:id_familia, "directiva", "familia", :id_admin, :titulo, :asunto, :mensaje)');
+        $this->db->bind(':id_familia', $id_familia);
+        $this->db->bind(':id_admin', $id_admin);
+        $this->db->bind(':titulo', $titulo);
+        $this->db->bind(':asunto', $asunto);
+        $this->db->bind(':mensaje', $mensaje);
+        return $this->db->execute();
+    }
+
+    /**
+     * Elimina un mensaje de contacto (enviado o recibido por directiva).
+     */
+    public function eliminarMensaje($id_mensaje, $id_admin) {
+        $this->db->query('DELETE FROM mensajes_contacto WHERE id_mensaje = :id_mensaje AND id_administrador_fk = :id_admin');
+        $this->db->bind(':id_mensaje', $id_mensaje);
+        $this->db->bind(':id_admin', $id_admin);
+        return $this->db->execute();
+    }
 }
 

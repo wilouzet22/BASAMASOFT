@@ -12,13 +12,6 @@
 <!-- Overlay móvil -->
 <div id="doc-sidebar-overlay" class="fixed inset-0 bg-black/40 z-30 hidden" onclick="closeDocentesSidebar()"></div>
 
-<!-- Botón hamburguesa móvil -->
-<button id="doc-mob-btn" type="button"
-    class="md:hidden fixed top-3 left-3 z-50 p-2 rounded-full bg-primary text-white shadow-lg"
-    onclick="toggleDocentesMobileSidebar()">
-    <span class="material-symbols-outlined text-xl">menu</span>
-</button>
-
 <!-- Sidebar docentes -->
 <nav id="docentes-sidebar"
      class="flex flex-col fixed left-0 top-0 h-full py-4 docked w-64 border-r border-outline-variant bg-white z-40 overflow-y-auto overflow-x-hidden
@@ -54,6 +47,12 @@
            class="<?php echo strpos($currentPage, '/docentes/asistencia') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
             <span class="material-symbols-outlined sidebar-nav-icon shrink-0">event_available</span>
             <span class="sidebar-label truncate">Asistencia</span>
+        </a>
+        <a href="<?php echo URLROOT; ?>/docentes/mensajes"
+           title="Mensajes"
+           class="<?php echo strpos($currentPage, '/docentes/mensajes') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
+            <span class="material-symbols-outlined sidebar-nav-icon shrink-0">mail</span>
+            <span class="sidebar-label truncate">Mensajes</span>
         </a>
         <a href="<?php echo URLROOT; ?>/docentes/notificaciones"
            title="Notificaciones"
@@ -116,6 +115,31 @@
         window.closeDocentesSidebar = function() {
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('hidden');
+        };
+
+        // Modal Global Functions
+        window.openModal = function(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                if(modal.children[0]) modal.children[0].classList.remove('opacity-0');
+                if(modal.children[1]) {
+                    modal.children[1].classList.remove('scale-95', 'opacity-0');
+                    modal.children[1].classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            if(modal.children[0]) modal.children[0].classList.add('opacity-0');
+            if(modal.children[1]) {
+                modal.children[1].classList.add('scale-95', 'opacity-0');
+                modal.children[1].classList.remove('scale-100', 'opacity-100');
+            }
+            setTimeout(() => modal.classList.add('hidden'), 300);
         };
     })();
 </script>

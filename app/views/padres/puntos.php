@@ -60,9 +60,6 @@ require APPROOT . '/views/inc/header.php';
 <!-- Mobile Header -->
 <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
     <span class="font-bold text-primary text-lg">Mis Puntos</span>
-    <button id="menuToggleBtn" class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
-        <span class="material-symbols-outlined">menu</span>
-    </button>
 </header>
 
 <div class="flex">
@@ -71,7 +68,7 @@ require APPROOT . '/views/inc/header.php';
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
     <!-- ====== MAIN CONTENT ====== -->
-    <main id="mainContent" class="flex-1 lg:ml-72 transition-all duration-300 min-h-screen">
+    <main id="mainContent" class="flex-1 transition-all duration-300 min-h-screen">
         <div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
 
             <!-- Page Header -->
@@ -275,7 +272,7 @@ require APPROOT . '/views/inc/header.php';
                 </div>
             <?php endif; ?>
 
-        </div><!-- /max-w -->
+        <?php require APPROOT . '/views/inc/footer.php'; ?>
     </main>
 </div>
 
@@ -394,5 +391,3 @@ require APPROOT . '/views/inc/header.php';
     });
 
 </script>
-
-<?php require APPROOT . '/views/inc/footer.php'; ?>

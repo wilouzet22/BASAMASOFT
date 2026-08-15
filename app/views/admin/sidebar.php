@@ -17,13 +17,6 @@
 <!-- Overlay móvil -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 z-30 hidden md:hidden" onclick="closeSidebar()"></div>
 
-<!-- Botón hamburguesa móvil (fijo arriba a la izq) -->
-<button id="mob-sidebar-btn" type="button"
-    class="md:hidden fixed top-3 left-3 z-50 p-2 rounded-full bg-primary text-white shadow-lg"
-    onclick="toggleMobileSidebar()">
-    <span class="material-symbols-outlined text-xl">menu</span>
-</button>
-
 <!-- Sidebar -->
 <nav id="admin-sidebar"
      class="flex flex-col fixed left-0 top-0 h-full py-4 docked w-64 border-r border-outline-variant bg-white z-40 overflow-y-auto overflow-x-hidden
@@ -113,6 +106,13 @@
         <!-- Divisor Sistema -->
         <p class="sidebar-divider-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 px-3 pt-3 pb-1">Sistema</p>
 
+        <a href="<?php echo URLROOT; ?>/admin/mensajes"
+           title="Mensajes"
+           class="sidebar-item <?php echo strpos($currentPage, '/admin/mensajes') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
+            <span class="material-symbols-outlined sidebar-nav-icon shrink-0">mail</span>
+            <span class="sidebar-label truncate">Mensajes</span>
+        </a>
+
         <a href="<?php echo URLROOT; ?>/admin/auditoria"
            title="Auditoría"
            class="sidebar-item <?php echo strpos($currentPage, '/admin/auditoria') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
@@ -177,6 +177,31 @@
         window.closeSidebar = function() {
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('hidden');
+        };
+
+        // Modal Global Functions
+        window.openModal = function(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                if(modal.children[0]) modal.children[0].classList.remove('opacity-0');
+                if(modal.children[1]) {
+                    modal.children[1].classList.remove('scale-95', 'opacity-0');
+                    modal.children[1].classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            if(modal.children[0]) modal.children[0].classList.add('opacity-0');
+            if(modal.children[1]) {
+                modal.children[1].classList.add('scale-95', 'opacity-0');
+                modal.children[1].classList.remove('scale-100', 'opacity-100');
+            }
+            setTimeout(() => modal.classList.add('hidden'), 300);
         };
     })();
 </script>

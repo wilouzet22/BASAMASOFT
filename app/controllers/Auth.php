@@ -87,6 +87,7 @@ class Auth extends Controller {
             $_SESSION['username']   = $familia->nombre_principal_acudiente . ' ' . $familia->apellidos_principal_acudiente;
             $_SESSION['correo']     = $familia->email_contacto;
             $_SESSION['rol']        = 'familia';
+            $_SESSION['foto_perfil'] = $familia->foto_perfil ?? null;
             header('Location: ' . URLROOT . '/padres/dashboard');
             exit;
         }

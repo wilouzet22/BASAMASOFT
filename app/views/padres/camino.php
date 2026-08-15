@@ -399,26 +399,72 @@ $extraStyles = <<<'EOT'
             #actividadModal { padding: 1.5rem; }
             #actividadModal .modal-card { border-radius: 2rem; }
         }
+        @media (max-width: 1023px) {
+            #global-theme-selector { display: none !important; }
+            /* Ocultar mini pill flotante en camino — se muestra en el header */
+            #thermometerMini { display: none !important; }
+        }
     </style>
 EOT;
 require APPROOT . '/views/inc/header.php';
 ?>
 
 <!-- Mobile Header -->
-<header class="lg:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
-    <div class="flex items-center gap-3">
+<header class="lg:hidden flex justify-between items-center px-4 py-3 bg-white border-b border-outline-variant sticky top-0 z-50">
+    <div class="flex items-center gap-2">
         <span class="font-bold text-primary text-lg">Zenith Path</span>
+        <?php
+        /* Mini pill de asistencia inline en el header */
+        $pct = $porcentajeTermometro ?? 0;
+        if ($pct >= 75)     { $pctColor = '#22c55e'; $pctIcon = 'sentiment_very_satisfied'; }
+        elseif ($pct >= 50) { $pctColor = '#eab308'; $pctIcon = 'sentiment_neutral'; }
+        elseif ($pct >= 25) { $pctColor = '#f97316'; $pctIcon = 'sentiment_dissatisfied'; }
+        else                { $pctColor = '#ef4444'; $pctIcon = 'sentiment_very_dissatisfied'; }
+        ?>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black border" style="background:<?= $pctColor ?>22; color:<?= $pctColor ?>; border-color:<?= $pctColor ?>44;">
+            <span class="material-symbols-outlined" style="font-size:14px;color:<?= $pctColor ?>"><?= $pctIcon ?></span>
+            <?= $pct ?>%
+        </span>
     </div>
-    <button id="menuToggleBtn" class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-        <span class="material-symbols-outlined">menu</span>
-    </button>
+    <div class="flex items-center gap-1.5">
+        <button id="headerThemeToggle" class="p-1.5 text-yellow-500 hover:bg-surface-container-low rounded-full transition-colors active:scale-95" title="Tema">
+            <span class="material-symbols-outlined text-[1.3rem]">palette</span>
+        </button>
+        <button onclick="openModal('contactosModal')" class="p-1.5 text-primary hover:bg-primary/10 rounded-full transition-colors active:scale-95" title="Contactos">
+            <span class="material-symbols-outlined text-[1.3rem]">group</span>
+        </button>
+        <button onclick="openModal('opinionModal')" class="p-1.5 text-secondary hover:bg-secondary/10 rounded-full transition-colors active:scale-95" title="Opinión">
+            <span class="material-symbols-outlined text-[1.3rem]">chat_bubble</span>
+        </button>
+    </div>
 </header>
+<script>
+// Conectar el botón de tema del header al sistema global de temas
+(function() {
+    function bindHeaderTheme() {
+        var btn = document.getElementById('headerThemeToggle');
+        var mainBtn = document.getElementById('theme-main-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (mainBtn) {
+                mainBtn.click();
+            }
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindHeaderTheme);
+    } else {
+        bindHeaderTheme();
+    }
+})();
+</script>
 
 <div class="flex">
     <!-- Sidebar reusable -->
     <?php require APPROOT . '/views/padres/sidebar.php'; ?>
 
-    <main id="mainScrollContainer" class="flex-1 lg:ml-72 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
+    <main id="mainScrollContainer" class="flex-1 pt-0 pb-4 px-0 flex flex-col items-center relative w-full bg-gradient-to-b from-sky-100 via-blue-50 to-slate-100 scroll-smooth transition-all duration-300">
 
         <!-- ====== MOUNTAIN VIEWPORT (Native scroll) ====== -->
         <div class="relative w-full" id="mountainViewport">
@@ -1337,43 +1383,6 @@ require APPROOT . '/views/inc/header.php';
             if (hash === '#contactos') setTimeout(() => openModal('contactosModal'), 400);
             if (hash === '#opinion') setTimeout(() => openModal('opinionModal'), 400);
 
-            // Toast de éxito al volver desde enviar_opinion
-            <?php if (isset($_GET['opinion']) && $_GET['opinion'] === 'ok'): ?>
-            (function() {
-                const t = document.createElement('div');
-                t.innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>¡Gracias! Tu opinión fue enviada.</span>';
-                Object.assign(t.style, {
-                    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
-                    background:'#10b981', color:'#fff', display:'flex', alignItems:'center',
-                    gap:'8px', padding:'12px 24px', borderRadius:'999px', zIndex:'9999',
-                    boxShadow:'0 4px 20px rgba(0,0,0,0.3)', fontSize:'14px', fontWeight:'600',
-                    opacity:'0', transition:'opacity .4s'
-                });
-                document.body.appendChild(t);
-                requestAnimationFrame(() => { t.style.opacity = '1'; });
-                setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 4000);
-            })();
-            <?php endif; ?>
-
-            function openModal(id) {
-                const modal = document.getElementById(id);
-                if (!modal) return;
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.children[0].classList.remove('opacity-0');
-                    modal.children[1].classList.remove('scale-95', 'opacity-0');
-                    modal.children[1].classList.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-
-            function closeModal(id) {
-                const modal = document.getElementById(id);
-                if (!modal) return;
-                modal.children[0].classList.add('opacity-0');
-                modal.children[1].classList.add('scale-95', 'opacity-0');
-                modal.children[1].classList.remove('scale-100', 'opacity-100');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            }
 
             document.addEventListener('DOMContentLoaded', () => renderAll());
         </script>
@@ -1381,19 +1390,17 @@ require APPROOT . '/views/inc/header.php';
         <!-- Day Picker (fan cards) – container injected dynamically by JS -->
 
         <!-- Floating Action Buttons -->
-        <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
-            <!-- Floating Action Buttons -->
-            <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
-                <button onclick="openModal('contactosModal')" class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 0s;" title="Contactos">
-                    <span class="material-symbols-outlined">group</span>
-                </button>
-                <button onclick="openModal('opinionModal')" class="w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 1s;" title="Opinión">
-                    <span class="material-symbols-outlined">chat_bubble</span>
-                </button>
-                <button onclick="alert('Compartir próximamente')" class="w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 2s;" title="Compartir">
-                    <span class="material-symbols-outlined">share</span>
-                </button>
-            </div>
+        <div class="fixed bottom-6 right-6 hidden lg:flex flex-col gap-4 z-40">
+            <button onclick="openModal('contactosModal')" class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 0s;" title="Contactos">
+                <span class="material-symbols-outlined">group</span>
+            </button>
+            <button onclick="openModal('opinionModal')" class="w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 1s;" title="Opinión">
+                <span class="material-symbols-outlined">chat_bubble</span>
+            </button>
+            <button onclick="alert('Compartir próximamente')" class="w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 floating" style="animation-delay: 2s;" title="Compartir">
+                <span class="material-symbols-outlined">share</span>
+            </button>
+        </div>
 
             <!-- Modals -->
 
@@ -1444,52 +1451,6 @@ require APPROOT . '/views/inc/header.php';
                 </div>
             </div>
 
-            <!-- Contactos Modal -->
-            <div id="contactosModal" class="fixed inset-0 z-[60] hidden">
-                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-primary flex items-center gap-2"><span class="material-symbols-outlined">group</span> Contactos</h3>
-                        <button onclick="closeModal('contactosModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                            <div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed"><span class="material-symbols-outlined">person</span></div>
-                            <div>
-                                <span class="text-label-md font-bold block">Guía Maestro</span>
-                                <span class="text-xs text-on-surface-variant">guia@edusaft.edu</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                            <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed"><span class="material-symbols-outlined">group</span></div>
-                            <div>
-                                <span class="text-label-md font-bold block">Compañeros (Grupo A)</span>
-                                <span class="text-xs text-on-surface-variant">12 estudiantes</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Opinión Modal -->
-            <div id="opinionModal" class="fixed inset-0 z-[60] hidden">
-                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('opinionModal')"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-secondary flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> Danos tu Opinión</h3>
-                        <button onclick="closeModal('opinionModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
-                    </div>
-                    <p class="text-sm italic text-on-surface-variant mb-4">"El camino es tan importante como la cima."</p>
-                    <form method="POST" action="<?php echo URLROOT; ?>/padres/enviar_opinion" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold mb-1">¿Cómo podemos mejorar?</label>
-                            <textarea name="mensaje" rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-secondary text-on-secondary font-bold rounded-xl py-3 shadow-md hover:opacity-90 transition-opacity">Enviar Opinión</button>
-                    </form>
-                </div>
-            </div>
-
     </main>
 </div><!-- end flex -->
 
@@ -1497,6 +1458,12 @@ require APPROOT . '/views/inc/header.php';
 $etapasTermometro = $etapas;
 require APPROOT . '/views/padres/termometro.php';
 ?>
+<style>
+    @media (max-width: 1023px) {
+        /* Override termometro.php's display: flex !important */
+        #thermometerMini { display: none !important; }
+    }
+</style>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
