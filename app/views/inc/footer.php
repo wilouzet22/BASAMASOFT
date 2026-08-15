@@ -1,8 +1,12 @@
+<?php
+    $uri_footer = $_SERVER['REQUEST_URI'] ?? '';
+    $isCaminoPage = (strpos($uri_footer, '/padres/camino') !== false);
+?>
+<?php if (!$isCaminoPage): ?>
 <footer class="bg-white border-t mt-12 transition-colors duration-200">
     <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
         <?php
-            $uri = $_SERVER['REQUEST_URI'] ?? '';
-            $isAdminOrDocente = (strpos($uri, '/admin') !== false || strpos($uri, '/docentes') !== false);
+            $isAdminOrDocente = (strpos($uri_footer, '/admin') !== false || strpos($uri_footer, '/docentes') !== false);
         ?>
         <?php if (!$isAdminOrDocente): ?>
         <div class="flex justify-center space-x-6 md:order-2">
@@ -25,6 +29,7 @@
         </div>
     </div>
 </footer>
+<?php endif; ?>
 
 <!-- Selector Flotante de Temas (Esquina Inferior Derecha) -->
 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2.5">

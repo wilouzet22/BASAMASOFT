@@ -1,6 +1,9 @@
-<?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
+<?php 
+$data = $data ?? []; 
+$bodyClass = 'bg-surface-container-lowest text-on-background font-lexend min-h-screen';
+require APPROOT . '/views/inc/header.php'; 
+?>
 
-<body class="bg-surface-container-lowest text-on-background font-lexend min-h-screen">
 <style>
     /* Dropdown submenu animation */
     #asistenciaSubmenu {
