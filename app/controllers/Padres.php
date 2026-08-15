@@ -179,4 +179,25 @@ class Padres extends Controller {
 
         $this->view('padres/pico_montana', $data);
     }
+
+    /**
+     * Recibe y guarda la opinión enviada por una familia.
+     */
+    public function enviar_opinion() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URLROOT . '/padres/camino');
+            exit;
+        }
+        $mensaje = trim($_POST['mensaje'] ?? '');
+        if (empty($mensaje)) {
+            header('Location: ' . URLROOT . '/padres/camino#opinion');
+            exit;
+        }
+        $model = $this->model('FamiliaModel');
+        $model->guardarOpinion($_SESSION['user_id'], $mensaje);
+        // Redirige con flag de éxito para mostrar toast en la vista
+        header('Location: ' . URLROOT . '/padres/camino?opinion=ok');
+        exit;
+    }
 }
+

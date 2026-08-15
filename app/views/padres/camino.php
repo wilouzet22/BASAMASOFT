@@ -3,17 +3,49 @@ $data        = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
 $now         = new DateTime();
 
-// ── Agrupar actividades por clave año-semana ('YYYY-WW') para evitar colisiones entre años ──
-$actsByWeek = []; // ['YYYY-WW' => [act, ...]]
+// ── Determinar fecha de Inicio de Año ──
+$inicioAnoDate = null;
 foreach ($actividades as $act) {
-    $fd  = new DateTime($act->fecha_hora_inicio);
-    $key = $fd->format('o-W'); // ISO year + ISO week, e.g. "2026-27"
-    $actsByWeek[$key][] = $act;
+    if (strtolower(trim($act->nombre_actividad)) === 'inicio de año') {
+        $inicioAnoDate = new DateTime($act->fecha_hora_inicio);
+        $inicioAnoDate->setTime(0, 0, 0);
+        break;
+    }
+}
+if (!$inicioAnoDate) {
+    $inicioAnoDate = new DateTime(date('Y') . '-01-01');
 }
 
-// Ordenar las claves cronológicamente
-$allWeekKeys = array_keys($actsByWeek);
-sort($allWeekKeys); // lexicographic sort works correctly for 'YYYY-WW'
+// ── Agrupar actividades por Número de Semana real (1 a 41) ──
+$actsByWeek = []; 
+foreach ($actividades as $act) {
+    $fd  = new DateTime($act->fecha_hora_inicio);
+    $fdNorm = clone $fd;
+    $fdNorm->setTime(0, 0, 0);
+    
+    $interval = $inicioAnoDate->diff($fdNorm);
+    $days = $interval->days;
+    $invert = $interval->invert;
+    
+    if ($invert) {
+        $weekNum = 1; // Si es antes del inicio de año, semana 1
+    } else {
+        $weekNum = (int)floor($days / 7) + 1;
+    }
+    if ($weekNum > 41) $weekNum = 41; 
+    
+    $actsByWeek[$weekNum][] = $act;
+}
+
+$allWeekKeys = range(1, 41); // Claves explícitas 1 a 41
+
+$hasCueva = false;
+for ($i = 23; $i <= 37; $i++) {
+    if (!empty($actsByWeek[$i])) {
+        $hasCueva = true;
+        break;
+    }
+}
 
 // ── Los primeros 22 slots del programa = Montaña ──
 $totalSemanas = 22;
@@ -85,14 +117,25 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
         'semana'     => $s,
         'nombre'     => 'Semana ' . $s . ($weekKey ? " ($weekKey)" : ''),
         'estado'     => $estado,
-        'is_peak'    => ($s === $totalSemanas),
+        'is_peak'    => false,
         'multiple'   => ($count > 2),
         'dias'       => $dias,
         'total_acts' => $count,
     ];
 }
 
-$totalEtapas  = count($etapas); // always 40
+$etapas[] = [
+    'semana'     => 99,
+    'nombre'     => 'Portal a La Cueva',
+    'estado'     => $hasCueva ? 'completado' : 'bloqueado',
+    'is_peak'    => true,
+    'multiple'   => false,
+    'dias'       => [],
+    'is_portal'  => true,
+    'target_url' => URLROOT . '/padres/cueva',
+];
+
+$totalEtapas  = count($etapas); // always 23
 $totalSections = 10;
 $perPage       = 4;
 $totalPages    = max($totalSections, (int)ceil($totalEtapas / $perPage));
@@ -227,7 +270,7 @@ function generarTodosLosWaypoints(array $etapas, int $totalEtapas, int $vbW, int
         $cx_pt = $targetX + $mappedX;
         $cy_pt = $targetY + $mappedY;
 
-        $is_peak = ($i === $totalEtapas - 1);
+        $is_peak = !empty($etapa['is_peak']);
         $puntos[] = array_merge($etapa, ['cx' => $cx_pt, 'cy' => $cy_pt, 'is_peak' => $is_peak]);
     }
     return $puntos;
@@ -745,7 +788,7 @@ require APPROOT . '/views/inc/header.php';
                     // No label text — tooltips shown on click via popup
 
                     // Click: zoom + show day picker
-                    group.addEventListener('click', (e) => handleWeekClick(e, pt, group));
+                    group.addEventListener('click', (e) => handlePointClick(e, pt));
                     g.appendChild(group);
                 });
 
@@ -838,13 +881,44 @@ require APPROOT . '/views/inc/header.php';
                 });
             }
 
+            // ── Click handler centralizado ──
+            function handlePointClick(e, pt) {
+                e.stopPropagation();
+                if (pt.is_portal) {
+                    if (pt.estado === 'bloqueado') {
+                        showZoneAlert();
+                    } else {
+                        window.location.href = pt.target_url;
+                    }
+                    return;
+                }
+                handleWeekClick(e, pt, e.currentTarget);
+            }
+
+            function showZoneAlert() {
+                const existing = document.getElementById('zoneAlertModal');
+                if (existing) { existing.remove(); }
+                const modal = document.createElement('div');
+                modal.id = 'zoneAlertModal';
+                modal.style.cssText = 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;';
+                modal.innerHTML = `
+                    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);" onclick="this.parentElement.remove()"></div>
+                    <div style="position:relative;background:#1e293b;border:1px solid #475569;border-radius:1.5rem;padding:2.5rem 3rem;max-width:360px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+                        <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+                        <h3 style="color:#f1f5f9;font-size:1.2rem;font-weight:700;margin-bottom:0.75rem;">Zona no disponible</h3>
+                        <p style="color:#94a3b8;font-size:0.95rem;margin-bottom:1.5rem;">Esta zona aun no tiene actividades pendientes</p>
+                        <button onclick="document.getElementById('zoneAlertModal').remove()"
+                            style="background:#3b82f6;color:#fff;border:none;padding:0.6rem 2rem;border-radius:9999px;cursor:pointer;font-weight:600;">
+                            Entendido
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
             // ── Week click: zoom into point then show popup ──
             function handleWeekClick(e, pt, groupEl) {
                 e.stopPropagation(); // Prevent SVG background click
-                if (pt.is_peak) {
-                    window.location.href = '<?= URLROOT ?>/padres/cueva';
-                    return;
-                }
                 if (!pt.dias || pt.dias.length === 0) {
                     return; // No zoom if there are no activities
                 }
@@ -1263,6 +1337,24 @@ require APPROOT . '/views/inc/header.php';
             if (hash === '#contactos') setTimeout(() => openModal('contactosModal'), 400);
             if (hash === '#opinion') setTimeout(() => openModal('opinionModal'), 400);
 
+            // Toast de éxito al volver desde enviar_opinion
+            <?php if (isset($_GET['opinion']) && $_GET['opinion'] === 'ok'): ?>
+            (function() {
+                const t = document.createElement('div');
+                t.innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>¡Gracias! Tu opinión fue enviada.</span>';
+                Object.assign(t.style, {
+                    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+                    background:'#10b981', color:'#fff', display:'flex', alignItems:'center',
+                    gap:'8px', padding:'12px 24px', borderRadius:'999px', zIndex:'9999',
+                    boxShadow:'0 4px 20px rgba(0,0,0,0.3)', fontSize:'14px', fontWeight:'600',
+                    opacity:'0', transition:'opacity .4s'
+                });
+                document.body.appendChild(t);
+                requestAnimationFrame(() => { t.style.opacity = '1'; });
+                setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 4000);
+            })();
+            <?php endif; ?>
+
             function openModal(id) {
                 const modal = document.getElementById(id);
                 if (!modal) return;
@@ -1388,10 +1480,10 @@ require APPROOT . '/views/inc/header.php';
                         <button onclick="closeModal('opinionModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
                     </div>
                     <p class="text-sm italic text-on-surface-variant mb-4">"El camino es tan importante como la cima."</p>
-                    <form class="space-y-4" onsubmit="event.preventDefault(); alert('Opinión enviada. ¡Gracias!'); closeModal('opinionModal');">
+                    <form method="POST" action="<?php echo URLROOT; ?>/padres/enviar_opinion" class="space-y-4">
                         <div>
                             <label class="block text-sm font-bold mb-1">¿Cómo podemos mejorar?</label>
-                            <textarea rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
+                            <textarea name="mensaje" rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
                         </div>
                         <button type="submit" class="w-full bg-secondary text-on-secondary font-bold rounded-xl py-3 shadow-md hover:opacity-90 transition-opacity">Enviar Opinión</button>
                     </form>

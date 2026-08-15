@@ -89,6 +89,13 @@
             <span class="sidebar-label truncate">Sedes</span>
         </a>
 
+        <a href="<?php echo URLROOT; ?>/admin/grupos"
+           title="Grupos"
+           class="sidebar-item <?php echo strpos($currentPage, '/admin/grupos') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">
+            <span class="material-symbols-outlined sidebar-nav-icon shrink-0">view_module</span>
+            <span class="sidebar-label truncate">Grupos</span>
+        </a>
+
         <a href="<?php echo URLROOT; ?>/admin/actividades"
            title="Actividades"
            class="sidebar-item <?php echo strpos($currentPage, '/admin/actividades') !== false ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-container'; ?> rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors text-sm">

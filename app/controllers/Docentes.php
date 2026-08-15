@@ -70,4 +70,30 @@ class Docentes extends Controller {
 
         $this->view('docentes/asistencia', $data);
     }
+
+    /**
+     * Notificaciones del docente: opiniones enviadas por familias de sus grupos.
+     */
+    public function notificaciones() {
+        $familiaModel = $this->model('FamiliaModel');
+        $id_profesor = $_SESSION['user_id'];
+        
+        $opiniones = $familiaModel->getOpinionesByProfesor($id_profesor);
+
+        // Si se marca una como leída vía GET
+        if (isset($_GET['leer']) && is_numeric($_GET['leer'])) {
+            $familiaModel->marcarOpinionLeida((int)$_GET['leer']);
+            header('Location: ' . URLROOT . '/docentes/notificaciones');
+            exit;
+        }
+
+        $data = [
+            'title'    => 'Notificaciones',
+            'opiniones' => $opiniones,
+            'no_leidas' => count(array_filter((array)$opiniones, fn($o) => !$o->leida)),
+        ];
+
+        $this->view('docentes/notificaciones', $data);
+    }
 }
+

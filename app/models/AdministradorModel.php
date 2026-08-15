@@ -155,4 +155,48 @@ class AdministradorModel {
         $this->db->query('SELECT * FROM sedes ORDER BY nombre_sede ASC');
         return $this->db->resultSet();
     }
+
+    /**
+     * Obtiene todos los grupos con detalle de grado y sede.
+     */
+    public function getAllGruposDetails() {
+        $this->db->query(
+            'SELECT g.*, gr.nombre_grado, s.nombre_sede,
+             (SELECT COUNT(*) FROM estudiantes e WHERE e.id_grupo_fk = g.id_grupo) as total_estudiantes
+             FROM grupos g
+             LEFT JOIN grados gr ON g.id_grado_fk = gr.id_grado
+             LEFT JOIN sedes s ON g.id_sede_fk = s.id_sede
+             ORDER BY g.nombre_grupo ASC'
+        );
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Crea un nuevo grupo.
+     */
+    public function crearGrupo($data) {
+        $this->db->query('INSERT INTO grupos (nombre_grupo, id_grado_fk, id_sede_fk) VALUES (:nombre, :grado, :sede)');
+        $this->db->bind(':nombre', $data['nombre_grupo']);
+        $this->db->bind(':grado', $data['id_grado_fk']);
+        $this->db->bind(':sede', $data['id_sede_fk']);
+        if ($this->db->execute()) {
+            $this->logActivity($_SESSION['user_id'], 'CREATE', "Grupo creado: {$data['nombre_grupo']}");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Elimina un grupo por ID.
+     */
+    public function eliminarGrupo($id) {
+        $this->db->query('DELETE FROM grupos WHERE id_grupo = :id');
+        $this->db->bind(':id', $id);
+        if ($this->db->execute()) {
+            $this->logActivity($_SESSION['user_id'], 'DELETE', "Grupo eliminado ID: {$id}");
+            return true;
+        }
+        return false;
+    }
 }
+

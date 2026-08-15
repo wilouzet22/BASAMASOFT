@@ -44,4 +44,67 @@ class ActividadModel {
         );
         return $this->db->resultSet();
     }
+
+    /**
+     * Obtiene todos los tipos de actividad.
+     */
+    public function getAllTiposActividad() {
+        $this->db->query('SELECT * FROM tipos_actividad ORDER BY nombre_tipo ASC');
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Obtiene todos los grupos registrados.
+     */
+    public function getAllGrupos() {
+        $this->db->query('SELECT * FROM grupos ORDER BY nombre_grupo ASC');
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Crea una nueva actividad.
+     */
+    public function crearActividad($data) {
+        $this->db->query('INSERT INTO actividades (nombre_actividad, descripcion, fecha_hora_inicio, fecha_hora_fin, id_tipo_actividad_fk, id_sede_fk, requiere_asistencia_por_hijo) VALUES (:nombre_actividad, :descripcion, :fecha_hora_inicio, :fecha_hora_fin, :id_tipo_actividad_fk, :id_sede_fk, :requiere_asistencia_por_hijo)');
+        
+        $this->db->bind(':nombre_actividad', $data['nombre_actividad']);
+        $this->db->bind(':descripcion', $data['descripcion'] ?? null);
+        $this->db->bind(':fecha_hora_inicio', $data['fecha_hora_inicio']);
+        $this->db->bind(':fecha_hora_fin', $data['fecha_hora_fin'] ?? null);
+        $this->db->bind(':id_tipo_actividad_fk', $data['id_tipo_actividad_fk']);
+        $this->db->bind(':id_sede_fk', $data['id_sede_fk']);
+        $this->db->bind(':requiere_asistencia_por_hijo', $data['requiere_asistencia_por_hijo'] ?? 1);
+
+        try {
+            if ($this->db->execute()) {
+                return $this->db->lastInsertId();
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            // Handle duplicate entry (1062) gracefully
+            if ($e->errorInfo[1] == 1062) {
+                return false; // Devuelve falso para que el controlador maneje el error
+            }
+            throw $e; // Re-lanza otros errores
+        }
+    }
+
+    /**
+     * Asigna grupos a una actividad (para actividades de grupo).
+     */
+    public function asignarGruposAActividad($id_actividad, $grupos) {
+        if (empty($grupos)) return true;
+
+        $success = true;
+        foreach ($grupos as $id_grupo) {
+            $this->db->query('INSERT INTO actividad_grupo (id_actividad_fk, id_grupo_fk) VALUES (:id_actividad_fk, :id_grupo_fk)');
+            $this->db->bind(':id_actividad_fk', $id_actividad);
+            $this->db->bind(':id_grupo_fk', $id_grupo);
+            if (!$this->db->execute()) {
+                $success = false;
+            }
+        }
+        return $success;
+    }
 }

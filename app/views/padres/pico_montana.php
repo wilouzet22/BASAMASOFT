@@ -3,17 +3,41 @@ $data = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
 $now = new DateTime();
 
-// ── Agrupar actividades por clave año-semana ('YYYY-WW') para evitar colisiones entre años ──
-$actsByWeek = []; // ['YYYY-WW' => [act, ...]]
+// ── Determinar fecha de Inicio de Año ──
+$inicioAnoDate = null;
 foreach ($actividades as $act) {
-    $fd  = new DateTime($act->fecha_hora_inicio);
-    $key = $fd->format('o-W'); // ISO year + ISO week, e.g. "2026-27"
-    $actsByWeek[$key][] = $act;
+    if (strtolower(trim($act->nombre_actividad)) === 'inicio de año') {
+        $inicioAnoDate = new DateTime($act->fecha_hora_inicio);
+        $inicioAnoDate->setTime(0, 0, 0);
+        break;
+    }
+}
+if (!$inicioAnoDate) {
+    $inicioAnoDate = new DateTime(date('Y') . '-01-01');
 }
 
-// Ordenar las claves cronológicamente
-$allWeekKeys = array_keys($actsByWeek);
-sort($allWeekKeys);
+// ── Agrupar actividades por Número de Semana real (1 a 41) ──
+$actsByWeek = []; 
+foreach ($actividades as $act) {
+    $fd  = new DateTime($act->fecha_hora_inicio);
+    $fdNorm = clone $fd;
+    $fdNorm->setTime(0, 0, 0);
+    
+    $interval = $inicioAnoDate->diff($fdNorm);
+    $days = $interval->days;
+    $invert = $interval->invert;
+    
+    if ($invert) {
+        $weekNum = 1; // Si es antes del inicio de año, semana 1
+    } else {
+        $weekNum = (int)floor($days / 7) + 1;
+    }
+    if ($weekNum > 41) $weekNum = 41; 
+    
+    $actsByWeek[$weekNum][] = $act;
+}
+
+$allWeekKeys = range(1, 41); // Claves explícitas 1 a 41
 
 $etapasProg = [];
 $actual_assigned = false;
@@ -97,13 +121,40 @@ $picoPoints = [
 ];
 
 // Tomamos de la 38 a la 41 (índices 37 a 40)
-$etapasPico = array_slice($etapasProg, 37, 4);
-foreach ($etapasPico as $i => &$etapa) {
-    $ptCoord = $picoPoints[$i + 1] ?? ['x' => 0, 'y' => 0];
+$etapasPicoRaw = array_slice($etapasProg, 37, 4);
+
+// Verificar si la cueva tiene actividades (semanas 23-37)
+$hasCueva = false;
+for ($i = 23; $i <= 37; $i++) {
+    if (!empty($actsByWeek[$i])) { $hasCueva = true; break; }
+}
+
+// Portal de retorno
+$etapasFinalPico = [];
+$etapasFinalPico[] = [
+    'semana'     => 98,
+    'nombre'     => 'Volver a La Cueva',
+    'estado'     => $hasCueva ? 'completado' : 'bloqueado',
+    'is_peak'    => false,
+    'is_portal'  => true,
+    'is_return'  => true,
+    'target_url' => URLROOT . '/padres/cueva',
+    'dias'       => [],
+    'cx'         => 727,
+    'cy'         => 1884,
+];
+
+// Semanas reales del pico (38-41 → slots 1-4 de picoPoints)
+foreach ($etapasPicoRaw as $i => $etapa) {
+    $ptCoord = $picoPoints[$i + 2] ?? ['x' => 0, 'y' => 0]; // +2 because slot 1 is the portal
     $etapa['cx'] = $ptCoord['x'];
     $etapa['cy'] = $ptCoord['y'];
+    $etapa['is_peak'] = ($i === count($etapasPicoRaw) - 1);
+    $etapasFinalPico[] = $etapa;
 }
-unset($etapa);
+
+// Alias for SVG loop
+$etapasPico = $etapasFinalPico;
 
 $bodyClass = 'antialiased min-h-screen';
 $extraStyles = '
@@ -316,33 +367,55 @@ require APPROOT . '/views/inc/header.php';
                     'bloqueado'   => ['fill' => '#94a3b8', 'stroke' => '#475569', 'outer' => '#cbd5e1'],
                 ];
 
-                $totalPuntos = count($picoPoints);
-                foreach ($picoPoints as $semana => $pt):
-                    $etapaInfo = $etapasPico[$semana - 1] ?? null;
-                    $estadoActual = $etapaInfo ? $etapaInfo['estado'] : 'bloqueado';
-
-                    // Use attendance-based color only (no blue override for multiple)
+                foreach ($etapasPico as $idx => $etapaRender):
+                    $estadoActual = $etapaRender['estado'] ?? 'bloqueado';
+                    $esPortal     = !empty($etapaRender['is_portal']);
+                    $esRetorno    = !empty($etapaRender['is_return']);
+                    $esUltimo     = !empty($etapaRender['is_peak']);
                     $c = $colorMap[$estadoActual] ?? $colorMap['bloqueado'];
-
-                    $cx = $pt['x'];
-                    $cy = $pt['y'];
-                    $esUltimoPunto = ($semana === $totalPuntos); // Punto destino final
-                    $esPrimerPunto = ($semana === 1); // Punto de inicio (retorno)
-                    if ($esUltimoPunto) {
+                    $cx = $etapaRender['cx'] ?? 0;
+                    $cy = $etapaRender['cy'] ?? 0;
+                    if ($esUltimo) {
                         $c = ['fill' => '#fcd34d', 'stroke' => '#f59e0b', 'outer' => '#fde68a'];
                     }
                 ?>
-                    <!-- Semana <?= $semana ?> -->
+                    <!-- Etapa idx=<?= $idx ?> -->
                     <g style="transform-origin:<?= $cx ?>px <?= $cy ?>px; cursor:pointer; pointer-events:all;"
-                        class="pico-wp" data-semana="<?= $semana ?>">
-                        <?php if ($estadoActual === 'actual' && !$esUltimoPunto): ?>
+                        class="pico-wp" data-idx="<?= $idx ?>">
+                        <?php if ($esPortal): ?>
+                            <!-- Portal: flecha de retorno independiente -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="42"
+                                fill="<?= $c['outer'] ?>" opacity="0.45"
+                                filter="url(#picoGlow)" />
+                            <g transform="translate(<?= $cx ?>, <?= $cy ?>) scale(1.5)">
+                                <g class="return-arrow-animated">
+                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
+                                        fill="<?= $c['fill'] ?>"
+                                        stroke="<?= $c['stroke'] ?>"
+                                        stroke-width="3" stroke-linejoin="round" />
+                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
+                                        fill="#ffffff" opacity="0.7" />
+                                </g>
+                            </g>
+                        <?php elseif ($estadoActual === 'actual' && !$esUltimo): ?>
                             <!-- Heartbeat pulse -->
                             <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="12" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.8">
                                 <animate attributeName="r" values="12;19.5;12;27;12;12" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
                             </circle>
-                        <?php endif; ?>
-
-                        <?php if ($esUltimoPunto): ?>
+                            <!-- Anillo glow exterior (idéntico a camino.php, 50% más grande) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="33"
+                                fill="<?= $c['outer'] ?>" opacity="0.55"
+                                filter="url(#picoGlow)" />
+                            <!-- Círculo principal (50% más grande) -->
+                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="24"
+                                fill="<?= $c['fill'] ?>" stroke="<?= $c['stroke'] ?>" stroke-width="3.75" />
+                        <?php elseif ($esUltimo): ?>
+                            <?php if ($estadoActual === 'actual'): ?>
+                                <!-- Heartbeat pulse for Peak -->
+                                <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="34" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                                    <animate attributeName="r" values="34;45;34;55;34;34" keyTimes="0;0.15;0.3;0.45;0.7;1" dur="2.5s" repeatCount="indefinite" />
+                                </circle>
+                            <?php endif; ?>
                             <!-- Aura exterior pulsante capa 2 -->
                             <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="60" fill="#fde68a" opacity="0.18" filter="url(#picoGlow)">
                                 <animate attributeName="r" values="60;76;60" dur="2s" repeatCount="indefinite" />
@@ -355,29 +428,10 @@ require APPROOT . '/views/inc/header.php';
                             </circle>
                             <!-- Gran punto dorado cumbre -->
                             <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="34"
-                                fill="#fcd34d"
-                                stroke="#f59e0b"
-                                stroke-width="5" />
+                                fill="#fcd34d" stroke="#f59e0b" stroke-width="5" />
                             <!-- Brillo interior -->
                             <circle cx="<?= $cx - 9 ?>" cy="<?= $cy - 9 ?>" r="10"
                                 fill="#ffffff" opacity="0.35" />
-                        <?php elseif ($esPrimerPunto): ?>
-                            <!-- Flecha de retorno animada (apuntando al norte 30º, 50% más grande) -->
-                            <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="42"
-                                fill="<?= $c['outer'] ?>" opacity="0.5"
-                                filter="url(#picoGlow)" />
-                            <g transform="translate(<?= $cx ?>, <?= $cy ?>) scale(1.5)">
-                                <g class="return-arrow-animated">
-                                    <path d="M 0,-36 L 20,6 L 8,2 L 8,26 C 8,29 -8,29 -8,26 L -8,2 L -20,6 Z"
-                                        fill="<?= $c['fill'] ?>"
-                                        stroke="<?= $c['stroke'] ?>"
-                                        stroke-width="3"
-                                        stroke-linejoin="round" />
-                                    <path d="M 0,-25 L 10,4 L 3,1 L 3,19 L -3,19 L -3,1 L -10,4 Z"
-                                        fill="#ffffff"
-                                        opacity="0.7" />
-                                </g>
-                            </g>
                         <?php else: ?>
                             <!-- Anillo glow exterior (idéntico a camino.php, 50% más grande) -->
                             <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="33"
@@ -385,9 +439,7 @@ require APPROOT . '/views/inc/header.php';
                                 filter="url(#picoGlow)" />
                             <!-- Círculo principal (50% más grande) -->
                             <circle cx="<?= $cx ?>" cy="<?= $cy ?>" r="24"
-                                fill="<?= $c['fill'] ?>"
-                                stroke="<?= $c['stroke'] ?>"
-                                stroke-width="3.75" />
+                                fill="<?= $c['fill'] ?>" stroke="<?= $c['stroke'] ?>" stroke-width="3.75" />
                         <?php endif; ?>
                     </g>
                 <?php endforeach; ?>
@@ -530,6 +582,41 @@ require APPROOT . '/views/inc/header.php';
             syncPano();
         });
         resizeObserver.observe(mainContent);
+    }
+
+    // ── Click handler centralizado ──
+    function handlePointClick(e, pt) {
+        e.stopPropagation();
+        if (pt.is_portal) {
+            if (pt.estado === 'bloqueado') {
+                showZoneAlert();
+            } else {
+                window.location.href = pt.target_url;
+            }
+            return;
+        }
+        handleWeekClick(e, pt, e.currentTarget);
+    }
+
+    function showZoneAlert() {
+        const existing = document.getElementById('zoneAlertModal');
+        if (existing) { existing.remove(); }
+        const modal = document.createElement('div');
+        modal.id = 'zoneAlertModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);" onclick="this.parentElement.remove()"></div>
+            <div style="position:relative;background:#1e293b;border:1px solid #475569;border-radius:1.5rem;padding:2.5rem 3rem;max-width:360px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+                <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+                <h3 style="color:#f1f5f9;font-size:1.2rem;font-weight:700;margin-bottom:0.75rem;">Zona no disponible</h3>
+                <p style="color:#94a3b8;font-size:0.95rem;margin-bottom:1.5rem;">Esta zona aun no tiene actividades pendientes</p>
+                <button onclick="document.getElementById('zoneAlertModal').remove()"
+                    style="background:#3b82f6;color:#fff;border:none;padding:0.6rem 2rem;border-radius:9999px;cursor:pointer;font-weight:600;">
+                    Entendido
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 
     // ── Week click interaction ──
@@ -878,14 +965,10 @@ require APPROOT . '/views/inc/header.php';
     // Inicializar listeners de los puntos
     document.querySelectorAll('.pico-wp').forEach(el => {
         el.addEventListener('click', (e) => {
-            const sem = parseInt(el.getAttribute('data-semana'));
-            if (sem === 1) {
-                window.location.href = '<?= URLROOT ?>/padres/cueva';
-                return;
-            }
-            const pt = etapasPico[sem - 1];
+            const idx = parseInt(el.getAttribute('data-idx'));
+            const pt = etapasPico[idx];
             if (pt) {
-                handleWeekClick(e, pt, el);
+                handlePointClick(e, pt);
             }
         });
     });
