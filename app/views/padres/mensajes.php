@@ -92,7 +92,7 @@ require APPROOT . '/views/inc/header.php';
                                 </div>
                             <?php endif; ?>
 
-                            <div class="flex gap-3">
+                            <div class="flex gap-3 items-start">
                                 <div class="w-10 h-10 rounded-full <?php echo $esRecibido ? 'bg-primary/10 text-primary' : 'bg-surface-container text-on-surface-variant'; ?> flex items-center justify-center shrink-0">
                                     <span class="material-symbols-outlined text-xl"><?php echo $esRecibido ? $otroIcon : 'person'; ?></span>
                                 </div>
@@ -121,7 +121,7 @@ require APPROOT . '/views/inc/header.php';
                                         <span class="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full uppercase tracking-wider mb-2 inline-block"><?php echo htmlspecialchars($msg->asunto); ?></span>
                                     <?php endif; ?>
 
-                                    <div class="bg-surface-container-lowest rounded-2xl p-3 text-sm text-on-surface leading-relaxed border border-outline-variant/30 shadow-sm mt-2 break-words">
+                                    <div class="w-full bg-surface-container-lowest rounded-2xl p-3 text-sm text-on-surface leading-normal border border-outline-variant/30 shadow-sm mt-2 break-words" style="height: auto !important; min-height: 0 !important;">
                                         <?php echo nl2br(htmlspecialchars(trim($msg->mensaje))); ?>
                                     </div>
 
