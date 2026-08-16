@@ -14,7 +14,7 @@ $isAdmin = (isset($_SESSION['rol']) && $_SESSION['rol'] === 'administrador');
     }
     ?>
 
-    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen" style="margin-left:16rem">
+    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen">
         <!-- TopAppBar -->
         <header class="flex justify-between items-center h-16 px-6 w-full bg-white top-0 z-50 border-b border-outline-variant shadow-sm">
             <div class="flex items-center gap-3">
@@ -36,6 +36,7 @@ $isAdmin = (isset($_SESSION['rol']) && $_SESSION['rol'] === 'administrador');
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
                 <span class="text-sm text-on-surface-variant hidden md:inline"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
                 <a href="<?php echo URLROOT; ?>/auth/logout"
                     class="px-4 py-1.5 rounded-full text-sm font-semibold border border-outline text-on-surface-variant hover:bg-surface-container transition-colors">

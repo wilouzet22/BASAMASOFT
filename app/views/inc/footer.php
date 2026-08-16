@@ -36,110 +36,94 @@
 </footer>
 <?php endif; ?>
 
-<!-- Selector Flotante de Temas (Esquina Inferior Derecha) -->
-<div id="global-theme-selector" class="fixed bottom-[85px] md:bottom-6 right-4 md:right-6 z-50 flex flex-col items-end gap-2.5">
-    <!-- Menú Desplegable de Temas -->
-    <div id="theme-options-menu" class="hidden flex-col items-end gap-2 transition-all duration-300 opacity-0 transform translate-y-3 pointer-events-none mb-1">
-        <!-- Opción: Modo Súper Oscuro -->
-        <button type="button" onclick="setTheme('superdark')"
-                class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-black text-white text-xs font-bold shadow-2xl border border-neutral-700 hover:scale-105 active:scale-95 transition-all cursor-pointer group">
-            <span class="w-3.5 h-3.5 rounded-full bg-black border border-white group-hover:scale-110 transition-transform"></span>
-            <span class="material-symbols-outlined text-base">contrast</span>
-            <span>Súper Oscuro</span>
-        </button>
-
-        <!-- Opción: Modo Oscuro (Slate/Azul) -->
-        <button type="button" onclick="setTheme('dark')"
-                class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-800 text-white text-xs font-bold shadow-2xl border border-slate-600 hover:scale-105 active:scale-95 transition-all cursor-pointer group">
-            <span class="w-3.5 h-3.5 rounded-full bg-slate-900 border border-sky-400 group-hover:scale-110 transition-transform"></span>
-            <span class="material-symbols-outlined text-base">dark_mode</span>
-            <span>Modo Oscuro</span>
-        </button>
-
-        <!-- Opción: Modo Claro -->
-        <button type="button" onclick="setTheme('light')"
-                class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white text-gray-900 text-xs font-bold shadow-2xl border border-gray-300 hover:scale-105 active:scale-95 transition-all cursor-pointer group">
-            <span class="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 group-hover:scale-110 transition-transform"></span>
-            <span class="material-symbols-outlined text-base text-amber-500">light_mode</span>
-            <span>Modo Claro</span>
-        </button>
-    </div>
-
-    <!-- Botón Principal Globo -->
-    <button id="theme-main-toggle" type="button" title="Cambiar Tema" aria-expanded="false"
-            class="p-3.5 bg-primary hover:bg-primary/90 text-white rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all duration-200 border-2 border-white/30 dark:bg-amber-400 dark:text-gray-900 dark:border-gray-800 flex items-center justify-center cursor-pointer">
-        <span class="material-symbols-outlined text-2xl">palette</span>
-    </button>
-</div>
-
 <script>
-    (function() {
-        function initThemeSelector() {
-            const menu = document.getElementById('theme-options-menu');
-            const mainBtn = document.getElementById('theme-main-toggle');
+(function() {
+    function updateThemeUI(theme) {
+        // Actualizar iconos de indicadores
+        const iconMap = {
+            'light': 'light_mode',
+            'dark': 'dark_mode',
+            'superdark': 'contrast'
+        };
+        const currentIcon = iconMap[theme] || 'palette';
+        document.querySelectorAll('#theme-icon-indicator').forEach(el => {
+            el.textContent = currentIcon;
+        });
 
-            function toggleMenu() {
-                if (!menu) return;
-                const isHidden = menu.classList.contains('hidden');
-                if (isHidden) {
-                    menu.classList.remove('hidden');
-                    setTimeout(function() {
-                        menu.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
-                        menu.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
-                    }, 10);
-                    mainBtn.setAttribute('aria-expanded', 'true');
-                } else {
-                    menu.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
-                    menu.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
-                    setTimeout(function() {
-                        menu.classList.add('hidden');
-                    }, 300);
-                    mainBtn.setAttribute('aria-expanded', 'false');
-                }
+        // Actualizar checkmarks en dropdowns
+        document.querySelectorAll('.theme-select-opt').forEach(btn => {
+            const val = btn.getAttribute('data-theme-value');
+            const check = btn.querySelector('.check-mark');
+            if (val === theme) {
+                btn.classList.add('bg-primary/10', 'text-primary');
+                if (check) check.classList.remove('hidden');
+            } else {
+                btn.classList.remove('bg-primary/10', 'text-primary');
+                if (check) check.classList.add('hidden');
             }
+        });
+    }
 
-            if (mainBtn) {
-                mainBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    toggleMenu();
-                });
+    window.toggleThemeMenu = function(e) {
+        if (e) e.stopPropagation();
+        const dropdowns = document.querySelectorAll('#theme-menu-dropdown');
+        dropdowns.forEach(dd => {
+            const isHidden = dd.classList.contains('hidden');
+            if (isHidden) {
+                dd.classList.remove('hidden');
+                setTimeout(() => {
+                    dd.classList.remove('opacity-0', 'scale-95');
+                    dd.classList.add('opacity-100', 'scale-100');
+                }, 10);
+            } else {
+                dd.classList.remove('opacity-100', 'scale-100');
+                dd.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => dd.classList.add('hidden'), 200);
             }
+        });
+    };
 
-            document.addEventListener('click', function(e) {
-                if (menu && !menu.contains(e.target) && mainBtn && !mainBtn.contains(e.target)) {
-                    if (!menu.classList.contains('hidden')) {
-                        menu.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
-                        menu.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
-                        setTimeout(function() {
-                            menu.classList.add('hidden');
-                        }, 300);
-                        mainBtn.setAttribute('aria-expanded', 'false');
-                    }
+    window.setTheme = function(theme) {
+        if (theme === 'superdark') {
+            document.documentElement.classList.add('dark', 'superdark');
+            localStorage.setItem('theme', 'superdark');
+        } else if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('superdark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark', 'superdark');
+            localStorage.setItem('theme', 'light');
+        }
+        updateThemeUI(theme);
+
+        // Cerrar menús
+        const dropdowns = document.querySelectorAll('#theme-menu-dropdown');
+        dropdowns.forEach(dd => {
+            dd.classList.remove('opacity-100', 'scale-100');
+            dd.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => dd.classList.add('hidden'), 200);
+        });
+    };
+
+    // Cerrar al hacer clic afuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#theme-selector-wrapper')) {
+            document.querySelectorAll('#theme-menu-dropdown').forEach(dd => {
+                if (!dd.classList.contains('hidden')) {
+                    dd.classList.remove('opacity-100', 'scale-100');
+                    dd.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => dd.classList.add('hidden'), 200);
                 }
             });
-
-            window.setTheme = function(theme) {
-                if (theme === 'superdark') {
-                    document.documentElement.classList.add('dark', 'superdark');
-                    localStorage.setItem('theme', 'superdark');
-                } else if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('superdark');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.documentElement.classList.remove('dark', 'superdark');
-                    localStorage.setItem('theme', 'light');
-                }
-                toggleMenu();
-            };
         }
+    });
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initThemeSelector);
-        } else {
-            initThemeSelector();
-        }
-    })();
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem('theme') || 'light';
+        updateThemeUI(saved);
+    });
+})();
 </script>
 
 <script src="<?php echo URLROOT; ?>/assets/js/main.js"></script>

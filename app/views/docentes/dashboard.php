@@ -1,159 +1,262 @@
-<?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
+<?php
+$data = $data ?? [];
+$bodyClass = 'bg-surface-container-lowest text-on-background font-lexend min-h-screen';
+require APPROOT . '/views/inc/header.php';
+?>
 
-<body class="bg-background text-on-background font-body-md graph-paper-bg min-h-screen flex flex-col md:flex-row">
-    <!-- SideNavBar -->
+<!-- Mobile Header -->
+<header class="md:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <button type="button" onclick="toggleDocentesMobileSidebar()" class="p-1 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-9 w-9 rounded-full" alt="Logo">
+        <span class="font-bold text-primary text-lg">EduSaft</span>
+    </div>
+    <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
+
+</header>
+
+<div class="flex">
+    <!-- Sidebar reusable docentes -->
     <?php require APPROOT . '/views/docentes/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen" style="margin-left:16rem">
-        <!-- TopAppBar -->
-        <header class="flex justify-between items-center h-16 px-6 w-full bg-white top-0 z-50 border-b border-outline-variant shadow-sm">
-            <div class="flex items-center gap-3">
-                <button type="button" onclick="toggleDocentesCollapse()"
-                        class="hidden md:flex w-9 h-9 items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-                <div class="text-xl font-extrabold tracking-tight text-primary md:hidden">Edusaft</div>
-                <div class="hidden md:block text-on-surface-variant text-sm">Panel Docente</div>
-            </div>
+    <main id="mainContent" class="flex-1 min-h-screen bg-surface-container-lowest flex flex-col">
+        <!-- Top Bar -->
+        <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
             <div class="flex items-center gap-4">
-                <span class="text-sm text-on-surface-variant hidden md:inline">
-                    <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>
-                </span>
-                <a href="<?php echo URLROOT; ?>/auth/logout" title="Cerrar Sesión"
-                   class="hover:bg-surface-container transition-all p-2 rounded-full active:scale-95 duration-150">
-                    <span class="material-symbols-outlined text-error">logout</span>
-                </a>
+                <button id="desktop-menu-toggle" class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95">menu</button>
+                <div>
+                    <h2 class="text-xl font-bold text-on-surface">Panel de Control Docente</h2>
+                    <p class="text-sm text-on-surface-variant">
+                        Bienvenido, <span class="text-primary font-bold">Prof. <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
+                <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-on-surface"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Docente'); ?></p>
+                        <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Portal Docente</p>
+                    </div>
+                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="event.preventDefault(); openLogoutModal();" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
+                        <span class="material-symbols-outlined text-primary">school</span>
+                    </a>
+                </div>
             </div>
         </header>
 
-        <!-- Page Content -->
-        <main class="flex-1 p-4 md:p-8 max-w-[1280px] mx-auto w-full flex flex-col gap-6">
-            <h2 class="text-headline-lg text-primary font-headline-lg">
-                Bienvenido, Prof. <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>
-            </h2>
+        <div class="p-6 md:p-10 space-y-8 max-w-7xl mx-auto w-full">
 
-            <!-- Stats Row -->
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div class="bg-surface border border-outline-variant rounded-xl p-5 flex flex-col items-center text-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-3xl">event</span>
-                    <p class="text-3xl font-black text-primary"><?php echo $data['total_actividades']; ?></p>
-                    <p class="text-xs text-on-surface-variant font-medium uppercase tracking-wide">Mis Actividades</p>
-                </div>
-                <div class="bg-surface border border-outline-variant rounded-xl p-5 flex flex-col items-center text-center gap-2">
-                    <span class="material-symbols-outlined text-secondary text-3xl">how_to_reg</span>
-                    <p class="text-3xl font-black text-secondary"><?php echo $data['total_asistencias']; ?></p>
-                    <p class="text-xs text-on-surface-variant font-medium uppercase tracking-wide">Asistencias Registradas</p>
-                </div>
-                <div class="bg-surface border border-outline-variant rounded-xl p-5 flex flex-col items-center text-center gap-2">
-                    <span class="material-symbols-outlined text-tertiary text-3xl">groups</span>
-                    <p class="text-3xl font-black text-tertiary"><?php echo count($data['grupos']); ?></p>
-                    <p class="text-xs text-on-surface-variant font-medium uppercase tracking-wide">Mis Grupos</p>
+            <!-- Hero Banner Docente -->
+            <div class="relative bg-primary rounded-[2.5rem] p-8 md:p-12 text-on-primary overflow-hidden shadow-2xl shadow-primary/30 group">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-secondary/20 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
+                    <div class="flex-1 text-center md:text-left">
+                        <span class="inline-block px-4 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                            Portal Docente — EduSaft
+                        </span>
+                        <h3 class="text-3xl md:text-4xl font-black mb-4 tracking-tight">
+                            ¡Hola, Prof. <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>!
+                        </h3>
+                        <p class="text-on-primary/80 mb-8 max-w-md">
+                            Gestiona las actividades de tus grupos, toma la asistencia y haz seguimiento en tiempo real del progreso de tus alumnos.
+                        </p>
+                        <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                            <a href="<?php echo URLROOT; ?>/docentes/asistencia"
+                                class="bg-white text-primary px-8 py-3.5 rounded-2xl font-bold text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                                Registrar Asistencia
+                                <span class="material-symbols-outlined">event_available</span>
+                            </a>
+                            <a href="<?php echo URLROOT; ?>/docentes/actividades"
+                                class="bg-white/20 text-white hover:bg-white/30 border border-white/30 px-8 py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center gap-2">
+                                Mis Actividades
+                                <span class="material-symbols-outlined">assignment</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Glassmorphism Stat Box -->
+                    <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20 text-center md:text-left">
+                        <p class="text-xs font-bold uppercase tracking-widest text-on-primary/70 mb-3">Resumen de Gestión</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/10">
+                                <span class="material-symbols-outlined text-2xl mb-1 text-white">assignment</span>
+                                <p class="text-2xl font-black"><?php echo $data['total_actividades']; ?></p>
+                                <p class="text-[10px] text-on-primary/70 uppercase font-bold">Actividades</p>
+                            </div>
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/10">
+                                <span class="material-symbols-outlined text-2xl mb-1 text-white">check_circle</span>
+                                <p class="text-2xl font-black"><?php echo $data['total_asistencias']; ?></p>
+                                <p class="text-[10px] text-on-primary/70 uppercase font-bold">Asistencias</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Mis Grupos -->
-            <div class="bg-surface border border-outline-variant rounded-xl p-6">
-                <h3 class="text-headline-md text-primary mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined">class</span>
+            <!-- Stats Tarjetas estilo Padres -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-all flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <span class="material-symbols-outlined text-3xl">event</span>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-black text-primary"><?php echo $data['total_actividades']; ?></p>
+                        <p class="text-xs text-on-surface-variant font-bold uppercase tracking-wider mt-0.5">Mis Actividades</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-all flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                        <span class="material-symbols-outlined text-3xl">how_to_reg</span>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-black text-secondary"><?php echo $data['total_asistencias']; ?></p>
+                        <p class="text-xs text-on-surface-variant font-bold uppercase tracking-wider mt-0.5">Asistencias Registradas</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-all flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-2xl bg-tertiary/10 flex items-center justify-center text-tertiary shrink-0">
+                        <span class="material-symbols-outlined text-3xl">groups</span>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-black text-tertiary"><?php echo count($data['grupos']); ?></p>
+                        <p class="text-xs text-on-surface-variant font-bold uppercase tracking-wider mt-0.5">Mis Grupos Asignados</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mis Grupos Asignados -->
+            <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm">
+                <h4 class="text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-2xl">class</span>
                     Mis Grupos Asignados
-                </h3>
+                </h4>
                 <?php if (empty($data['grupos'])): ?>
-                    <p class="text-on-surface-variant text-sm">No tiene grupos asignados actualmente.</p>
+                    <div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant/30 text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-60">group_off</span>
+                        <p class="font-medium text-sm">No tiene grupos asignados actualmente.</p>
+                    </div>
                 <?php else: ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <?php foreach ($data['grupos'] as $grupo): ?>
-                        <div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant flex items-center gap-4">
-                            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                <span class="material-symbols-outlined text-primary">group</span>
+                            <div class="p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/40 hover:border-primary/40 hover:shadow-md transition-all flex items-center gap-4 group">
+                                <div class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shrink-0">
+                                    <span class="material-symbols-outlined text-2xl">group</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <h5 class="font-bold text-on-surface text-base truncate"><?php echo htmlspecialchars($grupo->nombre_grupo); ?></h5>
+                                    <p class="text-xs text-outline font-bold uppercase tracking-tighter mt-0.5">
+                                        <?php echo htmlspecialchars($grupo->nombre_grado); ?>
+                                    </p>
+                                    <p class="text-xs text-on-surface-variant truncate">
+                                        <?php echo htmlspecialchars($grupo->nombre_sede); ?>
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="font-bold text-on-surface"><?php echo htmlspecialchars($grupo->nombre_grupo); ?></p>
-                                <p class="text-xs text-on-surface-variant">
-                                    <?php echo htmlspecialchars($grupo->nombre_grado); ?> — <?php echo htmlspecialchars($grupo->nombre_sede); ?>
-                                </p>
-                            </div>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
 
-            <!-- Asistencias Recientes -->
-            <div class="bg-surface border border-outline-variant rounded-xl p-6">
-                <h3 class="text-headline-md text-primary mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined">history</span>
+            <!-- Últimas asistencias registradas -->
+            <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm">
+                <h4 class="text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary text-2xl">history</span>
                     Últimas Asistencias Registradas
-                </h3>
+                </h4>
                 <?php if (empty($data['asistencias_recientes'])): ?>
-                    <p class="text-on-surface-variant text-sm">Aún no ha registrado asistencias.</p>
+                    <div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant/30 text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-60">event_busy</span>
+                        <p class="font-medium text-sm">Aún no ha registrado asistencias.</p>
+                    </div>
                 <?php else: ?>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm border-collapse">
+                        <table class="w-full text-sm text-left">
                             <thead>
-                                <tr class="border-b border-outline-variant">
-                                    <th class="px-3 py-2 text-left text-on-surface-variant font-semibold">Fecha</th>
-                                    <th class="px-3 py-2 text-left text-on-surface-variant font-semibold">Estudiante</th>
-                                    <th class="px-3 py-2 text-left text-on-surface-variant font-semibold">Grupo</th>
-                                    <th class="px-3 py-2 text-left text-on-surface-variant font-semibold">Actividad</th>
-                                    <th class="px-3 py-2 text-left text-on-surface-variant font-semibold">Estado</th>
+                                <tr class="border-b border-outline-variant/40 text-on-surface-variant text-xs font-bold uppercase tracking-wider">
+                                    <th class="py-3 px-4">Fecha</th>
+                                    <th class="py-3 px-4">Estudiante</th>
+                                    <th class="py-3 px-4">Grupo</th>
+                                    <th class="py-3 px-4">Actividad</th>
+                                    <th class="py-3 px-4 text-center">Estado</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-outline-variant/20">
                                 <?php foreach ($data['asistencias_recientes'] as $asi): ?>
-                                <tr class="border-b border-outline-variant/50 hover:bg-surface-container transition-colors">
-                                    <td class="px-3 py-3 text-xs text-on-surface-variant">
-                                        <?php echo date('d/m/Y H:i', strtotime($asi->fecha_registro)); ?>
-                                    </td>
-                                    <td class="px-3 py-3 font-medium"><?php echo htmlspecialchars($asi->estudiante_nombre); ?></td>
-                                    <td class="px-3 py-3 text-xs text-on-surface-variant"><?php echo htmlspecialchars($asi->nombre_grupo); ?></td>
-                                    <td class="px-3 py-3 text-xs text-on-surface-variant"><?php echo htmlspecialchars($asi->nombre_actividad); ?></td>
-                                    <td class="px-3 py-3">
-                                        <?php if ($asi->presente): ?>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 font-medium">Presente</span>
-                                        <?php else: ?>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800 font-medium">Ausente</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
+                                    <tr class="hover:bg-surface-container-low/50 transition-colors">
+                                        <td class="py-3 px-4 text-xs text-on-surface-variant">
+                                            <?php echo date('d/m/Y H:i', strtotime($asi->fecha_registro)); ?>
+                                        </td>
+                                        <td class="py-3 px-4 font-bold text-on-surface">
+                                            <?php echo htmlspecialchars($asi->estudiante_nombre); ?>
+                                        </td>
+                                        <td class="py-3 px-4 text-xs text-on-surface-variant">
+                                            <span class="bg-primary/10 text-primary font-bold px-2.5 py-1 rounded-full text-[11px]">
+                                                <?php echo htmlspecialchars($asi->nombre_grupo); ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-xs text-on-surface-variant">
+                                            <?php echo htmlspecialchars($asi->nombre_actividad); ?>
+                                        </td>
+                                        <td class="py-3 px-4 text-center">
+                                            <?php if ($asi->presente): ?>
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                                                    <span class="material-symbols-outlined text-sm">check</span> Presente
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold bg-red-100 text-red-800 px-3 py-1 rounded-full">
+                                                    <span class="material-symbols-outlined text-sm">close</span> Ausente
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-4">
-                        <a href="<?php echo URLROOT; ?>/docentes/asistencia" class="text-primary text-sm font-semibold hover:underline">
-                            Ver todas las asistencias &rarr;
+                    <div class="mt-6 flex justify-end">
+                        <a href="<?php echo URLROOT; ?>/docentes/asistencia" class="text-primary text-sm font-bold hover:underline inline-flex items-center gap-1">
+                            Ver todas las asistencias <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
                     </div>
                 <?php endif; ?>
             </div>
 
-            <!-- Quick Actions -->
+            <!-- Accesos Rápidos -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <a href="<?php echo URLROOT; ?>/docentes/actividades"
-                   class="bg-primary/5 border border-primary/20 rounded-xl p-6 hover:bg-primary/10 transition-colors flex items-center gap-4 group">
-                    <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <span class="material-symbols-outlined text-primary">calendar_today</span>
+                   class="bg-white border border-outline-variant rounded-3xl p-6 hover:border-primary/40 hover:shadow-md transition-all flex items-center gap-5 group">
+                    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shrink-0">
+                        <span class="material-symbols-outlined text-3xl">assignment</span>
                     </div>
                     <div>
-                        <p class="font-bold text-on-surface">Mis Actividades</p>
-                        <p class="text-sm text-on-surface-variant">Ver y gestionar actividades programadas</p>
+                        <h5 class="font-bold text-on-surface text-base">Mis Actividades</h5>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Crear, ver y gestionar actividades programadas</p>
                     </div>
                 </a>
                 <a href="<?php echo URLROOT; ?>/docentes/asistencia"
-                   class="bg-secondary/5 border border-secondary/20 rounded-xl p-6 hover:bg-secondary/10 transition-colors flex items-center gap-4 group">
-                    <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                        <span class="material-symbols-outlined text-secondary">how_to_reg</span>
+                   class="bg-white border border-outline-variant rounded-3xl p-6 hover:border-secondary/40 hover:shadow-md transition-all flex items-center gap-5 group">
+                    <div class="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all shrink-0">
+                        <span class="material-symbols-outlined text-3xl">how_to_reg</span>
                     </div>
                     <div>
-                        <p class="font-bold text-on-surface">Registrar Asistencia</p>
-                        <p class="text-sm text-on-surface-variant">Tomar asistencia de sus grupos</p>
+                        <h5 class="font-bold text-on-surface text-base">Registrar Asistencia</h5>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Tomar asistencia de tus alumnos por clase o evento</p>
                     </div>
                 </a>
             </div>
-        </main>
-    </div>
 
-    <?php require APPROOT . '/views/inc/footer.php'; ?>
+        </div>
+        <?php require APPROOT . '/views/inc/footer.php'; ?>
+    </main>
+</div>
+
 </body>
 </html>

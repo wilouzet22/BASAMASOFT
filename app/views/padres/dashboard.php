@@ -46,6 +46,8 @@ require APPROOT . '/views/inc/header.php';
         <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-10 w-10 rounded-full" alt="Logo">
         <span class="font-bold text-primary">EduSaft</span>
     </div>
+    <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
+
 </header>
 
 <div class="flex">
@@ -66,6 +68,7 @@ require APPROOT . '/views/inc/header.php';
                 </div>
             </div>
             <div class="flex items-center gap-6">
+                <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
                 <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
                     <div class="text-right">
                         <p class="text-sm font-bold text-on-surface">Acudiente</p>

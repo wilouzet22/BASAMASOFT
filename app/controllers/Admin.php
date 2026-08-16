@@ -350,4 +350,19 @@ class Admin extends Controller
         header('Location: ' . URLROOT . '/admin/mensajes');
         exit;
     }
+    /**
+     * Vista de actividades próximas/pendientes — solo informativa, sin puntaje.
+     */
+    public function actividades_proximas()
+    {
+        $model = $this->model('ActividadModel');
+
+        $data = [
+            'title'             => 'Actividades de la Institución',
+            'actividades'       => $model->getAllActividadesVisitante(),
+            'proximas'          => $model->getProximasActividadesVisitante(3),
+        ];
+
+        $this->view('shared/actividades_proximas', $data);
+    }
 }
