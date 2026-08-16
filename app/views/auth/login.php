@@ -17,7 +17,7 @@
         <!-- Login Form Card -->
         <div class="bg-surface border border-outline-variant rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm bg-white/90">
             <div class="mb-8 text-center">
-                <img class="w-24 h-24 rounded-full border-2 border-outline-variant shadow-md bg-surface object-cover mx-auto mb-4" src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="Logo">
+                <img class="w-24 h-24 rounded-full shadow-md object-contain mx-auto mb-4" src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="Logo">
                 <h3 class="font-headline-md text-headline-md text-primary tracking-tight">INICIAR SESIÓN</h3>
                 <p class="font-body-md text-body-md text-on-surface-variant mt-2">Bienvenido de nuevo a su comunidad educativa</p>
             </div>

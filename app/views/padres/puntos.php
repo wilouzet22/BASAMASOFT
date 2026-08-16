@@ -60,6 +60,7 @@ require APPROOT . '/views/inc/header.php';
 <!-- Mobile Header -->
 <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
     <span class="font-bold text-primary text-lg">Mis Puntos</span>
+    <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
 </header>
 
 <div class="flex">
@@ -72,13 +73,18 @@ require APPROOT . '/views/inc/header.php';
         <div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
 
             <!-- Page Header -->
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-black text-on-surface">Mis Puntos</h1>
+                        <p class="text-on-surface-variant text-sm">Resumen de tu progreso y participación</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-3xl font-black text-on-surface">Mis Puntos</h1>
-                    <p class="text-on-surface-variant text-sm">Resumen de tu progreso y participación</p>
+                <div class="hidden lg:flex items-center gap-3">
+                    <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
                 </div>
             </div>
 

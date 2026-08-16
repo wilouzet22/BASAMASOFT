@@ -413,27 +413,9 @@ require APPROOT . '/views/inc/header.php';
         </span>
     </div>
     <div class="flex items-center gap-1.5">
-        <button id="headerThemeToggle" class="p-1.5 text-yellow-500 hover:bg-surface-container-low rounded-full transition-colors active:scale-95" title="Tema">
-            <span class="material-symbols-outlined text-[1.3rem]">palette</span>
-        </button>
+        <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
     </div>
 </header>
-<script>
-(function() {
-    function bindHeaderTheme() {
-        var btn = document.getElementById('headerThemeToggle');
-        var mainBtn = document.getElementById('theme-main-toggle');
-        if (!btn) return;
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (mainBtn) mainBtn.click();
-        });
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindHeaderTheme);
-    } else { bindHeaderTheme(); }
-})();
-</script>
 
 <div class="flex">
     <!-- Sidebar reusable -->

@@ -32,7 +32,7 @@
         <div class="flex-1 relative animate-float">
             <div class="bg-primary/20 rounded-full w-64 h-64 md:w-96 md:h-96 absolute -top-12 -left-12 blur-3xl opacity-50"></div>
             <div class="bg-secondary/10 rounded-full w-48 h-48 md:w-80 md:h-80 absolute -bottom-8 -right-8 blur-3xl opacity-50"></div>
-            <img src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="EduSaft Logo" class="relative z-10 w-full max-w-sm mx-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+            <img src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="EduSaft Logo" class="relative z-10 w-64 h-64 md:w-80 md:h-80 mx-auto rounded-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         </div>
     </div>
 

@@ -427,9 +427,7 @@ require APPROOT . '/views/inc/header.php';
         </span>
     </div>
     <div class="flex items-center gap-1.5">
-        <button id="headerThemeToggle" class="p-1.5 text-yellow-500 hover:bg-surface-container-low rounded-full transition-colors active:scale-95" title="Tema">
-            <span class="material-symbols-outlined text-[1.3rem]">palette</span>
-        </button>
+        <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
         <button onclick="openModal('contactosModal')" class="p-1.5 text-primary hover:bg-primary/10 rounded-full transition-colors active:scale-95" title="Contactos">
             <span class="material-symbols-outlined text-[1.3rem]">group</span>
         </button>
@@ -1404,12 +1402,12 @@ require APPROOT . '/views/inc/header.php';
 
             <!-- Modals -->
 
-            <!-- Modal Detalles de Actividad -->
-            <div id="actividadModal" class="fixed inset-0 z-[80] hidden">
-                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
-                <div class="modal-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
+            <!-- Modal Detalles de Actividad (Centrado) -->
+            <div id="actividadModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
+                <div class="modal-card relative z-10 w-full max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0 border border-outline-variant/50">
                     <!-- Imagen cabecera representativa -->
-                    <div class="h-40 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center">
+                    <div class="h-36 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center">
                         <span class="material-symbols-outlined text-white text-6xl opacity-20 absolute">landscape</span>
                         <button onclick="closeModal('actividadModal')" class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors">
                             <span class="material-symbols-outlined text-sm">close</span>
@@ -1421,32 +1419,32 @@ require APPROOT . '/views/inc/header.php';
                     </div>
 
                     <div class="p-6">
-                        <h2 id="actTitle" class="text-2xl font-black text-primary mb-2">Nombre de Actividad</h2>
+                        <h2 id="actTitle" class="text-xl font-extrabold text-primary mb-2">Nombre de Actividad</h2>
 
-                        <div class="flex items-center gap-4 text-sm text-on-surface-variant mb-4 pb-4 border-b border-outline-variant">
+                        <div class="flex items-center gap-4 text-xs text-on-surface-variant mb-4 pb-4 border-b border-outline-variant/40">
                             <div class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[18px]">event</span>
+                                <span class="material-symbols-outlined text-[16px] text-primary">event</span>
                                 <span id="actDate">Fecha</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[18px]">location_on</span>
+                                <span class="material-symbols-outlined text-[16px] text-secondary">location_on</span>
                                 <span id="actSede">Sede</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[18px]">category</span>
+                                <span class="material-symbols-outlined text-[16px] text-tertiary">category</span>
                                 <span id="actType">Tipo</span>
                             </div>
                         </div>
 
                         <div>
-                            <h4 class="text-sm font-bold text-on-surface mb-1">Resumen de la Actividad</h4>
-                            <p id="actDesc" class="text-sm text-on-surface-variant leading-relaxed">
+                            <h4 class="text-xs font-bold text-on-surface uppercase tracking-wider mb-1.5">Resumen de la Actividad</h4>
+                            <p id="actDesc" class="text-xs text-on-surface-variant leading-relaxed bg-surface-container/30 p-3.5 rounded-2xl border border-outline-variant/30">
                                 Descripción detallada de la actividad aquí.
                             </p>
                         </div>
                     </div>
-                    <div class="bg-surface-container p-4 flex justify-end">
-                        <button onclick="closeModal('actividadModal')" class="px-6 py-2 bg-primary text-on-primary font-bold rounded-full hover:bg-primary-hover transition-colors shadow-sm">Entendido</button>
+                    <div class="bg-surface-container/50 px-6 py-4 flex justify-end border-t border-outline-variant/30">
+                        <button onclick="closeModal('actividadModal')" class="px-6 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md hover:bg-primary/90 transition-colors">Entendido</button>
                     </div>
                 </div>
             </div>

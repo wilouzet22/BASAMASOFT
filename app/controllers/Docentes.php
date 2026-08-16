@@ -160,4 +160,19 @@ class Docentes extends Controller
         header('Location: ' . URLROOT . '/docentes/mensajes');
         exit;
     }
+    /**
+     * Vista de actividades próximas — informativa, sin puntaje para el docente.
+     */
+    public function actividades_proximas()
+    {
+        $model = $this->model('ActividadModel');
+
+        $data = [
+            'title'       => 'Actividades de la Institución',
+            'actividades' => $model->getAllActividadesVisitante(),
+            'proximas'    => $model->getProximasActividadesVisitante(3),
+        ];
+
+        $this->view('shared/actividades_proximas', $data);
+    }
 }

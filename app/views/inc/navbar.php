@@ -4,7 +4,7 @@
             <div class="flex justify-between h-20">
                 <div class="flex items-center">
                     <a href="<?php echo URLROOT; ?>" class="flex-shrink-0 flex items-center gap-3">
-                        <img class="h-12 w-12 rounded-full border border-outline-variant shadow-sm" src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="EduSaft Logo">
+                        <img class="h-12 w-12 rounded-full object-contain" src="<?php echo URLROOT; ?>/assets/img/logo.png" alt="EduSaft Logo">
                         <div class="flex flex-col">
                             <span class="font-headline-md text-headline-md text-primary leading-none">EduSaft</span>
                             <span class="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-bold">Portal Escolar</span>
@@ -17,6 +17,7 @@
                     </div>
                 </div>
                 <div class="hidden md:flex items-center gap-4">
+                    <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
                     <?php if (isset($_SESSION['username'])): ?>
                         <div class="flex items-center gap-2 px-4 py-2 bg-surface-container rounded-full border border-outline-variant">
                             <span class="material-symbols-outlined text-primary text-sm">person</span>

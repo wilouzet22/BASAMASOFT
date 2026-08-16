@@ -20,12 +20,30 @@ if (!isset($_sidebar_profesores)) {
 ?>
 
 <style>
-    /* Sidebar collapse y responsividad */
+    /* Sidebar collapse y responsividad con scroll independiente */
     @media (min-width: 1024px) {
+        #userSidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            height: 100vh !important;
+            z-index: 40 !important;
+        }
+        #mainContent, 
+        main:not(.modal-main), 
+        #mainScrollContainer,
+        #main-content-wrap {
+            margin-left: 18rem !important;
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
+        }
+
         body.sidebar-collapsed #userSidebar { width: 5.5rem !important; }
         body.sidebar-collapsed #mainContent, 
         body.sidebar-collapsed main, 
-        body.sidebar-collapsed #mainScrollContainer { margin-left: 5.5rem !important; }
+        body.sidebar-collapsed #mainScrollContainer,
+        body.sidebar-collapsed #main-content-wrap { margin-left: 5.5rem !important; }
         body.sidebar-collapsed .sidebar-text { display: none !important; }
         body.sidebar-collapsed .sidebar-search-container { display: none !important; }
         body.sidebar-collapsed .sidebar-profile-info { display: none !important; }
@@ -41,7 +59,8 @@ if (!isset($_sidebar_profesores)) {
         }
         body.sidebar-hidden #mainContent, 
         body.sidebar-hidden main, 
-        body.sidebar-hidden #mainScrollContainer {
+        body.sidebar-hidden #mainScrollContainer,
+        body.sidebar-hidden #main-content-wrap {
             margin-left: 0 !important;
         }
         body.sidebar-hidden #showSidebarFloatingBtn {
@@ -76,7 +95,7 @@ if (!isset($_sidebar_profesores)) {
 
 <!-- Sidebar principal -->
 <nav id="userSidebar"
-    class="fixed inset-y-0 left-0 w-72 h-screen bg-white/80 backdrop-blur-xl border-r border-outline-variant/30 z-[100] transform -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+    class="fixed inset-y-0 left-0 w-72 h-screen bg-white/80 backdrop-blur-xl border-r border-outline-variant/30 z-40 transform -translate-x-full lg:translate-x-0 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[4px_0_24px_rgba(0,0,0,0.02)] overflow-hidden">
     
     <!-- Botón colapsar incrustado en el borde derecho -->
     <button id="collapseSidebarBtn" 
@@ -87,12 +106,15 @@ if (!isset($_sidebar_profesores)) {
     <button id="closeSidebarBtn" class="lg:hidden absolute top-6 right-4 material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95" title="Cerrar menú">close</button>
 
     <!-- Header del sidebar -->
-    <div class="p-4 pb-2 sidebar-header transition-all duration-300">
-        <div class="flex flex-col items-center text-center gap-1 mb-1 sidebar-logo-container transition-all duration-300">
-            <div class="p-1.5 bg-primary/10 rounded-xl flex-shrink-0">
-                <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-8 w-8 object-contain" alt="Logo">
+    <div class="p-4 pb-3 sidebar-header transition-all duration-300">
+        <div class="flex flex-col items-center text-center gap-2 mb-1 sidebar-logo-container transition-all duration-300">
+            <div class="relative flex-shrink-0">
+                <img src="<?php echo URLROOT; ?>/assets/img/logo.svg"
+                     class="h-24 w-24 object-contain rounded-full border-4 border-primary/20 shadow-lg ring-2 ring-primary/10 bg-white p-1"
+                     alt="Logo EduSaft">
+                <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 border-2 border-white rounded-full shadow-sm"></span>
             </div>
-            <span class="text-lg font-bold text-primary tracking-tight sidebar-text">EduSaft</span>
+            <span class="text-base font-extrabold text-primary tracking-tight sidebar-text mt-1">EduSaft</span>
         </div>
         <p class="text-[9px] text-outline uppercase tracking-widest font-bold text-center sidebar-text">Portal de Padres</p>
     </div>
@@ -263,6 +285,7 @@ window.openModal = function(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
     modal.classList.remove('hidden');
+    modal.classList.add('flex');
     setTimeout(() => {
         if(modal.children[0]) modal.children[0].classList.remove('opacity-0');
         if(modal.children[1]) {
@@ -280,161 +303,226 @@ window.closeModal = function(id) {
         modal.children[1].classList.add('scale-95', 'opacity-0');
         modal.children[1].classList.remove('scale-100', 'opacity-100');
     }
-    setTimeout(() => modal.classList.add('hidden'), 300);
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
 };
 </script>
 
 <!-- Global Modals for Padres -->
-<!-- Contactos Modal -->
-<div id="contactosModal" class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-lg bg-surface text-on-surface rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0" style="max-height:90dvh;">
+<!-- Global Modals for Padres -->
 
-        <!-- Header del modal -->
-        <div class="flex justify-between items-center px-6 pt-6 pb-4 border-b border-outline-variant/30">
-            <h3 class="text-xl font-bold text-primary flex items-center gap-2">
-                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">contacts</span>
-                Contáctanos
-            </h3>
-            <button onclick="closeModal('contactosModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant">
-                <span class="material-symbols-outlined">close</span>
+<!-- MODAL 1: Lista de Contactos (Maestros / Directivas con Buscador) -->
+<div id="contactosModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+    <!-- Backdrop oscuro -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('contactosModal')"></div>
+    
+    <!-- Ventana Centrada: Lista de Contactos -->
+    <div class="relative z-10 w-full max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline-variant/50 flex flex-col max-h-[88vh] overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-6 pt-5 pb-4 border-b border-outline-variant/30 bg-surface-container/50 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">contacts</span>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-on-surface leading-tight">Contáctanos</h3>
+                    <p class="text-xs text-on-surface-variant">Selecciona a quién deseas escribir</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal('contactosModal')" class="w-9 h-9 text-outline hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant flex items-center justify-center active:scale-95" title="Cerrar">
+                <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
 
-        <!-- Tabs -->
-        <div class="flex border-b border-outline-variant/30">
+        <!-- Tabs Maestros / Directivas -->
+        <div class="flex border-b border-outline-variant/30 shrink-0 bg-surface-container/20">
             <button id="tabMaestros" onclick="switchContactTab('maestros')"
-                class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold border-b-2 border-primary text-primary transition-all">
+                class="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold border-b-2 border-primary text-primary transition-all cursor-pointer">
                 <span class="material-symbols-outlined text-base">school</span> Maestros
             </button>
             <button id="tabDirectivas" onclick="switchContactTab('directivas')"
-                class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-all">
-                <span class="material-symbols-outlined text-base">apartment</span> Contacto a Directivas
+                class="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-all cursor-pointer">
+                <span class="material-symbols-outlined text-base">apartment</span> Directivas
             </button>
         </div>
 
-        <!-- Lista Maestros -->
-        <div id="panelMaestros" class="overflow-y-auto" style="max-height:55dvh;">
-            <div class="p-4 space-y-2">
-                <?php
-                if (empty($_sidebar_profesores)):
-                ?>
-                <div class="text-center text-on-surface-variant py-8">
-                    <span class="material-symbols-outlined text-4xl block mb-2">person_off</span>
-                    <p class="text-sm">No hay maestros registrados.</p>
-                </div>
-                <?php else: foreach ($_sidebar_profesores as $prof): ?>
-                <button type="button"
-                    class="w-full flex items-center gap-4 p-3 bg-surface-container-low hover:bg-primary/5 rounded-xl border border-outline-variant/50 hover:border-primary/30 transition-all group text-left"
-                    onclick="abrirFormContacto('profesor', <?= $prof->id_profesor ?>, '<?= htmlspecialchars(addslashes($prof->nombres . ' ' . $prof->apellidos)) ?>', '<?= htmlspecialchars(addslashes($prof->email)) ?>')">
-                    <div class="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                        <span class="material-symbols-outlined text-primary">person</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <span class="font-bold text-sm text-on-surface block truncate">
-                            <?= htmlspecialchars($prof->nombres . ' ' . $prof->apellidos) ?>
-                        </span>
-                        <span class="text-xs text-on-surface-variant truncate block"><?= htmlspecialchars($prof->email) ?></span>
-                        <?php if (!empty($prof->grupos)): ?>
-                        <span class="text-xs text-primary/70 truncate block"><?= htmlspecialchars($prof->grupos) ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
+        <!-- Buscador de Profesor -->
+        <div class="px-5 pt-3.5 pb-2 shrink-0">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                <input
+                    type="text"
+                    id="buscador-profesor"
+                    placeholder="Buscar profesor por nombre o correo..."
+                    oninput="filtrarProfesores(this.value)"
+                    class="w-full pl-10 pr-9 py-2.5 rounded-xl border border-outline-variant bg-surface-container/30 text-xs font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15 outline-none transition-all"
+                >
+                <button type="button" onclick="limpiarBuscadorProf()" id="btn-limpiar-prof" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
                 </button>
-                <?php endforeach; endif; ?>
             </div>
         </div>
 
-        <!-- Lista Directivas (oculto por default) -->
-        <div id="panelDirectivas" class="overflow-y-auto hidden" style="max-height:55dvh;">
-            <div class="p-4 space-y-2">
-                <?php
-                if (empty($_sidebar_directivas)):
-                ?>
-                <div class="text-center text-on-surface-variant py-8">
-                    <span class="material-symbols-outlined text-4xl block mb-2">domain_disabled</span>
-                    <p class="text-sm">No hay directivas registradas.</p>
-                </div>
-                <?php else: foreach ($_sidebar_directivas as $dir): ?>
-                <button type="button"
-                    class="w-full flex items-center gap-4 p-3 bg-surface-container-low hover:bg-secondary/5 rounded-xl border border-outline-variant/50 hover:border-secondary/30 transition-all group text-left"
-                    onclick="abrirFormContacto('directiva', <?= $dir->id_administrador ?>, '<?= htmlspecialchars(addslashes($dir->nombres . ' ' . $dir->apellidos)) ?>', '<?= htmlspecialchars(addslashes($dir->email)) ?>')">
-                    <div class="w-11 h-11 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-secondary/20 transition-colors">
-                        <span class="material-symbols-outlined text-secondary">badge</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <span class="font-bold text-sm text-on-surface block truncate">
-                            <?= htmlspecialchars($dir->nombres . ' ' . $dir->apellidos) ?>
-                        </span>
-                        <span class="text-xs text-on-surface-variant truncate block"><?= htmlspecialchars($dir->email) ?></span>
-                    </div>
-                    <span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">chevron_right</span>
-                </button>
-                <?php endforeach; endif; ?>
+        <!-- Lista de Maestros con Scroll -->
+        <div id="panelMaestros" class="overflow-y-auto flex-1 px-4 pb-4 space-y-2 custom-scrollbar" style="max-height: 50vh;">
+            <?php
+            if (empty($_sidebar_profesores)):
+            ?>
+            <div class="text-center text-on-surface-variant py-10">
+                <span class="material-symbols-outlined text-4xl block mb-2 opacity-50">person_off</span>
+                <p class="text-xs font-medium">No hay maestros registrados.</p>
             </div>
+            <?php else: foreach ($_sidebar_profesores as $prof): ?>
+            <button type="button"
+                class="prof-item w-full flex items-center gap-3.5 p-3 bg-surface-container-low/80 hover:bg-primary/5 rounded-2xl border border-outline-variant/40 hover:border-primary/40 transition-all group text-left cursor-pointer active:scale-98"
+                data-search="<?= strtolower(htmlspecialchars($prof->nombres . ' ' . $prof->apellidos . ' ' . $prof->email . ' ' . ($prof->grupos ?? ''))) ?>"
+                onclick="iniciarRedaccionMensaje('profesor', <?= $prof->id_profesor ?>, '<?= htmlspecialchars(addslashes($prof->nombres . ' ' . $prof->apellidos)) ?>', '<?= htmlspecialchars(addslashes($prof->email)) ?>')">
+                <div class="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <span class="material-symbols-outlined text-primary text-xl">person</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <span class="font-bold text-xs text-on-surface block truncate">
+                        <?= htmlspecialchars($prof->nombres . ' ' . $prof->apellidos) ?>
+                    </span>
+                    <span class="text-[11px] text-on-surface-variant truncate block"><?= htmlspecialchars($prof->email) ?></span>
+                    <?php if (!empty($prof->grupos)): ?>
+                    <span class="text-[10px] text-primary font-semibold truncate block mt-0.5"><?= htmlspecialchars($prof->grupos) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary transition-all flex-shrink-0">
+                    <span class="material-symbols-outlined text-base">edit</span>
+                </div>
+            </button>
+            <?php endforeach; endif; ?>
+
+            <!-- Estado vacío búsqueda -->
+            <div id="sin-prof-resultados" class="hidden text-center py-10">
+                <span class="material-symbols-outlined text-4xl text-on-surface-variant/40 block mb-2">search_off</span>
+                <p class="text-xs font-semibold text-on-surface-variant">No se encontró ningún profesor</p>
+                <button type="button" onclick="limpiarBuscadorProf()" class="mt-2 text-xs text-primary hover:underline font-bold">Limpiar búsqueda</button>
+            </div>
+        </div>
+
+        <!-- Lista de Directivas con Scroll -->
+        <div id="panelDirectivas" class="overflow-y-auto hidden flex-1 px-4 pb-4 space-y-2 custom-scrollbar" style="max-height: 50vh;">
+            <?php
+            if (empty($_sidebar_directivas)):
+            ?>
+            <div class="text-center text-on-surface-variant py-10">
+                <span class="material-symbols-outlined text-4xl block mb-2 opacity-50">domain_disabled</span>
+                <p class="text-xs font-medium">No hay directivas registradas.</p>
+            </div>
+            <?php else: foreach ($_sidebar_directivas as $dir): ?>
+            <button type="button"
+                class="prof-item w-full flex items-center gap-3.5 p-3 bg-surface-container-low/80 hover:bg-secondary/5 rounded-2xl border border-outline-variant/40 hover:border-secondary/40 transition-all group text-left cursor-pointer active:scale-98"
+                data-search="<?= strtolower(htmlspecialchars($dir->nombres . ' ' . $dir->apellidos . ' ' . $dir->email)) ?>"
+                onclick="iniciarRedaccionMensaje('directiva', <?= $dir->id_administrador ?>, '<?= htmlspecialchars(addslashes($dir->nombres . ' ' . $dir->apellidos)) ?>', '<?= htmlspecialchars(addslashes($dir->email)) ?>')">
+                <div class="w-11 h-11 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-secondary/20 transition-colors">
+                    <span class="material-symbols-outlined text-secondary text-xl">badge</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <span class="font-bold text-xs text-on-surface block truncate">
+                        <?= htmlspecialchars($dir->nombres . ' ' . $dir->apellidos) ?>
+                    </span>
+                    <span class="text-[11px] text-on-surface-variant truncate block"><?= htmlspecialchars($dir->email) ?></span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-secondary group-hover:text-on-secondary transition-all flex-shrink-0">
+                    <span class="material-symbols-outlined text-base">edit</span>
+                </div>
+            </button>
+            <?php endforeach; endif; ?>
         </div>
     </div>
 </div>
 
-<!-- Sub-modal: Formulario de mensaje de contacto -->
-<div id="msgContactoModal" class="fixed inset-0 z-[110] hidden">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="cerrarFormContacto()"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
 
-        <!-- Header con nombre familia -->
-        <div id="msgHeaderColor" class="px-6 pt-5 pb-4 bg-primary/10 border-b border-primary/20">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-xs font-bold text-primary/70 uppercase tracking-widest mb-1">Familia</p>
-                    <p id="msgFamiliaNombre" class="text-base font-black text-on-surface">
-                        <?= $_sidebar_familia_nombre ?>
-                    </p>
-                </div>
-                <button onclick="cerrarFormContacto()" class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-variant transition-colors mt-1">
-                    <span class="material-symbols-outlined">arrow_back</span>
+<!-- MODAL 2: Formulario para Redactar y Enviar Mensaje (Centrado en Pantalla) -->
+<div id="modalRedactarMensaje" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+    <!-- Backdrop oscuro -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('modalRedactarMensaje')"></div>
+    
+    <!-- Ventana Centrada: Formulario -->
+    <div class="relative z-10 w-full max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline-variant/50 flex flex-col max-h-[90vh] overflow-hidden transition-all duration-300 transform scale-95 opacity-0">
+        
+        <!-- Header del Formulario -->
+        <div id="msgHeaderColor" class="flex justify-between items-center px-6 pt-5 pb-4 border-b border-outline-variant/30 bg-surface-container/50 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="volverAListaContactos()" class="w-9 h-9 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95" title="Volver a la lista">
+                    <span class="material-symbols-outlined text-xl">arrow_back</span>
                 </button>
+                <div id="msgAvatarBox" class="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+                    <span id="msgDestinatarioIcon" class="material-symbols-outlined text-xl">school</span>
+                </div>
+                <div class="min-w-0">
+                    <h3 id="msgDestinatarioNombre" class="text-sm font-bold text-on-surface leading-tight truncate">Enviar Mensaje</h3>
+                    <p id="msgDestinatarioEmail" class="text-[11px] text-on-surface-variant truncate">Docente</p>
+                </div>
             </div>
-            <div class="mt-3 flex items-center gap-2">
-                <span id="msgDestinatarioIcon" class="material-symbols-outlined text-primary text-sm">person</span>
-                <span id="msgDestinatarioNombre" class="text-sm font-bold text-on-surface"></span>
-                <span id="msgDestinatarioEmail" class="text-xs text-on-surface-variant ml-1"></span>
+            <button type="button" onclick="closeModal('modalRedactarMensaje')" class="w-9 h-9 text-outline hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant flex items-center justify-center active:scale-95" title="Cerrar">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        <!-- Tarjeta Destinatario Informativa -->
+        <div class="px-6 pt-4 shrink-0">
+            <div class="p-3 rounded-2xl bg-surface-container/50 border border-outline-variant/40 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-[10px] uppercase font-extrabold tracking-wider text-outline px-2 py-0.5 rounded-md bg-surface border border-outline-variant/50">Para</span>
+                    <span id="msgDestinatarioBadge" class="text-xs font-bold text-primary truncate">Profesor seleccionado</span>
+                </div>
+                <button type="button" onclick="volverAListaContactos()" class="text-xs text-primary hover:underline font-bold shrink-0 flex items-center gap-1">
+                    Cambiar
+                    <span class="material-symbols-outlined text-xs">swap_horiz</span>
+                </button>
             </div>
         </div>
 
         <!-- Formulario -->
-        <form id="formContacto" method="POST" action="<?php echo URLROOT; ?>/padres/enviar_mensaje" class="p-5 space-y-4">
-            <input type="hidden" name="tipo" id="msgTipoInput">
-            <input type="hidden" name="id_destinatario" id="msgIdInput">
-            <input type="hidden" name="redirect_to" id="msgRedirectInput">
+        <form id="formContactoDirecto" method="POST" action="<?php echo URLROOT; ?>/padres/enviar_mensaje" class="p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+            <input type="hidden" name="tipo" id="msgTipoInput" value="profesor">
+            <input type="hidden" name="id_destinatario" id="msgIdInput" value="">
+            <input type="hidden" name="redirect_to" id="msgRedirectInput" value="">
 
             <div>
-                <label class="block text-xs font-black text-on-surface-variant uppercase tracking-wider mb-1">Título *</label>
-                <input type="text" name="titulo" required
-                    class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
-                    placeholder="Ej: Consulta sobre actividad del 12 de agosto">
-            </div>
-            <div>
-                <label class="block text-xs font-black text-on-surface-variant uppercase tracking-wider mb-1">
-                    Asunto <span class="normal-case font-normal">(opcional)</span>
+                <label for="msgInputTitulo" class="block text-[11px] font-bold text-on-surface uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-sm">edit_note</span>
+                    Título del Mensaje <span class="text-error">*</span>
                 </label>
-                <input type="text" name="asunto"
-                    class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
-                    placeholder="Ej: Inasistencia justificada">
+                <input type="text" name="titulo" id="msgInputTitulo" required
+                    class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-xs font-medium text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all placeholder:text-on-surface-variant/40"
+                    placeholder="Ej: Justificación de inasistencia o consulta académica">
             </div>
+
             <div>
-                <label class="block text-xs font-black text-on-surface-variant uppercase tracking-wider mb-1">Mensaje *</label>
-                <textarea name="mensaje" rows="4" required
-                    class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all resize-none"
-                    placeholder="Escribe tu mensaje aquí..."></textarea>
+                <label for="msgInputAsunto" class="block text-[11px] font-bold text-on-surface uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-sm">bookmark</span>
+                    Asunto <span class="normal-case font-normal text-on-surface-variant">(Opcional)</span>
+                </label>
+                <input type="text" name="asunto" id="msgInputAsunto"
+                    class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-xs font-medium text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all placeholder:text-on-surface-variant/40"
+                    placeholder="Ej: Matemáticas / Entrega de taller">
             </div>
-            <div class="flex gap-3 pt-1">
-                <button type="button" onclick="cerrarFormContacto()"
-                    class="flex-1 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors">
+
+            <div class="flex-1 flex flex-col">
+                <label for="msgInputMensaje" class="block text-[11px] font-bold text-on-surface uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-sm">description</span>
+                    Mensaje <span class="text-error">*</span>
+                </label>
+                <textarea name="mensaje" id="msgInputMensaje" rows="5" required
+                    class="w-full flex-1 rounded-xl border border-outline-variant bg-surface px-4 py-3 text-xs font-medium text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all resize-none min-h-[120px] placeholder:text-on-surface-variant/40"
+                    placeholder="Escribe aquí tu mensaje con los detalles necesarios..."></textarea>
+            </div>
+
+            <div class="flex justify-end items-center gap-3 pt-3 border-t border-outline-variant/30 shrink-0">
+                <button type="button" onclick="closeModal('modalRedactarMensaje')"
+                    class="px-5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant font-bold text-xs hover:bg-surface-variant transition-colors active:scale-95 cursor-pointer">
                     Cancelar
                 </button>
                 <button type="submit" id="msgSubmitBtn"
-                    class="flex-1 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-sm shadow-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-base">send</span> Enviar
+                    class="px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs shadow-md shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">send</span> Enviar Mensaje
                 </button>
             </div>
         </form>
@@ -447,75 +535,130 @@ function switchContactTab(tab) {
     const panels = { maestros: document.getElementById('panelMaestros'), directivas: document.getElementById('panelDirectivas') };
     Object.keys(tabs).forEach(k => {
         const isActive = k === tab;
-        tabs[k].classList.toggle('border-primary', isActive);
-        tabs[k].classList.toggle('text-primary', isActive);
-        tabs[k].classList.toggle('border-transparent', !isActive);
-        tabs[k].classList.toggle('text-on-surface-variant', !isActive);
-        panels[k].classList.toggle('hidden', !isActive);
+        if (tabs[k]) {
+            tabs[k].classList.toggle('border-primary', isActive);
+            tabs[k].classList.toggle('text-primary', isActive);
+            tabs[k].classList.toggle('border-transparent', !isActive);
+            tabs[k].classList.toggle('text-on-surface-variant', !isActive);
+        }
+        if (panels[k]) {
+            panels[k].classList.toggle('hidden', !isActive);
+        }
     });
 }
 
-function abrirFormContacto(tipo, id, nombre, email) {
-    const modal = document.getElementById('msgContactoModal');
-    if (!modal) return;
+function filtrarProfesores(query) {
+    const q = query.trim().toLowerCase();
+    const items = document.querySelectorAll('.prof-item');
+    const btnLimpiar = document.getElementById('btn-limpiar-prof');
+    const sinResultados = document.getElementById('sin-prof-resultados');
+
+    if (btnLimpiar) btnLimpiar.classList.toggle('hidden', q === '');
+
+    let visibles = 0;
+    items.forEach(item => {
+        const texto = item.getAttribute('data-search') || '';
+        const coincide = texto.includes(q);
+        item.classList.toggle('hidden', !coincide);
+        if (coincide) visibles++;
+    });
+
+    if (sinResultados) {
+        sinResultados.classList.toggle('hidden', visibles > 0 || q === '');
+    }
+}
+
+function limpiarBuscadorProf() {
+    const input = document.getElementById('buscador-profesor');
+    if (input) { input.value = ''; filtrarProfesores(''); input.focus(); }
+}
+
+function iniciarRedaccionMensaje(tipo, id, nombre, email) {
+    // 1. Cerrar modal de lista de contactos
+    closeModal('contactosModal');
+
+    // 2. Cargar datos en el modal de redacción
     document.getElementById('msgTipoInput').value = tipo;
     document.getElementById('msgIdInput').value = id;
     document.getElementById('msgRedirectInput').value = window.location.pathname;
     document.getElementById('msgDestinatarioNombre').textContent = nombre;
-    document.getElementById('msgDestinatarioEmail').textContent = email ? '· ' + email : '';
+    document.getElementById('msgDestinatarioBadge').textContent = (tipo === 'directiva' ? 'Directiva: ' : 'Prof. ') + nombre;
+    document.getElementById('msgDestinatarioEmail').textContent = email || (tipo === 'directiva' ? 'Directiva Institucional' : 'Docente');
 
     const icon = document.getElementById('msgDestinatarioIcon');
+    const avatarBox = document.getElementById('msgAvatarBox');
     const btn = document.getElementById('msgSubmitBtn');
-    const header = document.getElementById('msgHeaderColor');
+    
     if (tipo === 'directiva') {
-        icon.textContent = 'badge';
-        icon.style.color = 'var(--md-sys-color-secondary, #6750a4)';
-        btn.className = btn.className.replace('bg-primary', 'bg-secondary').replace('text-on-primary', 'text-on-secondary');
-        header.className = header.className.replace('bg-primary/10', 'bg-secondary/10').replace('border-primary/20', 'border-secondary/20');
+        if (icon) icon.textContent = 'badge';
+        if (avatarBox) avatarBox.className = 'w-10 h-10 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary flex-shrink-0';
+        if (btn) btn.className = 'px-6 py-2.5 rounded-xl bg-secondary text-on-secondary font-bold text-xs shadow-md shadow-secondary/20 hover:bg-secondary/90 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer';
     } else {
-        icon.textContent = 'person';
-        icon.style.color = 'var(--md-sys-color-primary, #1976d2)';
-        btn.className = btn.className.replace('bg-secondary', 'bg-primary').replace('text-on-secondary', 'text-on-primary');
-        header.className = header.className.replace('bg-secondary/10', 'bg-primary/10').replace('border-secondary/20', 'border-primary/20');
+        if (icon) icon.textContent = 'school';
+        if (avatarBox) avatarBox.className = 'w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0';
+        if (btn) btn.className = 'px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs shadow-md shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer';
     }
 
-    modal.classList.remove('hidden');
+    // 3. Abrir modal de redacción centrado en pantalla
     setTimeout(() => {
-        if(modal.children[0]) modal.children[0].classList.remove('opacity-0');
-        if(modal.children[1]) {
-            modal.children[1].classList.remove('scale-95', 'opacity-0');
-            modal.children[1].classList.add('scale-100', 'opacity-100');
-        }
-    }, 10);
+        openModal('modalRedactarMensaje');
+        const inputTit = document.getElementById('msgInputTitulo');
+        if (inputTit) inputTit.focus();
+    }, 150);
 }
 
-function cerrarFormContacto() {
-    const modal = document.getElementById('msgContactoModal');
-    if (!modal) return;
-    if(modal.children[0]) modal.children[0].classList.add('opacity-0');
-    if(modal.children[1]) {
-        modal.children[1].classList.add('scale-95', 'opacity-0');
-        modal.children[1].classList.remove('scale-100', 'opacity-100');
-    }
-    setTimeout(() => modal.classList.add('hidden'), 300);
+function volverAListaContactos() {
+    closeModal('modalRedactarMensaje');
+    setTimeout(() => {
+        openModal('contactosModal');
+    }, 150);
+}
+
+// Compatibilidad con abrirFormContacto
+function abrirFormContacto(tipo, id, nombre, email) {
+    iniciarRedaccionMensaje(tipo, id, nombre, email);
 }
 </script>
 
-<!-- Opinión Modal -->
-<div id="opinionModal" class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('opinionModal')"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-surface text-on-surface rounded-2xl shadow-2xl p-6 transition-all duration-300 transform scale-95 opacity-0">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-secondary flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> Danos tu Opinión</h3>
-            <button onclick="closeModal('opinionModal')" class="text-outline hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
+<!-- Opinión Modal (Centrado) -->
+<div id="opinionModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('opinionModal')"></div>
+    
+    <!-- Contenido del Modal Centrado -->
+    <div class="relative z-10 w-full max-w-md bg-surface text-on-surface rounded-3xl shadow-2xl p-6 border border-outline-variant/50 transition-all duration-300 transform scale-95 opacity-0">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-outline-variant/30">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary">
+                    <span class="material-symbols-outlined text-xl">chat_bubble</span>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-on-surface leading-tight">Danos tu Opinión</h3>
+                    <p class="text-xs text-on-surface-variant">Ayúdanos a mejorar la plataforma</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal('opinionModal')" class="w-8 h-8 text-outline hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant flex items-center justify-center active:scale-95" title="Cerrar">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
         </div>
-        <p class="text-sm italic text-on-surface-variant mb-4">"El camino es tan importante como la cima."</p>
+
+        <p class="text-xs italic text-on-surface-variant/80 mb-4 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30">
+            "El camino es tan importante como la cima."
+        </p>
+
         <form method="POST" action="<?php echo URLROOT; ?>/padres/enviar_opinion" class="space-y-4">
             <div>
-                <label class="block text-sm font-bold mb-1">¿Cómo podemos mejorar?</label>
-                <textarea name="mensaje" rows="4" class="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" placeholder="Escribe tus comentarios..." required></textarea>
+                <label class="block text-xs font-bold text-on-surface uppercase tracking-wider mb-1.5">¿Cómo podemos mejorar?</label>
+                <textarea name="mensaje" rows="4" class="w-full rounded-2xl border border-outline-variant bg-surface px-4 py-3 text-xs font-medium text-on-surface focus:ring-2 focus:ring-secondary/20 focus:border-secondary focus:outline-none transition-all resize-none placeholder:text-on-surface-variant/40" placeholder="Escribe tus comentarios o sugerencias..." required></textarea>
             </div>
-            <button type="submit" class="w-full bg-secondary text-on-secondary font-bold rounded-xl py-3 shadow-md hover:opacity-90 transition-opacity">Enviar Opinión</button>
+            <div class="flex justify-end items-center gap-3 pt-2">
+                <button type="button" onclick="closeModal('opinionModal')" class="px-4 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant font-bold text-xs hover:bg-surface-variant transition-colors active:scale-95">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-6 py-2.5 bg-secondary text-on-secondary font-bold text-xs rounded-xl shadow-md shadow-secondary/20 hover:bg-secondary/90 transition-all flex items-center gap-2 active:scale-95">
+                    <span class="material-symbols-outlined text-sm">send</span> Enviar Opinión
+                </button>
+            </div>
         </form>
     </div>
 </div>

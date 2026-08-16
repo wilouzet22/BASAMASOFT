@@ -1,84 +1,112 @@
-<?php $data = $data ?? []; require APPROOT . '/views/inc/header.php'; ?>
+<?php
+$data = $data ?? [];
+$bodyClass = 'bg-surface-container-lowest text-on-background font-lexend min-h-screen';
+require APPROOT . '/views/inc/header.php';
+?>
 
-<body class="bg-background text-on-background font-body-md graph-paper-bg min-h-screen flex flex-col md:flex-row">
-    <!-- SideNavBar -->
+<!-- Mobile Header -->
+<header class="md:hidden flex justify-between items-center p-4 bg-white border-b border-outline-variant sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <button type="button" onclick="toggleMobileSidebar()" class="p-1 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <img src="<?php echo URLROOT; ?>/assets/img/logo.png" class="h-9 w-9 rounded-full" alt="Logo">
+        <span class="font-bold text-primary text-lg">EduSaft</span>
+    </div>
+    <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
+
+</header>
+
+<div class="flex">
+    <!-- Sidebar reusable admin -->
     <?php require APPROOT . '/views/admin/sidebar.php'; ?>
 
     <!-- Main Content Area -->
-    <div id="main-content-wrap" class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden" style="margin-left:16rem">
-        <!-- TopAppBar -->
-        <header class="flex justify-between items-center h-16 px-6 w-full bg-white top-0 z-50 border-b border-outline-variant shadow-sm">
-            <div class="text-2xl font-extrabold tracking-tight text-primary font-headline-md md:hidden">
-                Edusaft
-            </div>
-            <div class="hidden md:block text-on-surface-variant font-label-md">
-                Gestión de Estudiantes
-            </div>
+    <main id="mainContent" class="flex-1 min-h-screen bg-surface-container-lowest flex flex-col">
+        <!-- Top Bar -->
+        <header class="hidden md:flex items-center justify-between px-10 py-6 sticky top-0 bg-white/80 backdrop-blur-md z-30 border-b border-outline-variant/30">
             <div class="flex items-center gap-4">
-                <span class="text-sm text-on-surface-variant hidden md:inline">
-                    <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>
-                </span>
-                <a href="<?php echo URLROOT; ?>/auth/logout" title="Cerrar Sesión"
-                   class="hover:bg-surface-container transition-all p-2 rounded-full active:scale-95 duration-150">
-                    <span class="material-symbols-outlined text-error">logout</span>
-                </a>
-                <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+                <button id="desktop-menu-toggle" class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95">menu</button>
+                <div>
+                    <h2 class="text-xl font-bold text-on-surface">Gestión de Estudiantes</h2>
+                    <p class="text-sm text-on-surface-variant">
+                        Administración · <span class="text-primary font-bold"><?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
+                <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-on-surface"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></p>
+                        <p class="text-[10px] text-outline uppercase font-bold tracking-tighter">Administrador del Sistema</p>
+                    </div>
+                    <a href="<?php echo URLROOT; ?>/auth/logout" onclick="event.preventDefault(); openLogoutModal();" class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden hover:bg-primary/20 transition-all cursor-pointer shadow-sm" title="Cerrar sesión">
+                        <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+                    </a>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-8 max-w-[1280px] mx-auto w-full flex flex-col gap-6">
-            <div class="flex flex-wrap justify-between items-center gap-4">
+        <div class="p-6 md:p-10 space-y-8 max-w-7xl mx-auto w-full flex-1">
+
+            <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-headline-lg text-tertiary font-headline-lg flex items-center gap-2">
-                        <span class="material-symbols-outlined text-3xl">groups</span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-tertiary text-3xl md:text-4xl">groups</span>
                         Estudiantes (<?php echo count($data['estudiantes']); ?>)
-                    </h2>
-                    <p class="text-on-surface-variant text-sm mt-1">Listado de estudiantes matriculados en la institución.</p>
+                    </h1>
+                    <p class="text-sm text-on-surface-variant mt-1">Listado de estudiantes matriculados en la institución.</p>
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface shadow-sm">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-surface-container/60 border-b border-outline-variant">
-                            <th class="px-4 py-3.5 text-on-surface font-semibold">Nombre</th>
-                            <th class="px-4 py-3.5 text-on-surface font-semibold">Documento</th>
-                            <th class="px-4 py-3.5 text-on-surface font-semibold">Fecha Nacimiento</th>
-                            <th class="px-4 py-3.5 text-on-surface font-semibold">Grupo</th>
-                            <th class="px-4 py-3.5 text-on-surface font-semibold">Grado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($data['estudiantes'])): ?>
-                            <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No hay estudiantes registrados.</td></tr>
-                        <?php else: ?>
-                            <?php foreach ($data['estudiantes'] as $est): ?>
-                            <tr class="border-b border-outline-variant/50 hover:bg-surface-container/40 transition-colors">
-                                <td class="px-4 py-3.5 font-medium text-on-surface">
-                                    <?php echo htmlspecialchars($est->nombres . ' ' . $est->apellidos); ?>
-                                </td>
-                                <td class="px-4 py-3.5 text-on-surface-variant font-mono text-xs"><?php echo htmlspecialchars($est->documento_identidad ?? '—'); ?></td>
-                                <td class="px-4 py-3.5 text-on-surface-variant">
-                                    <?php echo $est->fecha_nacimiento ? date('d/m/Y', strtotime($est->fecha_nacimiento)) : '—'; ?>
-                                </td>
-                                <td class="px-4 py-3.5">
-                                    <span class="bg-tertiary/10 text-tertiary px-2 py-0.5 rounded text-xs font-semibold">
-                                        <?php echo htmlspecialchars($est->nombre_grupo); ?>
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3.5 text-on-surface-variant text-xs"><?php echo htmlspecialchars($est->nombre_grado); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+            <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm">
+                <?php if (empty($data['estudiantes'])): ?>
+                    <div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant/30 text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-60">person_off</span>
+                        <p class="text-sm font-medium">No hay estudiantes registrados.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead>
+                                <tr class="border-b border-outline-variant/40 text-on-surface-variant text-xs font-bold uppercase tracking-wider">
+                                    <th class="py-3 px-4">Nombre</th>
+                                    <th class="py-3 px-4">Documento</th>
+                                    <th class="py-3 px-4">Fecha Nacimiento</th>
+                                    <th class="py-3 px-4">Grupo</th>
+                                    <th class="py-3 px-4">Grado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant/20">
+                                <?php foreach ($data['estudiantes'] as $est): ?>
+                                    <tr class="hover:bg-surface-container-low/50 transition-colors">
+                                        <td class="py-3.5 px-4 font-bold text-on-surface">
+                                            <?php echo htmlspecialchars($est->nombres . ' ' . $est->apellidos); ?>
+                                        </td>
+                                        <td class="py-3.5 px-4 font-mono text-xs text-on-surface-variant"><?php echo htmlspecialchars($est->documento_identidad ?? '—'); ?></td>
+                                        <td class="py-3.5 px-4 text-xs text-on-surface-variant font-medium">
+                                            <?php echo $est->fecha_nacimiento ? date('d/m/Y', strtotime($est->fecha_nacimiento)) : '—'; ?>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <span class="bg-tertiary/10 text-tertiary font-bold px-3 py-1 rounded-full text-xs">
+                                                <?php echo htmlspecialchars($est->nombre_grupo); ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-xs text-on-surface-variant font-medium"><?php echo htmlspecialchars($est->nombre_grado); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
             </div>
-        </main>
+
+        </div>
+
         <?php require APPROOT . '/views/inc/footer.php'; ?>
-    </div>
+    </main>
+</div>
 
 </body>
 </html>
