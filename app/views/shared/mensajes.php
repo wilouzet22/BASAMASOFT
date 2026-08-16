@@ -129,8 +129,8 @@ $isAdmin = (isset($_SESSION['rol']) && $_SESSION['rol'] === 'administrador');
                                             <?php endif; ?>
                                         </div>
 
-                                        <div class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-3 text-sm text-on-surface leading-relaxed whitespace-pre-line break-words">
-                                            <?php echo nl2br(htmlspecialchars($msg->mensaje)); ?>
+                                        <div class="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl p-3 text-sm text-on-surface leading-normal whitespace-pre-line break-words" style="height: auto !important; min-height: 0 !important;">
+                                            <?php echo nl2br(htmlspecialchars(trim($msg->mensaje))); ?>
                                         </div>
                                     </div>
                                 </div>
