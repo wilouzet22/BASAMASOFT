@@ -18,7 +18,7 @@ foreach ($data['actividades'] as $act) {
 }
 ?>
 
-<div class="min-h-screen bg-gradient-to-br from-surface to-surface-container-low py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header / Navigation -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-4">
@@ -33,13 +33,18 @@ foreach ($data['actividades'] as $act) {
                 <p class="text-body-md text-on-surface-variant">Explora todos los eventos y actividades de nuestra institución.</p>
             </div>
             
-            <!-- Selector de Vista / Info -->
-            <div class="flex items-center gap-3 bg-white border border-outline-variant p-2 rounded-2xl shadow-sm self-start md:self-auto">
-                <span class="flex h-3 w-3 relative">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Modo Visitante Activo</span>
+            <!-- Controles / Info -->
+            <div class="flex items-center gap-4 self-start md:self-auto">
+                <?php require APPROOT . '/views/inc/theme_toggle.php'; ?>
+                
+                <!-- Selector de Vista / Info -->
+                <div class="flex items-center gap-3 bg-white border border-outline-variant p-2 rounded-2xl shadow-sm">
+                    <span class="flex h-3 w-3 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Modo Visitante Activo</span>
+                </div>
             </div>
         </div>
 
@@ -72,7 +77,7 @@ foreach ($data['actividades'] as $act) {
                 </div>
                 
                 <!-- Decorative comic card -->
-                <div class="bg-yellow-300 border-[4px] border-slate-900 rounded-[24px] p-6 shadow-[5px_5px_0px_0px_#0b1c30] rotate-[-1deg]">
+                <div class="comic-card comic-border bg-yellow-300 border-[4px] border-slate-900 rounded-[24px] p-6 shadow-[5px_5px_0px_0px_#0b1c30] rotate-[-1deg]">
                     <h4 class="font-black text-slate-900 uppercase text-lg mb-2">¡Hey! 👋</h4>
                     <p class="text-xs font-bold text-slate-800 leading-relaxed">Haz clic en cualquier actividad en el calendario o en la lista para ver los detalles completos y sus fotos en un globo de diálogo de cómic.</p>
                 </div>
@@ -124,28 +129,28 @@ foreach ($data['actividades'] as $act) {
     <div class="relative w-full max-w-lg transition-all duration-300 transform scale-95 opacity-0 z-10">
         
         <!-- The Comic Speech Bubble -->
-        <div class="bg-white border-[5px] border-slate-900 rounded-[32px] p-6 md:p-8 shadow-[8px_8px_0px_0px_#0b1c30] relative overflow-visible">
+        <div class="comic-border-lg bg-white border-[5px] border-slate-900 rounded-[32px] p-6 md:p-8 shadow-[8px_8px_0px_0px_#0b1c30] relative overflow-visible">
             
             <!-- Close Button -->
-            <button onclick="cerrarComicModal()" class="absolute -top-3 -right-3 bg-secondary text-white border-[3px] border-slate-900 rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[3px_3px_0px_0px_#0b1c30] z-30 font-extrabold text-lg">
+            <button onclick="cerrarComicModal()" class="comic-border absolute -top-3 -right-3 bg-secondary text-white border-[3px] border-slate-900 rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[3px_3px_0px_0px_#0b1c30] z-30 font-extrabold text-lg">
                 ✕
             </button>
             
             <!-- Activity Category Badge -->
-            <div class="absolute -top-6 left-8 bg-yellow-300 text-slate-900 border-[3px] border-slate-900 px-4 py-1.5 rounded-lg rotate-[-3deg] shadow-[3px_3px_0px_0px_#0b1c30] font-black uppercase text-xs tracking-wider z-20">
+            <div class="comic-card comic-border absolute -top-6 left-8 bg-yellow-300 text-slate-900 border-[3px] border-slate-900 px-4 py-1.5 rounded-lg rotate-[-3deg] shadow-[3px_3px_0px_0px_#0b1c30] font-black uppercase text-xs tracking-wider z-20">
                 <span id="comicType">ACTIVIDAD</span>
             </div>
 
             <!-- Carousel -->
-            <div class="relative h-60 w-full rounded-2xl border-[4px] border-slate-900 overflow-hidden mb-6 bg-slate-100 shadow-inner group">
+            <div class="comic-border relative h-60 w-full rounded-2xl border-[4px] border-slate-900 overflow-hidden mb-6 bg-slate-100 shadow-inner group">
                 <div id="carouselSlides" class="absolute inset-0 flex transition-transform duration-500 ease-in-out">
                     <!-- Slides inserted dynamically -->
                 </div>
                 
-                <button id="carouselPrevBtn" onclick="moverCarousel(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-yellow-300 text-slate-900 border-[3px] border-slate-900 rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[2px_2px_0px_0px_#0b1c30] font-black text-xl z-20 opacity-0 group-hover:opacity-100">
+                <button id="carouselPrevBtn" onclick="moverCarousel(-1)" class="comic-card comic-border absolute left-3 top-1/2 -translate-y-1/2 bg-yellow-300 text-slate-900 border-[3px] border-slate-900 rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[2px_2px_0px_0px_#0b1c30] font-black text-xl z-20 opacity-0 group-hover:opacity-100">
                     &lt;
                 </button>
-                <button id="carouselNextBtn" onclick="moverCarousel(1)" class="absolute right-3 top-1/2 -translate-y-1/2 bg-yellow-300 text-slate-900 border-[3px] border-slate-900 rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[2px_2px_0px_0px_#0b1c30] font-black text-xl z-20 opacity-0 group-hover:opacity-100">
+                <button id="carouselNextBtn" onclick="moverCarousel(1)" class="comic-card comic-border absolute right-3 top-1/2 -translate-y-1/2 bg-yellow-300 text-slate-900 border-[3px] border-slate-900 rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[2px_2px_0px_0px_#0b1c30] font-black text-xl z-20 opacity-0 group-hover:opacity-100">
                     &gt;
                 </button>
 
@@ -186,7 +191,7 @@ foreach ($data['actividades'] as $act) {
 
             <!-- Ingresar Button -->
             <div class="mt-6 pt-4 border-t-4 border-dashed border-slate-200 flex justify-center">
-                <a href="<?php echo URLROOT; ?>/auth/login" class="w-full text-center py-4 bg-primary text-on-primary border-[4px] border-slate-900 rounded-2xl font-black uppercase text-sm tracking-wider shadow-[4px_4px_0px_0px_#0b1c30] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#0b1c30] transition-all duration-150 active:scale-98">
+                <a href="<?php echo URLROOT; ?>/auth/login" class="comic-border w-full text-center py-4 bg-primary text-on-primary border-[4px] border-slate-900 rounded-2xl font-black uppercase text-sm tracking-wider shadow-[4px_4px_0px_0px_#0b1c30] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#0b1c30] transition-all duration-150 active:scale-98">
                     ¡Ingresar al Portal!
                 </a>
             </div>
@@ -237,6 +242,100 @@ foreach ($data['actividades'] as $act) {
     border-color: #ffffff transparent transparent transparent;
     z-index: 6;
 }
+
+/* -------------------------------------------------------------
+   CORRECCIONES PARA MODOS OSCUROS (DARK Y SÚPER OSCURO)
+------------------------------------------------------------- */
+/* 1. Proteger las tarjetas estilo cómic de las reglas globales (Ambos modos) */
+.dark .comic-card,
+.dark .comic-card h1, .dark .comic-card h2, .dark .comic-card h3, .dark .comic-card h4,
+.dark .comic-card p, .dark .comic-card div, .dark .comic-card span {
+    color: #0f172a !important; /* slate-900 */
+}
+
+/* (Eliminado bloque 2 anterior, reemplazado por la lógica global de abajo) */
+/* 3. Bordes de comic más visibles (Ambos modos) */
+.dark .comic-border {
+    border-color: #94a3b8 !important; /* slate-400 */
+    box-shadow: 5px 5px 0px 0px #94a3b8 !important;
+}
+.dark .comic-border-lg {
+    border-color: #94a3b8 !important;
+    box-shadow: 8px 8px 0px 0px #94a3b8 !important;
+}
+.dark .comic-bubble-tail {
+    border-color: #94a3b8 transparent transparent transparent !important;
+}
+
+/* 4. Celdas del calendario genéricas (Diferencias específicas) */
+
+/* ---> MODO OSCURO NORMAL <--- */
+html.dark:not(.superdark) .calendar-cell:not([class*="cell-"]) {
+    background-color: #1e293b !important; /* slate-800 */
+    border-color: #475569 !important; /* slate-600 */
+}
+html.dark:not(.superdark) .calendar-cell:not([class*="cell-"]):hover {
+    background-color: #334155 !important; /* slate-700 */
+    border-color: #60a5fa !important; 
+}
+html.dark:not(.superdark) .calendar-cell-today:not([class*="cell-"]) {
+    background-color: rgba(59, 130, 246, 0.15) !important; 
+    border-color: #3b82f6 !important; 
+}
+html.dark:not(.superdark) .comic-bubble-tail::after {
+    border-color: #1e293b transparent transparent transparent !important;
+}
+
+/* 5. Celdas coloreadas según evento (TODOS LOS TEMAS - Light, Dark, Superdark) */
+.calendar-cell.cell-taller { background-color: #3b82f6 !important; border-color: #2563eb !important; color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4) !important; }
+.calendar-cell.cell-taller:hover { background-color: #2563eb !important; border-color: #1d4ed8 !important; }
+
+.calendar-cell.cell-feria { background-color: #a855f7 !important; border-color: #9333ea !important; color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.4) !important; }
+.calendar-cell.cell-feria:hover { background-color: #9333ea !important; border-color: #7e22ce !important; }
+
+.calendar-cell.cell-reunion { background-color: #f97316 !important; border-color: #ea580c !important; color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.4) !important; }
+.calendar-cell.cell-reunion:hover { background-color: #ea580c !important; border-color: #c2410c !important; }
+
+.calendar-cell.cell-convivencia { background-color: #22c55e !important; border-color: #16a34a !important; color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.4) !important; }
+.calendar-cell.cell-convivencia:hover { background-color: #16a34a !important; border-color: #15803d !important; }
+
+.calendar-cell.cell-default { background-color: #64748b !important; border-color: #475569 !important; color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4) !important; }
+.calendar-cell.cell-default:hover { background-color: #475569 !important; border-color: #334155 !important; }
+
+/* 6. Asegurar que el número del día sea blanco en todas estas celdas y la tarjeta contrasta */
+.calendar-cell.cell-taller span.day-number-text, 
+.calendar-cell.cell-feria span.day-number-text, 
+.calendar-cell.cell-reunion span.day-number-text, 
+.calendar-cell.cell-convivencia span.day-number-text, 
+.calendar-cell.cell-default span.day-number-text {
+    color: #ffffff !important;
+}
+
+/* 7. Forzar colores de la micro-tarjeta para que resalten como botones blancos con texto de color sobre los cuadros vivos */
+.event-badge { background-color: #ffffff !important; font-weight: 900 !important; }
+.event-badge:hover { background-color: #f8fafc !important; transform: scale(1.05); }
+.event-badge.taller { color: #1e40af !important; border-color: #bfdbfe !important; } /* blue-800 */
+.event-badge.feria { color: #6b21a8 !important; border-color: #e9d5ff !important; } /* purple-800 */
+.event-badge.reunion { color: #9a3412 !important; border-color: #fed7aa !important; } /* orange-800 */
+.event-badge.convivencia { color: #166534 !important; border-color: #bbf7d0 !important; } /* green-800 */
+.event-badge.default { color: #334155 !important; border-color: #e2e8f0 !important; } /* slate-800 */
+
+/* ---> MODO SÚPER OSCURO <--- */
+.superdark .calendar-cell:not([class*="cell-"]) {
+    background-color: #111827 !important; /* slate-900 */
+    border-color: #374151 !important; /* slate-700 */
+}
+.superdark .calendar-cell:not([class*="cell-"]):hover {
+    background-color: #1f2937 !important; /* slate-800 */
+    border-color: #60a5fa !important; /* blue-400 */
+}
+.superdark .calendar-cell-today:not([class*="cell-"]) {
+    background-color: rgba(59, 130, 246, 0.1) !important; /* blue-500 con opacidad */
+    border-color: #3b82f6 !important; /* blue-500 */
+}
+.superdark .comic-bubble-tail::after {
+    border-color: #0d0d0d transparent transparent transparent !important;
+}
 </style>
 
 <script>
@@ -258,11 +357,26 @@ const monthsSpanish = [
 ];
 
 const categoryColorMap = {
-    'Taller': { bg: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300' },
-    'Feria': { bg: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-300' },
-    'Reunión': { bg: 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-300' },
-    'Convivencia': { bg: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-300' },
-    'default': { bg: 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300' }
+    'Taller': { 
+        bg: 'event-badge taller',
+        cellBg: 'cell-taller'
+    },
+    'Feria': { 
+        bg: 'event-badge feria',
+        cellBg: 'cell-feria'
+    },
+    'Reunión': { 
+        bg: 'event-badge reunion',
+        cellBg: 'cell-reunion'
+    },
+    'Convivencia': { 
+        bg: 'event-badge convivencia',
+        cellBg: 'cell-convivencia'
+    },
+    'default': { 
+        bg: 'event-badge default',
+        cellBg: 'cell-default'
+    }
 };
 
 function getBadgeColors(tipo) {
@@ -299,7 +413,7 @@ function renderCalendar() {
     for (let i = adjustedFirstDayIndex; i > 0; i--) {
         const dayNum = prevMonthTotalDays - i + 1;
         const cell = document.createElement('div');
-        cell.className = 'bg-slate-50/50 border border-slate-100 text-slate-300 rounded-xl p-2 min-h-[90px] flex flex-col justify-between opacity-50 select-none';
+        cell.className = 'calendar-cell bg-slate-50/50 border border-slate-100 text-slate-300 rounded-xl p-2 min-h-[90px] flex flex-col justify-between opacity-50 select-none';
         cell.innerHTML = `<span class="text-xs font-bold">${dayNum}</span>`;
         cellsContainer.appendChild(cell);
     }
@@ -315,15 +429,26 @@ function renderCalendar() {
         const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayEvents = allEvents.filter(e => e.fecha_raw === formattedDate);
         
-        let cellClass = 'bg-white border border-outline-variant rounded-xl p-2 min-h-[90px] flex flex-col justify-between hover:shadow-sm transition-all group';
+        let cellClass = 'calendar-cell bg-white border border-outline-variant rounded-xl p-2 min-h-[90px] flex flex-col justify-between hover:shadow-sm transition-all group';
         if (isCurrentMonthYear && today.getDate() === day) {
-            cellClass = 'bg-primary/5 border-2 border-primary rounded-xl p-2 min-h-[90px] flex flex-col justify-between hover:shadow-md transition-all group';
+            cellClass = 'calendar-cell calendar-cell-today bg-primary/5 border-2 border-primary rounded-xl p-2 min-h-[90px] flex flex-col justify-between hover:shadow-md transition-all group';
+        }
+        
+        let dayTextColorClass = (isCurrentMonthYear && today.getDate() === day) ? 'text-primary' : 'text-on-surface';
+        
+        if (dayEvents.length > 0) {
+            const mainEventColors = getBadgeColors(dayEvents[0].tipo);
+            cellClass = cellClass.replace('bg-white', '').replace('bg-primary/5', '').replace('border-outline-variant', '');
+            cellClass += ` cursor-pointer ${mainEventColors.cellBg}`;
+            cell.onclick = () => abrirComicModal(dayEvents[0]);
+            
+            dayTextColorClass = 'day-number-text';
         }
         
         cell.className = cellClass;
         
         // Day number structure
-        let html = `<span class="text-xs font-black ${isCurrentMonthYear && today.getDate() === day ? 'text-primary' : 'text-on-surface'}">${day}</span>`;
+        let html = `<span class="text-xs font-black ${dayTextColorClass}">${day}</span>`;
         
         // Plot events
         if (dayEvents.length > 0) {
@@ -349,7 +474,7 @@ function renderCalendar() {
     const remainingCells = 42 - totalRendered;
     for (let day = 1; day <= remainingCells; day++) {
         const cell = document.createElement('div');
-        cell.className = 'bg-slate-50/50 border border-slate-100 text-slate-300 rounded-xl p-2 min-h-[90px] flex flex-col justify-between opacity-50 select-none';
+        cell.className = 'calendar-cell bg-slate-50/50 border border-slate-100 text-slate-300 rounded-xl p-2 min-h-[90px] flex flex-col justify-between opacity-50 select-none';
         cell.innerHTML = `<span class="text-xs font-bold">${day}</span>`;
         cellsContainer.appendChild(cell);
     }
