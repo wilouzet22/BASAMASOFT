@@ -36,16 +36,18 @@ CREATE TABLE `actividades` (
   `id_tipo_actividad_fk` int NOT NULL,
   `id_sede_fk` int NOT NULL,
   `creada_por_profesor_fk` int DEFAULT NULL,
-  `requiere_asistencia_por_hijo` tinyint(1) DEFAULT '1'
+  `requiere_asistencia_por_hijo` tinyint(1) DEFAULT '1',
+  `imagen_principal` varchar(500) DEFAULT NULL,
+  `fotos` longtext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `actividades`
 --
 
-INSERT INTO `actividades` (`id_actividad`, `nombre_actividad`, `descripcion`, `fecha_hora_inicio`, `fecha_hora_fin`, `id_tipo_actividad_fk`, `id_sede_fk`, `creada_por_profesor_fk`, `requiere_asistencia_por_hijo`) VALUES
-(1, 'Clase de Matemáticas Integrales', 'Introducción al cálculo de áreas', '2026-06-01 07:00:00', '2026-06-01 09:00:00', 1, 1, 1, 1),
-(2, 'Primera Entrega de Informes 2026', 'Entrega del segundo periodo académico', '2026-06-05 16:30:00', '2026-06-05 18:30:00', 2, 2, 2, 1);
+INSERT INTO `actividades` (`id_actividad`, `nombre_actividad`, `descripcion`, `fecha_hora_inicio`, `fecha_hora_fin`, `id_tipo_actividad_fk`, `id_sede_fk`, `creada_por_profesor_fk`, `requiere_asistencia_por_hijo`, `imagen_principal`) VALUES
+(1, 'Clase de Matemáticas Integrales', 'Introducción al cálculo de áreas', '2026-06-01 07:00:00', '2026-06-01 09:00:00', 1, 1, 1, 1, NULL),
+(2, 'Primera Entrega de Informes 2026', 'Entrega del segundo periodo académico', '2026-06-05 16:30:00', '2026-06-05 18:30:00', 2, 2, 2, 1, NULL);
 
 -- --------------------------------------------------------
 

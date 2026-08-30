@@ -66,6 +66,26 @@ require APPROOT . '/views/inc/header.php';
                 <span class="material-symbols-outlined">warning</span> La actividad "Inicio de año" solo puede crearse el 1 de enero.
             </div>
             <?php endif; ?>
+            <?php if (isset($_GET['error']) && $_GET['error'] === 'upload_permission'): ?>
+            <div class="bg-error-container text-on-error-container px-4 py-3 rounded-xl shadow-sm text-sm font-semibold flex items-center gap-2 animate-fade-in mb-6">
+                <span class="material-symbols-outlined">warning</span> La actividad no ha finalizado o no se pudo actualizar la imagen.
+            </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['error']) && $_GET['error'] === 'invalid_image'): ?>
+            <div class="bg-error-container text-on-error-container px-4 py-3 rounded-xl shadow-sm text-sm font-semibold flex items-center gap-2 animate-fade-in mb-6">
+                <span class="material-symbols-outlined">warning</span> Formato de imagen no válido. Use JPG, PNG, GIF o WEBP (máx. 5 MB).
+            </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['error']) && $_GET['error'] === 'upload_failed'): ?>
+            <div class="bg-error-container text-on-error-container px-4 py-3 rounded-xl shadow-sm text-sm font-semibold flex items-center gap-2 animate-fade-in mb-6">
+                <span class="material-symbols-outlined">warning</span> Error al subir la imagen. Intente nuevamente.
+            </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['upload']) && $_GET['upload'] === 'success'): ?>
+            <div class="bg-green-100 text-green-800 px-4 py-3 rounded-xl shadow-sm text-sm font-semibold flex items-center gap-2 animate-fade-in mb-6">
+                <span class="material-symbols-outlined">check_circle</span> Imagen principal guardada correctamente.
+            </div>
+            <?php endif; ?>
 
             <?php if (empty($data['actividades'])): ?>
                 <div class="bg-surface border border-outline-variant rounded-xl p-12 text-center text-on-surface-variant">
@@ -128,6 +148,12 @@ require APPROOT . '/views/inc/header.php';
                                 <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-bold <?php echo $estado['class']; ?>">
                                     <?php echo $estado['label']; ?>
                                 </span>
+                                <?php if ($estado['label'] === 'Finalizada'): ?>
+                                    <button onclick="abrirModalFoto(<?php echo $act->id_actividad; ?>, '<?php echo htmlspecialchars(addslashes($act->nombre_actividad)); ?>')" class="mt-2 text-[11px] font-bold text-primary hover:text-primary/80 flex items-center justify-end gap-1 w-full transition-colors">
+                                        <span class="material-symbols-outlined text-[14px]">add_a_photo</span>
+                                        Definir imagen principal
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -159,7 +185,7 @@ require APPROOT . '/views/inc/header.php';
 
             <!-- Cuerpo del Formulario -->
             <div class="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
-                <form id="form-crear-actividad" action="<?php echo URLROOT; ?>/admin/crear_actividad" method="POST" class="flex flex-col gap-5">
+                <form id="form-crear-actividad" action="<?php echo URLROOT; ?>/admin/crear_actividad" method="POST" enctype="multipart/form-data" class="flex flex-col gap-5">
                     
                     <!-- 1. Nombre y Descripción -->
                     <div class="space-y-4">
@@ -178,6 +204,15 @@ require APPROOT . '/views/inc/header.php';
                             </label>
                             <textarea id="descripcion" name="descripcion" rows="2" placeholder="Detalles, objetivos o instrucciones para la comunidad escolar..." class="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface-container/30 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm font-medium resize-none"></textarea>
                         </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label for="imagen_principal" class="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-primary text-sm">image</span>
+                            Imagen principal <span class="text-error">*</span>
+                        </label>
+                        <input type="file" id="imagen_principal" name="imagen_principal" accept="image/png,image/jpeg,image/gif,image/webp" required class="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface-container/30 text-on-surface text-sm font-medium">
+                        <p class="text-[11px] text-on-surface-variant">Se guarda como la imagen de esta actividad en la base de datos. Máximo 5 MB.</p>
                     </div>
 
                     <!-- 2. Fechas y Horarios -->
@@ -278,8 +313,54 @@ require APPROOT . '/views/inc/header.php';
             </div>
         </div>
     </dialog>
+
+    <!-- Modal Subir Foto -->
+    <dialog id="modal-subir-foto" class="fixed inset-0 z-[100] m-auto w-[92%] max-w-sm max-h-[88vh] bg-surface rounded-3xl shadow-2xl p-0 backdrop:bg-black/60 backdrop:backdrop-blur-sm border border-outline-variant/60 outline-none overflow-hidden open:animate-in open:fade-in open:zoom-in-95">
+        <div class="flex flex-col h-full">
+            <div class="flex justify-between items-center px-6 py-4.5 border-b border-outline-variant bg-surface-container/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
+                        <span class="material-symbols-outlined text-2xl">add_a_photo</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-on-surface tracking-tight">Imagen principal</h3>
+                        <p class="text-[10px] font-bold text-primary uppercase" id="foto-actividad-nombre">Cargando...</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-subir-foto').close()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-variant text-on-surface-variant hover:text-on-surface transition-all active:scale-95" title="Cerrar">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="form-subir-foto" action="<?php echo URLROOT; ?>/admin/subir_foto_actividad" method="POST" enctype="multipart/form-data" class="flex flex-col gap-5">
+                    <input type="hidden" name="id_actividad" id="foto_id_actividad" value="">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="foto_actividad" class="text-xs font-bold text-on-surface uppercase tracking-wider">
+                            Seleccionar imagen (PNG, JPG, GIF o WEBP; máx. 5 MB) <span class="text-error">*</span>
+                        </label>
+                        <input type="file" id="foto_actividad" name="foto_actividad" accept="image/*" required class="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface-container/30 text-on-surface text-sm font-medium">
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-outline-variant flex justify-end items-center gap-3 bg-surface-container/50">
+                <button type="button" onclick="document.getElementById('modal-subir-foto').close()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-variant transition-colors active:scale-95">
+                    Cancelar
+                </button>
+                <button type="submit" form="form-subir-foto" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-primary text-on-primary hover:bg-primary/90 shadow-md shadow-primary/20 transition-all flex items-center gap-2 active:scale-95">
+                    <span class="material-symbols-outlined text-lg">upload</span>
+                    Guardar imagen principal
+                </button>
+            </div>
+        </div>
+    </dialog>
     
     <script>
+    function abrirModalFoto(id, nombre) {
+        document.getElementById('foto_id_actividad').value = id;
+        document.getElementById('foto-actividad-nombre').textContent = nombre;
+        document.getElementById('modal-subir-foto').showModal();
+    }
+
     function toggleGruposSection(value) {
         const seccionGrupos = document.getElementById('seccion-grupos');
         if (value === 'grupo') {

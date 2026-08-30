@@ -65,7 +65,7 @@ class ActividadModel {
      * Crea una nueva actividad.
      */
     public function crearActividad($data) {
-        $this->db->query('INSERT INTO actividades (nombre_actividad, descripcion, fecha_hora_inicio, fecha_hora_fin, id_tipo_actividad_fk, id_sede_fk, requiere_asistencia_por_hijo) VALUES (:nombre_actividad, :descripcion, :fecha_hora_inicio, :fecha_hora_fin, :id_tipo_actividad_fk, :id_sede_fk, :requiere_asistencia_por_hijo)');
+        $this->db->query('INSERT INTO actividades (nombre_actividad, descripcion, fecha_hora_inicio, fecha_hora_fin, id_tipo_actividad_fk, id_sede_fk, requiere_asistencia_por_hijo, imagen_principal, creada_por_profesor_fk) VALUES (:nombre_actividad, :descripcion, :fecha_hora_inicio, :fecha_hora_fin, :id_tipo_actividad_fk, :id_sede_fk, :requiere_asistencia_por_hijo, :imagen_principal, :creada_por_profesor_fk)');
         
         $this->db->bind(':nombre_actividad', $data['nombre_actividad']);
         $this->db->bind(':descripcion', $data['descripcion'] ?? null);
@@ -74,6 +74,8 @@ class ActividadModel {
         $this->db->bind(':id_tipo_actividad_fk', $data['id_tipo_actividad_fk']);
         $this->db->bind(':id_sede_fk', $data['id_sede_fk']);
         $this->db->bind(':requiere_asistencia_por_hijo', $data['requiere_asistencia_por_hijo'] ?? 1);
+        $this->db->bind(':imagen_principal', $data['imagen_principal'] ?? null);
+        $this->db->bind(':creada_por_profesor_fk', $data['creada_por_profesor_fk'] ?? null);
 
         try {
             if ($this->db->execute()) {
@@ -82,11 +84,10 @@ class ActividadModel {
                 return false;
             }
         } catch (PDOException $e) {
-            // Handle duplicate entry (1062) gracefully
             if ($e->errorInfo[1] == 1062) {
-                return false; // Devuelve falso para que el controlador maneje el error
+                return false;
             }
-            throw $e; // Re-lanza otros errores
+            throw $e;
         }
     }
 
@@ -106,5 +107,40 @@ class ActividadModel {
             }
         }
         return $success;
+    }
+
+/** Registra la URL de la imagen principal directamente en la actividad. */
+    public function establecerImagenPrincipal($id_actividad, $ruta_foto, $id_profesor = null) {
+        if ($id_profesor === null) {
+            $this->db->query(
+                'SELECT id_actividad FROM actividades
+                 WHERE id_actividad = :id
+                   AND COALESCE(fecha_hora_fin, TIMESTAMP(DATE(fecha_hora_inicio), "23:59:59")) < NOW()'
+            );
+            $this->db->bind(':id', $id_actividad);
+        } else {
+            $this->db->query(
+                'SELECT a.id_actividad FROM actividades a
+                 LEFT JOIN actividad_grupo ag ON a.id_actividad = ag.id_actividad_fk
+                 LEFT JOIN profesor_grupo pg ON ag.id_grupo_fk = pg.id_grupo_fk
+                 WHERE a.id_actividad = :id
+                   AND COALESCE(a.fecha_hora_fin, TIMESTAMP(DATE(a.fecha_hora_inicio), "23:59:59")) < NOW()
+                   AND (a.creada_por_profesor_fk = :id_profesor OR pg.id_profesor_fk = :id_profesor)
+                 GROUP BY a.id_actividad'
+            );
+            $this->db->bind(':id', $id_actividad);
+            $this->db->bind(':id_profesor', $id_profesor);
+        }
+        $act = $this->db->single();
+        if (!$act) return false;
+
+        $this->db->query(
+            'UPDATE actividades
+             SET imagen_principal = :imagen_principal
+             WHERE id_actividad = :id'
+        );
+        $this->db->bind(':imagen_principal', $ruta_foto);
+        $this->db->bind(':id', $id_actividad);
+        return $this->db->execute();
     }
 }

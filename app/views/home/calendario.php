@@ -2,6 +2,9 @@
 
 <?php
 $jsActividades = [];
+$normalizarRutaImagenActividad = static function ($ruta) {
+    return is_string($ruta) ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) : $ruta;
+};
 foreach ($data['actividades'] as $act) {
     $fecha = new DateTime($act->fecha_hora_inicio);
     $jsActividades[] = [
@@ -13,7 +16,8 @@ foreach ($data['actividades'] as $act) {
         'fecha_raw' => $fecha->format('Y-m-d'),
         'fecha' => $fecha->format('d/m/Y'),
         'hora' => $fecha->format('H:i') . (!empty($act->fecha_hora_fin) ? ' — ' . date('H:i', strtotime($act->fecha_hora_fin)) : ''),
-        'fotos' => json_decode($act->fotos) ?? []
+        // La imagen se obtiene exclusivamente del registro de esta actividad.
+        'imagen_principal' => $normalizarRutaImagenActividad($act->imagen_principal ?? null)
     ];
 }
 ?>
@@ -514,13 +518,14 @@ function abrirComicModal(act) {
     slidesContainer.innerHTML = '';
     dotsContainer.innerHTML = '';
     
-    let fotos = act.fotos;
-    if (!fotos || fotos.length === 0) {
-        fotos = ['<?php echo URLROOT; ?>/assets/img/actividades/actividad_familia.png'];
-    }
+    const fotos = act.imagen_principal ? [act.imagen_principal] : [];
     
     modalSlides = fotos;
     currentSlideIndex = 0;
+
+    if (fotos.length === 0) {
+        slidesContainer.innerHTML = '<div class="w-full h-full flex items-center justify-center text-center px-6 text-slate-500 font-bold text-sm">Esta actividad aún no tiene una imagen principal registrada.</div>';
+    }
 
     fotos.forEach((foto, i) => {
         const slide = document.createElement('div');

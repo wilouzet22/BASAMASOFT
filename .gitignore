@@ -4,6 +4,8 @@ vendor/
 # Database
 *.sql
 !database/*.sql
+!database/migrations/
+!database/migrations/*.sql
 
 # Temp
 .temp/

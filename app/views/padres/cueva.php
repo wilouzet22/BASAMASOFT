@@ -2,6 +2,9 @@
 $data = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
 $now = new DateTime();
+$normalizarRutaImagenActividad = static function ($ruta) {
+    return is_string($ruta) ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) : $ruta;
+};
 
 // ── Determinar fecha de Inicio de Año ──
 $inicioAnoDate = null;
@@ -107,6 +110,7 @@ for ($s = 1; $s <= 41; $s++) {
             'descripcion' => $act->descripcion ?? '',
             'tipo'        => $act->nombre_tipo ?? '',
             'sede'        => $act->nombre_sede ?? '',
+            'imagen_principal' => $normalizarRutaImagenActividad($act->imagen_principal ?? null),
         ];
     }
 
@@ -966,17 +970,23 @@ require APPROOT . '/views/inc/header.php';
                 });
 
                 card.classList.add('selected', 'expanded');
+                
+                // Determinar si hay foto disponible
+                const fotoUrl = dia.imagen_principal || null;
+                const headerIconStyle = fotoUrl ? 'display:none;' : '';
+                
                 card.innerHTML = `
                     <div style="height:140px;background:#ffffff;border-bottom:3px dashed ${cardColor}40;border-radius:20px 20px 0 0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
-                        <span style="font-size:90px;opacity:0.05;position:absolute;color:#000 !important;">${s.suit}</span>
-                        <span class="material-symbols-outlined" style="font-size:64px;color:${cardColor} !important;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.1));">${cardIcon}</span>
-                        <button id="cardBackBtn" style="position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                        ${fotoUrl ? `<img src="${fotoUrl}" alt="Imagen principal de ${dia.nombre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.remove()">` : ''}
+                        <span style="font-size:90px;opacity:0.05;position:absolute;color:#000 !important;${headerIconStyle}">${s.suit}</span>
+                        <span class="material-symbols-outlined" style="font-size:64px;color:${cardColor} !important;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.1));${headerIconStyle}">${cardIcon}</span>
+                        <button id="cardBackBtn" style="position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;">
                             <span class="material-symbols-outlined" style="color:#475569 !important;font-size:22px;">arrow_back</span>
                         </button>
-                        <span style="position:absolute;bottom:12px;left:14px;background:${s.color};color:#fff !important;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,0.15);">
+                        <span style="position:absolute;bottom:12px;left:14px;background:${s.color};color:#fff !important;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,0.15);z-index:2;">
                             <span class="material-symbols-outlined" style="font-size:14px;color:#fff !important;">${s.icon}</span>${s.label}
                         </span>
-                        <span style="position:absolute;top:12px;right:14px;font-size:28px;font-weight:900;color:${cardColor} !important;opacity:0.7;">${s.suit}</span>
+                        <span style="position:absolute;top:12px;right:14px;font-size:28px;font-weight:900;color:${fotoUrl ? '#ffffff' : cardColor} !important;opacity:0.85;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,0.4);">${s.suit}</span>
                     </div>
                     <div style="padding:22px 20px 26px;background:#ffffff;border-radius:0 0 20px 20px;overflow-y:auto;flex:1;">
                         <h2 style="font-size:20px;font-weight:900;color:#0f172a !important;margin:0 0 8px;line-height:1.2;">${dia.nombre}</h2>

@@ -2,6 +2,9 @@
 $data        = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
 $now         = new DateTime();
+$normalizarRutaImagenActividad = static function ($ruta) {
+    return is_string($ruta) ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) : $ruta;
+};
 
 // ── Determinar fecha de Inicio de Año ──
 $inicioAnoDate = null;
@@ -110,6 +113,7 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
             'descripcion' => $act->descripcion ?? '',
             'tipo'        => $act->nombre_tipo ?? '',
             'sede'        => $act->nombre_sede ?? '',
+            'imagen_principal' => $normalizarRutaImagenActividad($act->imagen_principal ?? null),
         ];
     }
 
@@ -1238,18 +1242,23 @@ require APPROOT . '/views/inc/header.php';
                         // 2. Move card directly to center, straight, expand immediately
                         card.classList.add('selected', 'expanded');
 
+                        // Determinar si hay foto disponible
+                        const fotoUrl = dia.imagen_principal || null;
+                        const headerIconStyle = fotoUrl ? 'display:none;' : '';
+
                         // Replace content immediately before moving
                         card.innerHTML = `
                             <div style="height:140px;background:#ffffff;border-bottom:3px dashed ${cardColor}40;border-radius:20px 20px 0 0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
-                                <span style="font-size:90px;opacity:0.05;position:absolute;color:#000 !important;">${s.suit}</span>
-                                <span class="material-symbols-outlined" style="font-size:64px;color:${cardColor} !important;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.1));">${cardIcon}</span>
-                                <button id="cardBackBtn" style="position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                ${fotoUrl ? `<img src="${fotoUrl}" alt="Imagen principal de ${dia.nombre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.remove()">` : ''}
+                                <span style="font-size:90px;opacity:0.05;position:absolute;color:#000 !important;${headerIconStyle}">${s.suit}</span>
+                                <span class="material-symbols-outlined" style="font-size:64px;color:${cardColor} !important;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.1));${headerIconStyle}">${cardIcon}</span>
+                                <button id="cardBackBtn" style="position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;">
                                     <span class="material-symbols-outlined" style="color:#475569 !important;font-size:22px;">arrow_back</span>
                                 </button>
-                                <span style="position:absolute;bottom:12px;left:14px;background:${s.color};color:#fff !important;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,0.15);">
+                                <span style="position:absolute;bottom:12px;left:14px;background:${s.color};color:#fff !important;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,0.15);z-index:2;">
                                     <span class="material-symbols-outlined" style="font-size:14px;color:#fff !important;">${s.icon}</span>${s.label}
                                 </span>
-                                <span style="position:absolute;top:12px;right:14px;font-size:28px;font-weight:900;color:${cardColor} !important;opacity:0.7;">${s.suit}</span>
+                                <span style="position:absolute;top:12px;right:14px;font-size:28px;font-weight:900;color:${fotoUrl ? '#ffffff' : cardColor} !important;opacity:0.85;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,0.4);">${s.suit}</span>
                             </div>
                             <div style="padding:22px 20px 26px;background:#ffffff;border-radius:0 0 20px 20px;overflow-y:auto;flex:1;">
                                 <h2 style="font-size:20px;font-weight:900;color:#0f172a !important;margin:0 0 8px;line-height:1.2;">${dia.nombre}</h2>
@@ -1365,13 +1374,27 @@ require APPROOT . '/views/inc/header.php';
                     },
                 };
                 const s = stateMap[dia.estado] || stateMap.bloqueado;
+                
+                const headerImg = document.getElementById('actModalHeaderImg');
+                const headerIcon = document.getElementById('actModalHeaderIcon');
+                
+                if (dia.imagen_principal) {
+                    headerImg.style.backgroundImage = 'url(' + dia.imagen_principal + ')';
+                    headerImg.classList.remove('from-blue-500', 'to-indigo-600');
+                    if (headerIcon) headerIcon.style.display = 'none';
+                } else {
+                    headerImg.style.backgroundImage = 'none';
+                    headerImg.classList.add('from-blue-500', 'to-indigo-600');
+                    if (headerIcon) headerIcon.style.display = 'block';
+                }
+
                 document.getElementById('actTitle').textContent = dia.nombre;
                 document.getElementById('actDate').textContent = `${dia.dia_semana} ${dia.fecha} ${dia.hora}`;
                 document.getElementById('actSede').textContent = dia.sede || '—';
                 document.getElementById('actType').textContent = dia.tipo || '—';
                 document.getElementById('actDesc').textContent = dia.descripcion || 'Sin descripción.';
                 const st = document.getElementById('actStatus');
-                st.className = `px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${s.badge}`;
+                st.className = `absolute bottom-4 left-6 shadow px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${s.badge}`;
                 st.innerHTML = `<span class="material-symbols-outlined text-sm align-middle mr-1">${s.icon}</span>${s.label}`;
                 openModal('actividadModal');
             }
@@ -1407,8 +1430,8 @@ require APPROOT . '/views/inc/header.php';
                 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('actividadModal')"></div>
                 <div class="modal-card relative z-10 w-full max-w-lg bg-surface text-on-surface rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0 border border-outline-variant/50">
                     <!-- Imagen cabecera representativa -->
-                    <div class="h-36 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center">
-                        <span class="material-symbols-outlined text-white text-6xl opacity-20 absolute">landscape</span>
+                    <div id="actModalHeaderImg" class="h-36 bg-gradient-to-r from-blue-500 to-indigo-600 relative flex items-center justify-center bg-cover bg-center">
+                        <span id="actModalHeaderIcon" class="material-symbols-outlined text-white text-6xl opacity-20 absolute">landscape</span>
                         <button onclick="closeModal('actividadModal')" class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors">
                             <span class="material-symbols-outlined text-sm">close</span>
                         </button>

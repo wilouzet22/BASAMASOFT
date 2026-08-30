@@ -184,6 +184,29 @@ class Admin extends Controller
                 exit;
             }
 
+            // Cada actividad requiere una imagen principal almacenada en su registro.
+            $imagen = $_FILES['imagen_principal'] ?? null;
+            $extensiones = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!$imagen || $imagen['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($imagen['tmp_name']) || $imagen['size'] > 5 * 1024 * 1024) {
+                header('Location: ' . URLROOT . '/admin/actividades?error=image_required');
+                exit;
+            }
+            $extension = strtolower(pathinfo($imagen['name'], PATHINFO_EXTENSION));
+            if (!in_array($extension, $extensiones, true) || @getimagesize($imagen['tmp_name']) === false) {
+                header('Location: ' . URLROOT . '/admin/actividades?error=invalid_image');
+                exit;
+            }
+
+            $directorioImagenes = dirname(APPROOT) . '/public/assets/img/actividades/';
+            if (!is_dir($directorioImagenes)) mkdir($directorioImagenes, 0777, true);
+            $nombreArchivo = 'act_' . bin2hex(random_bytes(8)) . '.' . $extension;
+            $destinoImagen = $directorioImagenes . $nombreArchivo;
+            if (!move_uploaded_file($imagen['tmp_name'], $destinoImagen)) {
+                header('Location: ' . URLROOT . '/admin/actividades?error=image_upload');
+                exit;
+            }
+            $data['imagen_principal'] = URLROOT . '/public/assets/img/actividades/' . $nombreArchivo;
+
             // Lógica especial para "Inicio de año"
             if (strtolower(trim($data['nombre_actividad'])) === 'inicio de año') {
                 if (date('m-d') !== '01-01') {
@@ -210,6 +233,7 @@ class Admin extends Controller
                 header('Location: ' . URLROOT . '/admin/actividades');
                 exit;
             } else {
+                if (is_file($destinoImagen)) unlink($destinoImagen);
                 header('Location: ' . URLROOT . '/admin/actividades?error=duplicate');
                 exit;
             }
@@ -364,5 +388,51 @@ class Admin extends Controller
         ];
 
         $this->view('shared/actividades_proximas', $data);
+    }
+
+    /**
+     * Sube una foto para una actividad
+     */
+    public function subir_foto_actividad()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_actividad']) && isset($_FILES['foto_actividad'])) {
+            $id_actividad = (int)$_POST['id_actividad'];
+            $file = $_FILES['foto_actividad'];
+
+            if ($id_actividad > 0 && $file['error'] === UPLOAD_ERR_OK && is_uploaded_file($file['tmp_name']) && $file['size'] <= 5 * 1024 * 1024) {
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $imageInfo = @getimagesize($file['tmp_name']);
+                if (in_array($ext, $allowed, true) && $imageInfo !== false) {
+                    $uploadDir = dirname(APPROOT) . '/public/assets/img/actividades/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    $fileName = 'act_' . $id_actividad . '_' . time() . '.' . $ext;
+                    $destPath = $uploadDir . $fileName;
+
+                    if (move_uploaded_file($file['tmp_name'], $destPath)) {
+                        $rutaUrl = URLROOT . '/public/assets/img/actividades/' . $fileName;
+                        $model = $this->model('ActividadModel');
+                        if ($model->establecerImagenPrincipal($id_actividad, $rutaUrl)) {
+                            header('Location: ' . URLROOT . '/admin/actividades?upload=success');
+                            exit;
+                        } else {
+                            unlink($destPath);
+                            header('Location: ' . URLROOT . '/admin/actividades?error=upload_permission');
+                            exit;
+                        }
+                    }
+                } else {
+                    header('Location: ' . URLROOT . '/admin/actividades?error=invalid_image');
+                    exit;
+                }
+            } else {
+                header('Location: ' . URLROOT . '/admin/actividades?error=upload_failed');
+                exit;
+            }
+        }
+        header('Location: ' . URLROOT . '/admin/actividades');
+        exit;
     }
 }
