@@ -62,6 +62,21 @@ class ActividadModel {
     }
 
     /**
+     * Obtiene una actividad por su ID.
+     */
+    public function getActividadById($id_actividad) {
+        $this->db->query(
+            'SELECT a.*, ta.nombre_tipo, s.nombre_sede
+             FROM actividades a
+             INNER JOIN tipos_actividad ta ON a.id_tipo_actividad_fk = ta.id_tipo_actividad
+             INNER JOIN sedes s ON a.id_sede_fk = s.id_sede
+             WHERE a.id_actividad = :id'
+        );
+        $this->db->bind(':id', $id_actividad);
+        return $this->db->single();
+    }
+
+    /**
      * Crea una nueva actividad.
      */
     public function crearActividad($data) {

@@ -23,7 +23,7 @@ class Database {
         if (defined('DB_NAME')) $this->dbname = DB_NAME;
 
         // Set DSN
-        $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname;
+        $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname . ';unix_socket=/opt/lampp/var/mysql/mysql.sock';
         $options = array(
             PDO::ATTR_PERSISTENT => true,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION

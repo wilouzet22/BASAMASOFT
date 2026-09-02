@@ -7,6 +7,7 @@ $isMensajes      = (strpos($currentPage, '/docentes/mensajes') !== false) || ($a
 $isNotificaciones = (strpos($currentPage, '/docentes/notificaciones') !== false) || ($activePage ?? '') === 'notificaciones';
 $isConfiguracion = (strpos($currentPage, '/docentes/configuracion') !== false) || ($activePage ?? '') === 'configuracion';
 $isActProximas   = strpos($currentPage, '/docentes/actividades_proximas') !== false;
+$isConfirmarAsistencia = strpos($currentPage, '/docentes/confirmar_asistencia') !== false;
 
 $_sidebar_docente_nombre = htmlspecialchars(
     ($_SESSION['username'] ?? '') ?:
@@ -112,6 +113,13 @@ $_sidebar_docente_nombre = htmlspecialchars(
            href="<?php echo URLROOT; ?>/docentes/notificaciones">
             <span class="material-symbols-outlined flex-shrink-0 text-[20px]" <?php echo $isNotificaciones ? 'style="font-variation-settings:\'FILL\' 1;"' : ''; ?>>notifications</span>
             <span class="font-medium text-[13px] sidebar-text">Notificaciones</span>
+        </a>
+
+        <!-- Confirmar Asistencia (QR) -->
+        <a class="sidebar-item-link <?php echo $isConfirmarAsistencia ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'; ?> rounded-lg px-3 py-2.5 flex items-center gap-2.5 transition-all" 
+           href="<?php echo URLROOT; ?>/docentes/confirmar_asistencia">
+            <span class="material-symbols-outlined flex-shrink-0 text-[20px]" <?php echo $isConfirmarAsistencia ? 'style="font-variation-settings:\'FILL\' 1;"' : ''; ?>>qr_code_scanner</span>
+            <span class="font-medium text-[13px] sidebar-text">Confirmar Asistencia</span>
         </a>
     </div>
 

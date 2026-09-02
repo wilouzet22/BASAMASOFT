@@ -270,6 +270,23 @@ class Docentes extends Controller
     }
 
     /**
+     * Vista para escanear QR y confirmar asistencia (Docentes)
+     */
+    public function confirmar_asistencia()
+    {
+        $model      = $this->model('ProfesorModel');
+        $actividadModel = $this->model('ActividadModel');
+        $id_profesor = $_SESSION['user_id'];
+
+        $data = [
+            'title'       => 'Confirmar Asistencia - Escáner QR',
+            'actividades' => $model->getActividadesByProfesor($id_profesor),
+        ];
+
+        $this->view('docentes/confirmar_asistencia', $data);
+    }
+
+    /**
      * Sube una foto para una actividad
      */
     public function subir_foto_actividad()
@@ -312,6 +329,122 @@ class Docentes extends Controller
             }
         }
         header('Location: ' . URLROOT . '/docentes/actividades');
+        exit;
+    }
+
+    /**
+     * Procesa el escaneo de QR para confirmar asistencia (Docente)
+     */
+    public function procesar_qr_asistencia()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $estudianteId = $input['estudiante_id'] ?? '';
+        $actividadId = $input['actividad_id'] ?? '';
+        $requiereHijo = $input['requiere_hijo'] ?? 1;
+
+        if (empty($estudianteId) || empty($actividadId)) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            exit;
+        }
+
+        $model = $this->model('AsistenciaModel');
+        $actividadModel = $this->model('ActividadModel');
+        
+        // Verify the activity belongs to this professor
+        $actividad = $actividadModel->getActividadById($actividadId);
+        if (!$actividad) {
+            echo json_encode(['success' => false, 'message' => 'Actividad no encontrada']);
+            exit;
+        }
+
+        // Check if professor has access to this activity
+        $profesorModel = $this->model('ProfesorModel');
+        $misActividades = $profesorModel->getActividadesByProfesor($_SESSION['user_id']);
+        $tieneAcceso = false;
+        foreach ($misActividades as $act) {
+            if ($act->id_actividad == $actividadId) {
+                $tieneAcceso = true;
+                break;
+            }
+        }
+        if (!$tieneAcceso) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para esta actividad']);
+            exit;
+        }
+
+        // Get estudiante info
+        $db = new Database();
+        $db->query('SELECT e.*, CONCAT(e.nombres, " ", e.apellidos) as nombre_completo, g.nombre_grupo 
+                    FROM estudiantes e 
+                    LEFT JOIN grupos g ON e.id_grupo_fk = g.id_grupo 
+                    WHERE e.id_estudiante = :id');
+        $db->bind(':id', $estudianteId);
+        $estudiante = $db->single();
+
+        if (!$estudiante) {
+            echo json_encode(['success' => false, 'message' => 'Estudiante no encontrado']);
+            exit;
+        }
+
+        // Check if already registered
+        $db->query('SELECT * FROM asistencia WHERE id_actividad_fk = :act_id AND id_estudiante_fk = :est_id LIMIT 1');
+        $db->bind(':act_id', $actividadId);
+        $db->bind(':est_id', $estudianteId);
+        $existe = $db->single();
+
+        if ($existe) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Asistencia ya registrada',
+                'estudiante_nombre' => $estudiante->nombre_completo,
+                'actividad_nombre' => $actividad->nombre_actividad
+            ]);
+            exit;
+        }
+
+        // Register attendance
+        $idFamilia = null;
+        if ($requiereHijo) {
+            $db->query('SELECT id_familia_fk FROM familia_estudiante WHERE id_estudiante_fk = :id LIMIT 1');
+            $db->bind(':id', $estudianteId);
+            $fam = $db->single();
+            if ($fam) $idFamilia = $fam->id_familia_fk;
+        } else {
+            $db->query('SELECT id_familia_fk FROM familia_estudiante WHERE id_estudiante_fk = :id LIMIT 1');
+            $db->bind(':id', $estudianteId);
+            $fam = $db->single();
+            if ($fam) $idFamilia = $fam->id_familia_fk;
+        }
+
+        if (!$idFamilia) {
+            echo json_encode(['success' => false, 'message' => 'Estudiante sin familia asociada']);
+            exit;
+        }
+
+        $db->query('INSERT INTO asistencia (id_actividad_fk, id_familia_fk, id_estudiante_fk, registrada_por_profesor_fk, presente) 
+                    VALUES (:act_id, :fam_id, :est_id, :prof_id, 1)');
+        $db->bind(':act_id', $actividadId);
+        $db->bind(':fam_id', $idFamilia);
+        $db->bind(':est_id', $estudianteId);
+        $db->bind(':prof_id', $_SESSION['user_id']);
+        
+        if ($db->execute()) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Asistencia confirmada',
+                'estudiante_nombre' => $estudiante->nombre_completo,
+                'actividad_nombre' => $actividad->nombre_actividad
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al guardar']);
+        }
         exit;
     }
 }

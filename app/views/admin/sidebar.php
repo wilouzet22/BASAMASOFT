@@ -10,6 +10,7 @@ $isActividades = strpos($currentPage, '/admin/actividades') !== false && strpos(
 $isMensajes    = strpos($currentPage, '/admin/mensajes') !== false;
 $isAuditoria   = strpos($currentPage, '/admin/auditoria') !== false;
 $isActProximas = strpos($currentPage, '/admin/actividades_proximas') !== false;
+$isConfirmarAsistencia = strpos($currentPage, '/admin/confirmar_asistencia') !== false;
 
 $isUsuariosGroup      = ($isProfesores || $isFamilias || $isEstudiantes);
 $isInstitucionalGroup = ($isSedes || $isGrupos || $isActividades);
@@ -201,6 +202,13 @@ $_sidebar_admin_nombre = htmlspecialchars($_SESSION['username'] ?? 'Administrado
                 </a>
             </div>
         </div>
+
+        <!-- Confirmar Asistencia -->
+        <a class="sidebar-item-link <?php echo $isConfirmarAsistencia ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'; ?> rounded-lg px-3 py-2 flex items-center gap-2.5 transition-all" 
+           href="<?php echo URLROOT; ?>/admin/confirmar_asistencia">
+            <span class="material-symbols-outlined flex-shrink-0 text-[18px]" <?php echo $isConfirmarAsistencia ? 'style="font-variation-settings:\'FILL\' 1;"' : ''; ?>>qr_code_scanner</span>
+            <span class="font-medium text-[12px] sidebar-text">Confirmar Asistencia</span>
+        </a>
 
     </div>
 

@@ -179,38 +179,40 @@ class Admin extends Controller
 
             // Validación básica
             if (empty($data['nombre_actividad']) || empty($data['fecha_hora_inicio']) || empty($data['id_tipo_actividad_fk']) || empty($data['id_sede_fk'])) {
-                // Flash message or similar would be better, but basic redirect for now
                 header('Location: ' . URLROOT . '/admin/actividades');
                 exit;
             }
 
-            // Cada actividad requiere una imagen principal almacenada en su registro.
+            // Manejo de imagen principal (opcional para "Inicio de año")
             $imagen = $_FILES['imagen_principal'] ?? null;
             $extensiones = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (!$imagen || $imagen['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($imagen['tmp_name']) || $imagen['size'] > 5 * 1024 * 1024) {
+            $esInicioDeAno = strtolower(trim($data['nombre_actividad'])) === 'inicio de año';
+            
+            if ($imagen && $imagen['error'] === UPLOAD_ERR_OK && is_uploaded_file($imagen['tmp_name']) && $imagen['size'] <= 5 * 1024 * 1024) {
+                $extension = strtolower(pathinfo($imagen['name'], PATHINFO_EXTENSION));
+                if (in_array($extension, $extensiones, true) && @getimagesize($imagen['tmp_name']) !== false) {
+                    $directorioImagenes = dirname(APPROOT) . '/public/assets/img/actividades/';
+                    if (!is_dir($directorioImagenes)) mkdir($directorioImagenes, 0777, true);
+                    $nombreArchivo = 'act_' . bin2hex(random_bytes(8)) . '.' . $extension;
+                    $destinoImagen = $directorioImagenes . $nombreArchivo;
+                    if (move_uploaded_file($imagen['tmp_name'], $destinoImagen)) {
+                        $data['imagen_principal'] = URLROOT . '/public/assets/img/actividades/' . $nombreArchivo;
+                    }
+                } else {
+                    if (!$esInicioDeAno) {
+                        header('Location: ' . URLROOT . '/admin/actividades?error=invalid_image');
+                        exit;
+                    }
+                }
+            } elseif (!$esInicioDeAno) {
+                // Para actividades normales, la imagen es obligatoria
                 header('Location: ' . URLROOT . '/admin/actividades?error=image_required');
                 exit;
             }
-            $extension = strtolower(pathinfo($imagen['name'], PATHINFO_EXTENSION));
-            if (!in_array($extension, $extensiones, true) || @getimagesize($imagen['tmp_name']) === false) {
-                header('Location: ' . URLROOT . '/admin/actividades?error=invalid_image');
-                exit;
-            }
-
-            $directorioImagenes = dirname(APPROOT) . '/public/assets/img/actividades/';
-            if (!is_dir($directorioImagenes)) mkdir($directorioImagenes, 0777, true);
-            $nombreArchivo = 'act_' . bin2hex(random_bytes(8)) . '.' . $extension;
-            $destinoImagen = $directorioImagenes . $nombreArchivo;
-            if (!move_uploaded_file($imagen['tmp_name'], $destinoImagen)) {
-                header('Location: ' . URLROOT . '/admin/actividades?error=image_upload');
-                exit;
-            }
-            $data['imagen_principal'] = URLROOT . '/public/assets/img/actividades/' . $nombreArchivo;
 
             // Lógica especial para "Inicio de año"
-            if (strtolower(trim($data['nombre_actividad'])) === 'inicio de año') {
+            if ($esInicioDeAno) {
                 if (date('m-d') !== '01-01') {
-                    // Si no es estrictamente el 1 de enero
                     header('Location: ' . URLROOT . '/admin/actividades?error=not_jan1');
                     exit;
                 }
@@ -391,6 +393,21 @@ class Admin extends Controller
     }
 
     /**
+     * Vista para escanear QR y confirmar asistencia (Admin)
+     */
+    public function confirmar_asistencia()
+    {
+        $model = $this->model('ActividadModel');
+        
+        $data = [
+            'title'       => 'Confirmar Asistencia - Escáner QR',
+            'actividades' => $model->getAllActividadesVisitante(),
+        ];
+
+        $this->view('admin/confirmar_asistencia', $data);
+    }
+
+    /**
      * Sube una foto para una actividad
      */
     public function subir_foto_actividad()
@@ -433,6 +450,108 @@ class Admin extends Controller
             }
         }
         header('Location: ' . URLROOT . '/admin/actividades');
+        exit;
+    }
+
+    /**
+     * Procesa el escaneo de QR para confirmar asistencia (Admin)
+     */
+    public function procesar_qr_asistencia()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $estudianteId = $input['estudiante_id'] ?? '';
+        $actividadId = $input['actividad_id'] ?? '';
+        $requiereHijo = $input['requiere_hijo'] ?? 1;
+
+        if (empty($estudianteId) || empty($actividadId)) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            exit;
+        }
+
+        $model = $this->model('AsistenciaModel');
+        $actividadModel = $this->model('ActividadModel');
+        
+        // Get actividad info
+        $actividad = $actividadModel->getActividadById($actividadId);
+        if (!$actividad) {
+            echo json_encode(['success' => false, 'message' => 'Actividad no encontrada']);
+            exit;
+        }
+
+        // Get estudiante info
+        $db = new Database();
+        $db->query('SELECT e.*, CONCAT(e.nombres, " ", e.apellidos) as nombre_completo, g.nombre_grupo 
+                    FROM estudiantes e 
+                    LEFT JOIN grupos g ON e.id_grupo_fk = g.id_grupo 
+                    WHERE e.id_estudiante = :id');
+        $db->bind(':id', $estudianteId);
+        $estudiante = $db->single();
+
+        if (!$estudiante) {
+            echo json_encode(['success' => false, 'message' => 'Estudiante no encontrado']);
+            exit;
+        }
+
+        // Check if already registered
+        $db->query('SELECT * FROM asistencia WHERE id_actividad_fk = :act_id AND id_estudiante_fk = :est_id LIMIT 1');
+        $db->bind(':act_id', $actividadId);
+        $db->bind(':est_id', $estudianteId);
+        $existe = $db->single();
+
+        if ($existe) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Asistencia ya registrada',
+                'estudiante_nombre' => $estudiante->nombre_completo,
+                'actividad_nombre' => $actividad->nombre_actividad
+            ]);
+            exit;
+        }
+
+        // Register attendance
+        $idFamilia = null;
+        if ($requiereHijo) {
+            $db->query('SELECT id_familia_fk FROM familia_estudiante WHERE id_estudiante_fk = :id LIMIT 1');
+            $db->bind(':id', $estudianteId);
+            $fam = $db->single();
+            if ($fam) $idFamilia = $fam->id_familia_fk;
+        } else {
+            // Get any family for general attendance
+            $db->query('SELECT id_familia_fk FROM familia_estudiante WHERE id_estudiante_fk = :id LIMIT 1');
+            $db->bind(':id', $estudianteId);
+            $fam = $db->single();
+            if ($fam) $idFamilia = $fam->id_familia_fk;
+        }
+
+        if (!$idFamilia) {
+            echo json_encode(['success' => false, 'message' => 'Estudiante sin familia asociada']);
+            exit;
+        }
+
+        $db->query('INSERT INTO asistencia (id_actividad_fk, id_familia_fk, id_estudiante_fk, registrada_por_profesor_fk, presente) 
+                    VALUES (:act_id, :fam_id, :est_id, :prof_id, 1)');
+        $db->bind(':act_id', $actividadId);
+        $db->bind(':fam_id', $idFamilia);
+        $db->bind(':est_id', $estudianteId);
+        $db->bind(':prof_id', $_SESSION['user_id'] ?? 1);
+        
+        if ($db->execute()) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Asistencia confirmada',
+                'estudiante_nombre' => $estudiante->nombre_completo,
+                'actividad_nombre' => $actividad->nombre_actividad
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al guardar']);
+        }
         exit;
     }
 }
