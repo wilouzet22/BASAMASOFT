@@ -552,8 +552,24 @@ async function startCameraAndScan() {
         startBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span><span>Iniciando...</span>`;
 
         const readerElement = document.getElementById('qr-reader');
-        const video = document.getElementById('qr-video');
+        let video = document.getElementById('qr-video');
         
+        if (!video) {
+            readerElement.innerHTML = '';
+            video = document.createElement('video');
+            video.id = 'qr-video';
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'cover';
+            video.muted = true;
+            video.playsInline = true;
+            readerElement.appendChild(video);
+        }
+        
+        if (!codeReader) {
+            codeReader = new ZXing.BrowserQRCodeReader();
+        }
+
         await CameraController.start(video, { facingMode: 'environment' });
         isUsingNativeCamera = true;
 
