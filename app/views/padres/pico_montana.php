@@ -57,11 +57,17 @@ for ($s = 1; $s <= 41; $s++) {
         $inasistencias = 0;
         $futuras       = 0;
         foreach ($acts as $act) {
-            $fd = new DateTime($act->fecha_hora_inicio);
-            if ($fd <= $now) {
+            $inicio_act = new DateTime($act->fecha_hora_inicio);
+            $fin_act    = !empty($act->fecha_hora_fin)
+                          ? new DateTime($act->fecha_hora_fin)
+                          : (clone $inicio_act)->modify('+2 hours');
+
+            if ($fin_act <= $now) {
+                // Actividad ya terminó
                 if ($act->asistencia_registrada > 0) $completadas++;
                 else $inasistencias++;
             } else {
+                // Futura o en progreso
                 $futuras++;
             }
         }
@@ -84,9 +90,15 @@ for ($s = 1; $s <= 41; $s++) {
     $dias = [];
     $dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
     foreach (array_slice($acts, 0, 5) as $act) {
-        $fd = new DateTime($act->fecha_hora_inicio);
-        if ($fd <= $now) {
+        $fd      = new DateTime($act->fecha_hora_inicio);
+        $fin_act = !empty($act->fecha_hora_fin)
+                   ? new DateTime($act->fecha_hora_fin)
+                   : (clone $fd)->modify('+2 hours');
+
+        if ($fin_act <= $now) {
             $actEstado = $act->asistencia_registrada > 0 ? 'completado' : 'inasistencia';
+        } elseif ($fd <= $now) {
+            $actEstado = 'actual'; // en progreso
         } else {
             $actEstado = 'futuro';
         }
@@ -164,8 +176,11 @@ $bodyClass = 'antialiased min-h-screen';
 // ── Porcentaje de asistencia para el header móvil ──
 $_hPast = 0; $_hAsist = 0;
 foreach ($actividades as $_a) {
-    $_fd = new DateTime($_a->fecha_hora_inicio);
-    if ($_fd <= $now) {
+    $_inicio = new DateTime($_a->fecha_hora_inicio);
+    $_fin    = !empty($_a->fecha_hora_fin)
+               ? new DateTime($_a->fecha_hora_fin)
+               : (clone $_inicio)->modify('+2 hours');
+    if ($_fin <= $now) {
         if ($_a->asistencia_registrada > 0) { $_hPast++; $_hAsist++; }
         else $_hPast++;
     }

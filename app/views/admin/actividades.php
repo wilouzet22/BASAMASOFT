@@ -49,7 +49,7 @@ require APPROOT . '/views/inc/header.php';
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-8 max-w-[1280px] mx-auto w-full flex flex-col gap-6">
+        <div class="flex-1 p-4 md:p-8 max-w-[1280px] mx-auto w-full flex flex-col gap-6">
             <div class="flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-headline-lg text-primary font-headline-lg">Actividades y Eventos</h2>
@@ -134,15 +134,15 @@ require APPROOT . '/views/inc/header.php';
                                 <?php
                                     $ahora = new DateTime();
                                     $inicio = new DateTime($act->fecha_hora_inicio);
-                                    // Si no tiene fecha de fin, se asume que termina al final del día de inicio
-                                    $fin = !empty($act->fecha_hora_fin) ? new DateTime($act->fecha_hora_fin) : (clone $inicio)->setTime(23, 59, 59);
+                                    // Si no tiene fecha de fin, se asume que termina 2 horas después del inicio
+                                    $fin = !empty($act->fecha_hora_fin) ? new DateTime($act->fecha_hora_fin) : (clone $inicio)->modify('+2 hours');
                                     
                                     if ($ahora < $inicio) {
-                                        $estado = ['label' => 'Próxima', 'class' => 'bg-blue-100 text-blue-800'];
+                                        $estado = ['label' => 'Pendiente', 'class' => 'bg-blue-100 text-blue-800'];
                                     } elseif ($ahora > $fin) {
                                         $estado = ['label' => 'Finalizada', 'class' => 'bg-surface-variant text-on-surface-variant font-extrabold shadow-sm'];
                                     } else {
-                                        $estado = ['label' => 'En Curso', 'class' => 'bg-green-100 text-green-800'];
+                                        $estado = ['label' => 'En Progreso', 'class' => 'bg-green-100 text-green-800 font-extrabold'];
                                     }
                                 ?>
                                 <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-bold <?php echo $estado['class']; ?>">
@@ -160,7 +160,7 @@ require APPROOT . '/views/inc/header.php';
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </main>
+        </div>
         <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 
@@ -416,7 +416,6 @@ require APPROOT . '/views/inc/header.php';
     });
     </script>
 
-    <?php require APPROOT . '/views/inc/footer.php'; ?>
     </main>
 </div>
 

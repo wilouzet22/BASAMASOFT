@@ -48,7 +48,7 @@ require APPROOT . '/views/inc/header.php';
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 p-6 md:p-10 max-w-4xl mx-auto w-full flex flex-col gap-6">
+        <div class="flex-1 p-6 md:p-10 max-w-4xl mx-auto w-full flex flex-col gap-6">
             <div class="flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-headline-lg text-primary font-headline-lg">Escáner de Código QR</h2>
@@ -156,7 +156,7 @@ require APPROOT . '/views/inc/header.php';
                     <p class="text-center text-on-surface-variant py-8">No hay escaneos aún. Selecciona una actividad y escanea un QR.</p>
                 </div>
             </div>
-        </main>
+        </div>
         <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 </div>
@@ -776,6 +776,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>

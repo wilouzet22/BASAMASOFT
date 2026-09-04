@@ -48,7 +48,7 @@ require APPROOT . '/views/inc/header.php';
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full flex flex-col gap-6">
+        <div class="flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full flex flex-col gap-6">
             <div class="flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-headline-lg text-primary font-headline-lg">Generar Código QR</h2>
@@ -142,7 +142,7 @@ require APPROOT . '/views/inc/header.php';
                 </ol>
             </div>
             <?php endif; ?>
-        </main>
+        </div>
         <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 </div>
@@ -230,6 +230,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 </script>
 
-<?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>

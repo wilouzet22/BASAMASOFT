@@ -48,7 +48,7 @@ require APPROOT . '/views/inc/header.php';
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-8 max-w-xl mx-auto w-full flex flex-col gap-6 items-center">
+        <div class="flex-1 p-4 md:p-8 max-w-xl mx-auto w-full flex flex-col gap-6 items-center">
             <?php if (!empty($data['error'])): ?>
             <div class="w-full bg-error-container text-on-error-container px-6 py-4 rounded-2xl shadow-sm text-center text-sm font-semibold flex items-center justify-center gap-2 animate-fade-in">
                 <span class="material-symbols-outlined">error</span> <?php echo htmlspecialchars($data['error']); ?>
@@ -107,7 +107,7 @@ require APPROOT . '/views/inc/header.php';
                 </ol>
             </div>
             <?php endif; ?>
-        </main>
+        </div>
         <?php require APPROOT . '/views/inc/footer.php'; ?>
     </div>
 </div>
@@ -144,6 +144,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<?php require APPROOT . '/views/inc/footer.php'; ?>
 </body>
 </html>

@@ -43,7 +43,7 @@ foreach ($actividades as $act) {
 $allWeekKeys = range(1, 41); // Claves explícitas 1 a 41
 
 $hasCueva = false;
-for ($i = 23; $i <= 37; $i++) {
+for ($i = 23; $i <= 41; $i++) {
     if (!empty($actsByWeek[$i])) {
         $hasCueva = true;
         break;
@@ -69,11 +69,17 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
         $inasistencias = 0;
         $futuras       = 0;
         foreach ($acts as $act) {
-            $fd = new DateTime($act->fecha_hora_inicio);
-            if ($fd <= $now) {
+            $inicio_act = new DateTime($act->fecha_hora_inicio);
+            $fin_act    = !empty($act->fecha_hora_fin)
+                          ? new DateTime($act->fecha_hora_fin)
+                          : (clone $inicio_act)->modify('+2 hours');
+
+            if ($fin_act <= $now) {
+                // Actividad ya terminó
                 if ($act->asistencia_registrada > 0) $completadas++;
                 else $inasistencias++;
             } else {
+                // Actividad futura o en progreso
                 $futuras++;
             }
         }
@@ -97,9 +103,15 @@ for ($s = 1; $s <= $totalSemanas; $s++) {
     $dias = [];
     $dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
     foreach (array_slice($acts, 0, 5) as $act) {
-        $fd = new DateTime($act->fecha_hora_inicio);
-        if ($fd <= $now) {
+        $fd      = new DateTime($act->fecha_hora_inicio);
+        $fin_act = !empty($act->fecha_hora_fin)
+                   ? new DateTime($act->fecha_hora_fin)
+                   : (clone $fd)->modify('+2 hours');
+
+        if ($fin_act <= $now) {
             $actEstado = $act->asistencia_registrada > 0 ? 'completado' : 'inasistencia';
+        } elseif ($fd <= $now) {
+            $actEstado = 'actual'; // en progreso
         } else {
             $actEstado = 'futuro';
         }
