@@ -4,6 +4,7 @@ $isDashboard = (strpos($currentPage, '/padres/dashboard') !== false) || ($active
 $isCamino    = (strpos($currentPage, '/padres/camino') !== false) || ($activePage ?? '') === 'camino';
 $isPuntos    = (strpos($currentPage, '/padres/puntos') !== false) || ($activePage ?? '') === 'puntos';
 $isMensajes  = (strpos($currentPage, '/padres/mensajes') !== false) || ($activePage ?? '') === 'mensajes';
+$isGenerarQr = (strpos($currentPage, '/padres/generar_qr') !== false) || (strpos($currentPage, '/padres/ver_qr') !== false);
 
 // ── Cargar profesores y directivas directamente para el modal de contactos ──
 // Esto evita depender de que el controlador pase $data['profesores']
@@ -175,6 +176,13 @@ if (!isset($_sidebar_profesores)) {
                 </button>
             </div>
         </div>
+
+        <!-- Generar QR -->
+        <a class="sidebar-item-link <?php echo $isGenerarQr ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'; ?> rounded-lg px-3 py-2 flex items-center gap-2.5 transition-all" 
+           href="<?php echo URLROOT; ?>/padres/generar_qr">
+            <span class="material-symbols-outlined flex-shrink-0 text-[18px]" <?php echo $isGenerarQr ? 'style="font-variation-settings:\'FILL\' 1;"' : ''; ?>>qr_code</span>
+            <span class="font-medium text-[12px] sidebar-text">Generar QR</span>
+        </a>
     </div>
 
     <!-- Perfil de usuario / Cerrar sesión -->

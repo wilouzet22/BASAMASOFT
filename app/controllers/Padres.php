@@ -316,4 +316,225 @@ class Padres extends Controller {
         }
         exit;
     }
+
+    /**
+     * Vista para generar QR de asistencia (solo actividades pendientes).
+     */
+    public function generar_qr() {
+        $model = $this->model('FamiliaModel');
+        $id_familia = $_SESSION['user_id'];
+
+        // Obtener estudiantes de la familia
+        $estudiantes = $model->getEstudiantesByFamilia($id_familia);
+
+        // Obtener actividades futuras (pendientes) de los grupos de los estudiantes
+        $actividades = $model->getProximasActividades($id_familia);
+
+        $data = [
+            'title'       => 'Generar QR de Asistencia',
+            'estudiantes' => $estudiantes,
+            'actividades' => $actividades,
+        ];
+
+        $this->view('padres/generar_qr', $data);
+    }
+
+    /**
+     * Crea un QR de asistencia único para una actividad y estudiante.
+     * Retorna JSON con el token y URL del QR.
+     */
+    public function crear_qr() {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $id_actividad = (int)($_POST['id_actividad'] ?? 0);
+        $id_estudiante = (int)($_POST['id_estudiante'] ?? 0);
+        $id_familia = $_SESSION['user_id'];
+
+        if (!$id_actividad || !$id_estudiante) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            exit;
+        }
+
+        // Verificar que el estudiante pertenece a la familia
+        $db = new Database();
+        $db->query('SELECT 1 FROM familia_estudiante WHERE id_familia_fk = :f AND id_estudiante_fk = :e LIMIT 1');
+        $db->bind(':f', $id_familia);
+        $db->bind(':e', $id_estudiante);
+        if (!$db->single()) {
+            echo json_encode(['success' => false, 'message' => 'Estudiante no autorizado']);
+            exit;
+        }
+
+        // Verificar que la actividad existe y es futura (pendiente)
+        $db->query('SELECT id_actividad FROM actividades WHERE id_actividad = :id AND fecha_hora_inicio >= NOW() LIMIT 1');
+        $db->bind(':id', $id_actividad);
+        if (!$db->single()) {
+            echo json_encode(['success' => false, 'message' => 'Actividad no disponible (ya pasó o no existe)']);
+            exit;
+        }
+
+        // Verificar si ya existe un QR pendiente para esta combinación
+        $db->query('SELECT token, expira_en FROM qr_asistencia WHERE id_actividad_fk = :a AND id_estudiante_fk = :e AND id_familia_fk = :f AND usado = 0 AND expira_en > NOW() LIMIT 1');
+        $db->bind(':a', $id_actividad);
+        $db->bind(':e', $id_estudiante);
+        $db->bind(':f', $id_familia);
+        $existente = $db->single();
+
+        if ($existente) {
+            // Devolver el QR existente si sigue válido
+            $url = URLROOT . '/padres/ver_qr/' . $existente->token;
+            echo json_encode(['success' => true, 'message' => 'QR ya generado', 'qr_url' => $url, 'token' => $existente->token, 'expira_en' => $existente->expira_en]);
+            exit;
+        }
+
+        // Generar token único
+        $token = bin2hex(random_bytes(32));
+        // Expira en 24 horas
+        $expira_en = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+        $db->query('INSERT INTO qr_asistencia (id_actividad_fk, id_familia_fk, id_estudiante_fk, token, expira_en) VALUES (:a, :f, :e, :t, :ex)');
+        $db->bind(':a', $id_actividad);
+        $db->bind(':f', $id_familia);
+        $db->bind(':e', $id_estudiante);
+        $db->bind(':t', $token);
+        $db->bind(':ex', $expira_en);
+
+        if ($db->execute()) {
+            $url = URLROOT . '/padres/ver_qr/' . $token;
+            echo json_encode(['success' => true, 'message' => 'QR generado', 'qr_url' => $url, 'token' => $token, 'expira_en' => $expira_en]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al generar QR']);
+        }
+        exit;
+    }
+
+    /**
+     * Muestra el QR generado para que la familia lo presente.
+     */
+    public function ver_qr($token) {
+        $db = new Database();
+        $db->query('SELECT q.*, a.nombre_actividad, a.fecha_hora_inicio, s.nombre_sede, e.nombres AS est_nombres, e.apellidos AS est_apellidos
+                    FROM qr_asistencia q
+                    INNER JOIN actividades a ON q.id_actividad_fk = a.id_actividad
+                    INNER JOIN sedes s ON a.id_sede_fk = s.id_sede
+                    INNER JOIN estudiantes e ON q.id_estudiante_fk = e.id_estudiante
+                    WHERE q.token = :token LIMIT 1');
+        $db->bind(':token', $token);
+        $qr = $db->single();
+
+        if (!$qr) {
+            $data = ['title' => 'QR no encontrado', 'error' => 'El código QR no existe o ha sido eliminado.'];
+            $this->view('padres/ver_qr', $data);
+            return;
+        }
+
+        // Verificar si pertenece a la familia actual
+        if ($qr->id_familia_fk != $_SESSION['user_id']) {
+            $data = ['title' => 'Acceso denegado', 'error' => 'No tienes permiso para ver este QR.'];
+            $this->view('padres/ver_qr', $data);
+            return;
+        }
+
+        $url_escanear = URLROOT . '/padres/escanear_qr/' . $token;
+        $data = [
+            'title'         => 'Tu Código QR',
+            'qr'            => $qr,
+            'url_escanear'  => $url_escanear,
+        ];
+
+        $this->view('padres/ver_qr', $data);
+    }
+
+    /**
+     * Procesa el escaneo del QR (usado por admin/docente desde confirmar_asistencia).
+     * Valida el QR y registra la asistencia si es válido.
+     */
+    public function escanear_qr() {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $token = $input['token'] ?? '';
+
+        if (empty($token)) {
+            echo json_encode(['success' => false, 'message' => 'Token QR requerido']);
+            exit;
+        }
+
+        $db = new Database();
+        $db->query('SELECT q.*, a.nombre_actividad, e.nombres AS est_nombres, e.apellidos AS est_apellidos
+                    FROM qr_asistencia q
+                    INNER JOIN actividades a ON q.id_actividad_fk = a.id_actividad
+                    INNER JOIN estudiantes e ON q.id_estudiante_fk = e.id_estudiante
+                    WHERE q.token = :token LIMIT 1');
+        $db->bind(':token', $token);
+        $qr = $db->single();
+
+        if (!$qr) {
+            echo json_encode(['success' => false, 'message' => 'Código QR inválido o no encontrado']);
+            exit;
+        }
+
+        // Verificar expiración
+        if (strtotime($qr->expira_en) < time()) {
+            echo json_encode(['success' => false, 'message' => 'El código QR ha expirado (válido 24h)']);
+            exit;
+        }
+
+        // Verificar si ya fue usado
+        if ((int)$qr->usado === 1) {
+            echo json_encode(['success' => false, 'message' => 'Este QR ya fue utilizado (' . $qr->usado_en . ')', 'usado' => true]);
+            exit;
+        }
+
+        // Verificar que la actividad ya empezó (opcional: permitir antes)
+        if (strtotime($qr->fecha_hora_inicio) > time()) {
+            echo json_encode(['success' => false, 'message' => 'La actividad aún no ha comenzado']);
+            exit;
+        }
+
+        // Verificar si ya existe asistencia registrada para esta familia/estudiante/actividad
+        $db->query('SELECT 1 FROM asistencia WHERE id_actividad_fk = :a AND id_estudiante_fk = :e AND id_familia_fk = :f LIMIT 1');
+        $db->bind(':a', $qr->id_actividad_fk);
+        $db->bind(':e', $qr->id_estudiante_fk);
+        $db->bind(':f', $qr->id_familia_fk);
+        if ($db->single()) {
+            // Marcar QR como usado aunque ya estuviera registrada
+            $db->query('UPDATE qr_asistencia SET usado = 1, usado_en = NOW() WHERE id_qr = :id');
+            $db->bind(':id', $qr->id_qr);
+            $db->execute();
+            echo json_encode(['success' => true, 'message' => 'Asistencia ya registrada previamente', 'ya_registrado' => true, 'estudiante' => $qr->est_nombres . ' ' . $qr->est_apellidos, 'actividad' => $qr->nombre_actividad]);
+            exit;
+        }
+
+        // Registrar asistencia
+        $db->query('INSERT INTO asistencia (id_actividad_fk, id_familia_fk, id_estudiante_fk, registrada_por_profesor_fk, presente) VALUES (:a, :f, :e, :p, 1)');
+        $db->bind(':a', $qr->id_actividad_fk);
+        $db->bind(':f', $qr->id_familia_fk);
+        $db->bind(':e', $qr->id_estudiante_fk);
+        // Registrado por "sistema QR" - usamos ID 0 o el admin que escanea
+        $registrado_por = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $db->bind(':p', $registrado_por);
+
+        if ($db->execute()) {
+            // Marcar QR como usado
+            $db->query('UPDATE qr_asistencia SET usado = 1, usado_en = NOW() WHERE id_qr = :id');
+            $db->bind(':id', $qr->id_qr);
+            $db->execute();
+
+            echo json_encode(['success' => true, 'message' => 'Asistencia confirmada correctamente', 'estudiante' => $qr->est_nombres . ' ' . $qr->est_apellidos, 'actividad' => $qr->nombre_actividad]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al registrar asistencia']);
+        }
+        exit;
+    }
 }
