@@ -630,6 +630,8 @@ async function stopCameraAndScan() {
         isUsingNativeCamera = false;
 
         // Update UI
+        startBtn.disabled = false;
+        startBtn.innerHTML = `<span class="material-symbols-outlined">videocam</span><span>Activar Cámara</span>`;
         startBtn.classList.remove('hidden');
         stopBtn.classList.add('hidden');
         torchBtn.disabled = true;
