@@ -3,7 +3,10 @@ $data        = $data ?? [];
 $actividades = $data['actividades_camino'] ?? [];
 $now         = new DateTime();
 $normalizarRutaImagenActividad = static function ($ruta) {
-    return is_string($ruta) ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) : $ruta;
+    if (!is_string($ruta)) return $ruta;
+    return strpos($ruta, '/public/assets/img/actividades/') === false 
+        ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) 
+        : $ruta;
 };
 
 // ── Determinar fecha de Inicio de Año ──
@@ -1261,7 +1264,7 @@ require APPROOT . '/views/inc/header.php';
                         // Replace content immediately before moving
                         card.innerHTML = `
                             <div style="height:140px;background:#ffffff;border-bottom:3px dashed ${cardColor}40;border-radius:20px 20px 0 0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
-                                ${fotoUrl ? `<img src="${fotoUrl}" alt="Imagen principal de ${dia.nombre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.remove()">` : ''}
+                                ${fotoUrl ? `<img src="${fotoUrl}" alt="Imagen principal de ${dia.nombre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" onerror="this.remove()">` : ''}
                                 <span style="font-size:90px;opacity:0.05;position:absolute;color:#000 !important;${headerIconStyle}">${s.suit}</span>
                                 <span class="material-symbols-outlined" style="font-size:64px;color:${cardColor} !important;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.1));${headerIconStyle}">${cardIcon}</span>
                                 <button id="cardBackBtn" style="position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;">

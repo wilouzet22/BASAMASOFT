@@ -122,17 +122,24 @@ class FamiliaModel {
     public function getProximasActividades($id_familia) {
         $this->db->query(
             'SELECT DISTINCT a.*, ta.nombre_tipo, s.nombre_sede,
-                    GROUP_CONCAT(g.nombre_grupo SEPARATOR ", ") AS grupos
+                    (SELECT GROUP_CONCAT(g2.nombre_grupo SEPARATOR ", ") 
+                     FROM actividad_grupo ag2 
+                     JOIN grupos g2 ON ag2.id_grupo_fk = g2.id_grupo 
+                     WHERE ag2.id_actividad_fk = a.id_actividad) AS grupos
              FROM actividades a
              INNER JOIN tipos_actividad ta ON a.id_tipo_actividad_fk = ta.id_tipo_actividad
              INNER JOIN sedes s ON a.id_sede_fk = s.id_sede
-             INNER JOIN actividad_grupo ag ON a.id_actividad = ag.id_actividad_fk
-             INNER JOIN grupos g ON ag.id_grupo_fk = g.id_grupo
-             INNER JOIN estudiantes e ON g.id_grupo = e.id_grupo_fk
-             INNER JOIN familia_estudiante fe ON e.id_estudiante = fe.id_estudiante_fk
-             WHERE fe.id_familia_fk = :id_familia
-               AND a.fecha_hora_inicio >= NOW()
-             GROUP BY a.id_actividad
+             WHERE (
+                 NOT EXISTS (SELECT 1 FROM actividad_grupo ag3 WHERE ag3.id_actividad_fk = a.id_actividad)
+                 OR 
+                 EXISTS (
+                     SELECT 1 FROM actividad_grupo ag4 
+                     INNER JOIN estudiantes e ON ag4.id_grupo_fk = e.id_grupo_fk
+                     INNER JOIN familia_estudiante fe ON e.id_estudiante = fe.id_estudiante_fk
+                     WHERE ag4.id_actividad_fk = a.id_actividad AND fe.id_familia_fk = :id_familia
+                 )
+             )
+             AND COALESCE(a.fecha_hora_fin, DATE_ADD(a.fecha_hora_inicio, INTERVAL 2 HOUR)) >= NOW()
              ORDER BY a.fecha_hora_inicio ASC
              LIMIT 5'
         );

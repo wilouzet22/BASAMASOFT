@@ -70,14 +70,20 @@ require APPROOT . '/views/inc/header.php';
                     <p class="text-on-surface-variant"><?php echo htmlspecialchars($data['qr']->nombre_sede); ?> · <?php echo date('d/m/Y H:i', strtotime($data['qr']->fecha_hora_inicio)); ?></p>
                 </div>
 
-                <div class="mb-6 p-4 bg-white rounded-xl border border-outline-variant inline-block">
+                <div class="mb-4 p-4 bg-white rounded-xl border border-outline-variant inline-block">
                     <div id="qrcode"></div>
                 </div>
 
+                <!-- Aviso de brillo -->
+                <div class="mb-4 w-full flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3">
+                    <span class="material-symbols-outlined text-amber-600 flex-shrink-0">light_mode</span>
+                    <p class="text-sm font-semibold text-amber-800">Sube el brillo de tu pantalla al máximo antes de mostrar el QR al docente.</p>
+                </div>
+
                 <div class="mb-6 text-sm text-on-surface-variant space-y-1">
-                    <p><strong>Estudiante:</strong> <?php echo htmlspecialchars($data['qr']->est_nombres . ' ' . $data['qr']->est_apellidos); ?></p>
+                    <p><strong>Familia:</strong> <?php echo htmlspecialchars($data['qr']->nombre_principal_acudiente . ' ' . $data['qr']->apellidos_principal_acudiente); ?></p>
                     <p><strong>Expira:</strong> <?php echo date('d/m/Y H:i', strtotime($data['qr']->expira_en)); ?></p>
-                    <p class="text-tertiary"><strong>Válido por 24 horas · Un solo uso</strong></p>
+                    <p class="text-tertiary"><strong>Válido por 24 horas · Un solo uso · Registra a todos tus hijos</strong></p>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 w-full">
@@ -134,11 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateQR() {
         new QRCode(qrContainer, {
             text: url,
-            width: 256,
-            height: 256,
+            width: 450,
+            height: 450,
             colorDark: '#000000',
             colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
+            correctLevel: QRCode.CorrectLevel.Q
         });
     }
 });

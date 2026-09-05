@@ -88,7 +88,7 @@ class Auth extends Controller {
             $_SESSION['correo']     = $familia->email_contacto;
             $_SESSION['rol']        = 'familia';
             $_SESSION['foto_perfil'] = $familia->foto_perfil ?? null;
-            header('Location: ' . URLROOT . '/padres/dashboard');
+            header('Location: ' . URLROOT . '/padres/camino');
             exit;
         }
 
@@ -107,7 +107,7 @@ class Auth extends Controller {
 
     public function logout() {
         session_destroy();
-        header('Location: ' . URLROOT . '/auth/login');
+        header('Location: ' . URLROOT . '/');
         exit;
     }
 }

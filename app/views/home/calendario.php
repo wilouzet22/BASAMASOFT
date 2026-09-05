@@ -3,7 +3,10 @@
 <?php
 $jsActividades = [];
 $normalizarRutaImagenActividad = static function ($ruta) {
-    return is_string($ruta) ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) : $ruta;
+    if (!is_string($ruta)) return $ruta;
+    return strpos($ruta, '/public/assets/img/actividades/') === false 
+        ? str_replace('/assets/img/actividades/', '/public/assets/img/actividades/', $ruta) 
+        : $ruta;
 };
 foreach ($data['actividades'] as $act) {
     $fecha = new DateTime($act->fecha_hora_inicio);
@@ -530,7 +533,7 @@ function abrirComicModal(act) {
     fotos.forEach((foto, i) => {
         const slide = document.createElement('div');
         slide.className = 'w-full h-full flex-shrink-0';
-        slide.innerHTML = `<img src="${foto}" class="w-full h-full object-cover" alt="Foto ${i+1}">`;
+        slide.innerHTML = `<img src="${foto}" class="w-full h-full object-contain" alt="Foto ${i+1}">`;
         slidesContainer.appendChild(slide);
 
         const dot = document.createElement('button');
